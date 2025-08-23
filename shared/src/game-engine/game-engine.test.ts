@@ -18,7 +18,7 @@ describe('GameEngine', () => {
 
   it('should start a game successfully', () => {
     const startedGame = GameEngine.startGame(gameState);
-    
+
     expect(startedGame.phase).toBe('playing');
     expect(startedGame.startedAt).toBeInstanceOf(Date);
     expect(startedGame.players).toHaveLength(2);
@@ -30,35 +30,43 @@ describe('GameEngine', () => {
 
   it('should not start game with insufficient players', () => {
     gameState.players = [createPlayer('player1', 'Alice')];
-    
-    expect(() => GameEngine.startGame(gameState)).toThrow('Not enough players to start game');
+
+    expect(() => GameEngine.startGame(gameState)).toThrow(
+      'Not enough players to start game',
+    );
   });
 
   it('should not start game that has already started', () => {
     gameState.phase = 'playing';
-    
-    expect(() => GameEngine.startGame(gameState)).toThrow('Game has already started');
+
+    expect(() => GameEngine.startGame(gameState)).toThrow(
+      'Game has already started',
+    );
   });
 
   it('should validate card plays correctly', () => {
     const startedGame = GameEngine.startGame(gameState);
     const topCard = startedGame.discardPile[0];
     const player = startedGame.players[0];
-    
-    const matchingRankCard = player.hand.find(card => card.rank === topCard.rank);
-    const matchingSuitCard = player.hand.find(card => card.suit === topCard.suit);
-    const nonMatchingCard = player.hand.find(card => 
-      card.rank !== topCard.rank && card.suit !== topCard.suit
+
+    const matchingRankCard = player.hand.find(
+      card => card.rank === topCard.rank,
     );
-    
+    const matchingSuitCard = player.hand.find(
+      card => card.suit === topCard.suit,
+    );
+    const nonMatchingCard = player.hand.find(
+      card => card.rank !== topCard.rank && card.suit !== topCard.suit,
+    );
+
     if (matchingRankCard) {
       expect(GameEngine.isValidPlay(startedGame, matchingRankCard)).toBe(true);
     }
-    
+
     if (matchingSuitCard) {
       expect(GameEngine.isValidPlay(startedGame, matchingSuitCard)).toBe(true);
     }
-    
+
     if (nonMatchingCard) {
       expect(GameEngine.isValidPlay(startedGame, nonMatchingCard)).toBe(false);
     }
@@ -68,18 +76,26 @@ describe('GameEngine', () => {
     const startedGame = GameEngine.startGame(gameState);
     const topCard = startedGame.discardPile[0];
     const currentPlayer = startedGame.players[startedGame.currentPlayerIndex];
-    const validCard = currentPlayer.hand.find(card => 
-      card.rank === topCard.rank || card.suit === topCard.suit
+    const validCard = currentPlayer.hand.find(
+      card => card.rank === topCard.rank || card.suit === topCard.suit,
     );
-    
+
     if (validCard) {
-      const updatedGame = GameEngine.playCard(startedGame, currentPlayer.id, validCard.id);
-      
-      expect(updatedGame.currentPlayerIndex).toBe((startedGame.currentPlayerIndex + 1) % 2);
+      const updatedGame = GameEngine.playCard(
+        startedGame,
+        currentPlayer.id,
+        validCard.id,
+      );
+
+      expect(updatedGame.currentPlayerIndex).toBe(
+        (startedGame.currentPlayerIndex + 1) % 2,
+      );
       expect(updatedGame.discardPile).toHaveLength(2);
       expect(updatedGame.discardPile[1]).toEqual(validCard);
-      
-      const updatedPlayer = updatedGame.players.find(p => p.id === currentPlayer.id);
+
+      const updatedPlayer = updatedGame.players.find(
+        p => p.id === currentPlayer.id,
+      );
       expect(updatedPlayer?.hand).toHaveLength(6);
     }
   });

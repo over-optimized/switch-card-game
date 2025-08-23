@@ -6,7 +6,7 @@ A multiplayer HTML5 card game with real-time networking capabilities. Play Switc
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm (recommended package manager)
 
 ### Installation
@@ -23,6 +23,7 @@ pnpm run dev
 ```
 
 This will start:
+
 - Client development server at http://localhost:3000
 - Backend server at http://localhost:3001
 
@@ -44,7 +45,7 @@ pnpm test                 # Run all tests
 pnpm test:coverage        # Run tests with coverage
 
 # Quality Checks
-pnpm lint                 # Lint all packages  
+pnpm lint                 # Lint all packages
 pnpm format              # Format code with Prettier
 pnpm ci                  # Full CI pipeline (lint + test + build)
 ```
@@ -52,12 +53,14 @@ pnpm ci                  # Full CI pipeline (lint + test + build)
 ## 🎮 How to Play
 
 ### Game Rules
+
 - Each player starts with 7 cards
 - Players take turns playing cards that match the top card's suit or rank
 - If you can't play, draw a card from the deck
 - First player to empty their hand wins!
 
 ### Multiplayer Setup
+
 1. **Create Room**: One player creates a room and gets a 6-character room code
 2. **Join Room**: Other players use the room code to join
 3. **Start Game**: Room host starts the game when ready
@@ -66,6 +69,7 @@ pnpm ci                  # Full CI pipeline (lint + test + build)
 ## 🏗️ Architecture
 
 ### Project Structure
+
 ```
 switch-card-game/
 ├── client/              # Frontend (Vite + TypeScript)
@@ -75,6 +79,7 @@ switch-card-game/
 ```
 
 ### Technology Stack
+
 - **Frontend**: HTML5, TypeScript, CSS3, Vite
 - **Backend**: Node.js, Express, Socket.IO
 - **Shared**: TypeScript types and game engine
@@ -82,6 +87,7 @@ switch-card-game/
 - **Development**: ESLint, Prettier, hot reloading
 
 ### Key Components
+
 - **Game Engine**: Core game logic with deck management
 - **Room Manager**: Handles multiplayer room creation/joining
 - **WebSocket Events**: Real-time communication between players
@@ -94,7 +100,7 @@ The project includes comprehensive test coverage:
 ```bash
 # Run specific test suites
 pnpm --filter shared test
-pnpm --filter server test  
+pnpm --filter server test
 pnpm --filter client test
 
 # Generate coverage reports
@@ -112,6 +118,7 @@ pnpm test:coverage
 ## 🚀 Deployment
 
 ### Docker (Recommended)
+
 ```bash
 # Build Docker images
 docker build -t switch-client ./client
@@ -122,6 +129,7 @@ docker-compose up -d
 ```
 
 ### Manual Deployment
+
 ```bash
 # Production build
 pnpm run build
@@ -133,24 +141,28 @@ cd server && pnpm start
 ## 📋 Roadmap
 
 ### Phase 1: Core Game ✅
-- [x] Basic game mechanics (deck, dealing, turns)  
+
+- [x] Basic game mechanics (deck, dealing, turns)
 - [x] TypeScript type system
 - [x] Game engine with validation
 - [x] Unit test coverage
 
 ### Phase 2: Multiplayer (In Progress)
+
 - [x] WebSocket server setup
 - [x] Room-based matchmaking
 - [x] Real-time game state sync
 - [ ] Client UI for multiplayer
 
 ### Phase 3: Polish
+
 - [ ] Game animations and transitions
 - [ ] Responsive UI design
 - [ ] Player avatars and themes
 - [ ] Game statistics
 
-### Phase 4: Enhanced Features  
+### Phase 4: Enhanced Features
+
 - [ ] Optional user registration
 - [ ] Friend lists and invites
 - [ ] Advanced matchmaking

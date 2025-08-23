@@ -20,12 +20,19 @@ export interface ServerToClientEvents {
   'player-left': (data: { playerId: string; room: Room }) => void;
   'game-started': (data: { gameState: GameState }) => void;
   'game-state-updated': (data: { gameState: GameState }) => void;
-  'card-played': (data: { playerId: string; cardId: string; gameState: GameState }) => void;
+  'card-played': (data: {
+    playerId: string;
+    cardId: string;
+    gameState: GameState;
+  }) => void;
   'card-drawn': (data: { playerId: string; gameState: GameState }) => void;
-  'turn-changed': (data: { currentPlayerId: string; gameState: GameState }) => void;
+  'turn-changed': (data: {
+    currentPlayerId: string;
+    gameState: GameState;
+  }) => void;
   'game-finished': (data: { winner: Player; gameState: GameState }) => void;
-  'error': (data: { message: string; code?: string }) => void;
-  'disconnect': () => void;
+  error: (data: { message: string; code?: string }) => void;
+  disconnect: () => void;
 }
 
 export interface InterServerEvents {

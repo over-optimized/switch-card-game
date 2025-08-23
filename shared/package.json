@@ -12,8 +12,10 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm run clean && tsc",
+    "build:prod": "pnpm run clean && tsc --build --verbose",
     "dev": "tsc --watch",
+    "clean": "rm -rf dist && rm -f src/**/*.js src/**/*.d.ts",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "test": "vitest --run",

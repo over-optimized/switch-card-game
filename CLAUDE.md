@@ -5,7 +5,7 @@
 Switch Card Game is a multiplayer HTML5 card game with real-time networking capabilities. The project is structured as a pnpm monorepo with three main packages:
 
 - **client/**: Frontend application (Vite + TypeScript)
-- **server/**: Backend server (Node.js + Socket.IO + Express)  
+- **server/**: Backend server (Node.js + Socket.IO + Express)
 - **shared/**: Shared types and game engine logic
 
 **Game Rules Reference**: See `docs/switch_game_rules.md` for complete Switch card game rules including all special cards (2s, 3s, 5♥, 7s, 8s, Jacks, Kings, Aces) and advanced mechanics like runs and penalty stacking.
@@ -61,24 +61,28 @@ pnpm format            # Format all code with Prettier
 Claude MUST keep these files updated when making changes:
 
 #### Game Rules Documentation (`docs/switch_game_rules.md`)
+
 - **When implementing special cards**: Update implementation status and examples
-- **When changing game mechanics**: Verify rules documentation matches code behavior  
+- **When changing game mechanics**: Verify rules documentation matches code behavior
 - **When adding new features**: Document any rule modifications or additions
 - **Game balance changes**: Update card effects, penalties, and strategic notes
 
 #### README.md Updates
+
 - **When adding features**: Update roadmap phase completion status
 - **When changing commands**: Verify all script examples work
 - **When adding dependencies**: Update technology stack section
 - **When changing architecture**: Update project structure diagram
 
-#### FEATURES.md Updates  
+#### FEATURES.md Updates
+
 - **Feature completion**: Move items from 🔴 Planned to 🟡 In Progress to 🟢 Complete
 - **New features**: Add to appropriate phase with proper status indicators
 - **Architecture changes**: Update technical notes and architecture decisions
 - **Known issues**: Add bugs to Known Issues section, remove when fixed
 
 #### TODO.md Updates
+
 - **Task completion**: Mark completed tasks and update status sections
 - **New bugs/issues**: Add to appropriate priority section
 - **Milestone progress**: Update current focus and development velocity
@@ -113,19 +117,22 @@ git push origin feature/card-special-effects
 ### Package-Specific Rules
 
 #### Client Package (`client/`)
+
 - **Framework**: Vite + vanilla TypeScript (no React/Vue/etc)
 - **UI State**: Keep UI state separate from game state
 - **Game Logic**: Import ALL game logic from shared package
 - **Styling**: Embedded CSS in main.ts for simplicity
 
-#### Server Package (`server/`)  
+#### Server Package (`server/`)
+
 - **Framework**: Express + Socket.IO
 - **Game Authority**: Server is authoritative for all game state
 - **Room Management**: Use shared RoomManager class
 - **Error Handling**: Comprehensive error handling for WebSocket events
 
 #### Shared Package (`shared/`)
-- **Pure Logic**: No UI dependencies, no server dependencies  
+
+- **Pure Logic**: No UI dependencies, no server dependencies
 - **Comprehensive Types**: Define all interfaces in types/ directory
 - **Game Engine**: All game rules and validation logic
 - **Testing**: Highest test coverage requirements (>85%)
@@ -133,7 +140,7 @@ git push origin feature/card-special-effects
 ### Deployment Configuration
 
 - **Frontend**: Vercel deployment (client package)
-- **Backend**: Railway deployment (server package) 
+- **Backend**: Railway deployment (server package)
 - **Environment**: Separate staging/production configs
 - **Build Order**: shared → server → client (shared must build first)
 
@@ -157,6 +164,7 @@ Based on current TODO.md status:
 ### Emergency Procedures
 
 If quality gates fail:
+
 1. **Never bypass** - fix the underlying issue
 2. **Isolate**: Test individual packages to find problem
 3. **Shared First**: If shared package fails, fix before client/server
@@ -177,3 +185,5 @@ If quality gates fail:
 - **Validate rule implementation**: Ensure code matches documented game rules exactly
 
 This configuration ensures high code quality, prevents regressions, and maintains accurate documentation throughout development.
+
+- Never include `Generated with Claude Code` in commit messages

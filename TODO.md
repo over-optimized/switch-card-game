@@ -3,6 +3,7 @@
 ## ✅ **COMPLETED - Core Gameplay Foundation**
 
 ### High Priority - Game Rules Implementation ✅
+
 - [x] **Research and document Switch card game rules**
   - [x] Define official rules to implement (basic matching: suit or rank)
   - [x] Decided to implement special cards incrementally (starting with 2s)
@@ -17,6 +18,7 @@
   - [x] Add deck reshuffling when empty
 
 ### High Priority - Interactive UI ✅
+
 - [x] **Card interaction system**
   - [x] Click-to-play card functionality
   - [x] Visual feedback for playable cards (green glow/border)
@@ -34,6 +36,7 @@
 ## 🎯 Current Focus (Week 2) - First Special Card Implementation
 
 ### Immediate Tasks - 2s Implementation
+
 - [ ] **Test current basic gameplay thoroughly**
   - [ ] Verify all basic rules work correctly
   - [ ] Test edge cases (deck running out, win conditions)
@@ -57,6 +60,7 @@
   - [ ] Add visual distinction for active vs dead cards
 
 ### Medium Priority - Game Polish
+
 - [ ] **Add game statistics**
   - [ ] Track games played, won, lost
   - [ ] Show stats on restart screen
@@ -70,6 +74,7 @@
 ## 📅 Phase 2 (Week 3-4) - Additional Special Cards
 
 ### Second Special Card Implementation
+
 - [ ] **Choose next card type (8s or Aces recommended)**
   - [ ] 8s - Reverse Direction (simpler, good for 2-player)
   - [ ] Aces - Change Suit (more strategic complexity)
@@ -80,13 +85,15 @@
   - [ ] Update UI for new card effects
   - [ ] Test interaction with existing 2s
 
-### Third Special Card Implementation  
+### Third Special Card Implementation
+
 - [ ] **Implement remaining basic card (8s or Aces)**
   - [ ] Complete the simpler special cards first
   - [ ] Test all combinations work together
   - [ ] Refine AI to handle multiple special cards
 
 ### Advanced Features Planning
+
 - [ ] **Prepare for complex cards**
   - [ ] Research Runs system architecture needs
   - [ ] Plan 7s Mirror card implementation
@@ -95,9 +102,10 @@
 ## 📅 Phase 3 (Week 4-5) - Local Multiplayer & Polish
 
 ### Hot-Seat Multiplayer (Same Device)
+
 - [ ] **Multiple players on one device**
   - [ ] Player turn management with hidden hands
-  - [ ] "Pass device" screen between turns  
+  - [ ] "Pass device" screen between turns
   - [ ] Player name display and turn indicators
   - [ ] Hand hiding/showing based on current player
 
@@ -108,13 +116,14 @@
   - [ ] Local game statistics and history
 
 ### Visual Polish & Animations
+
 - [ ] **Card animations**
   - [ ] Smooth card movement from hand to discard pile
   - [ ] Card flip animation when drawing from deck
   - [ ] Shuffle animation for deck
   - [ ] Special effects for trick cards
 
-- [ ] **Game feedback**  
+- [ ] **Game feedback**
   - [ ] Win/lose celebration animations
   - [ ] Turn transition effects
   - [ ] Penalty pickup animations
@@ -123,23 +132,26 @@
 ## 📅 Phase 3 (Week 4-5) - Networking Implementation
 
 ### WebSocket Connection (Deferred from Week 1)
+
 - [ ] **Connect client to WebSocket server**
   - [ ] Add Socket.IO client connection in main.ts
   - [ ] Handle connection events (connect, disconnect, error)
   - [ ] Display connection status in UI
 
 ### Room Management UI (Deferred)
+
 - [ ] **Implement room creation UI**
   - [ ] Add "Create Room" button and form
   - [ ] Display generated room code
   - [ ] Show player name input
 
-- [ ] **Implement room joining UI**  
+- [ ] **Implement room joining UI**
   - [ ] Add "Join Room" form with code input
   - [ ] Handle join success/error states
   - [ ] Navigate to lobby after successful join
 
 ### Multiplayer Game Sync
+
 - [ ] **Real-time game updates**
   - [ ] Sync game state changes across all clients
   - [ ] Handle player actions (play card, draw card)
@@ -149,6 +161,7 @@
 ## 📅 Phase 4 (Week 5-6) - Player vs Computer
 
 ### AI Implementation
+
 - [ ] **Basic AI player**
   - [ ] Random valid card selection
   - [ ] Follow game rules correctly
@@ -156,7 +169,7 @@
 
 - [ ] **AI difficulty levels**
   - [ ] Easy: Random plays
-  - [ ] Medium: Basic strategy (color/number matching)  
+  - [ ] Medium: Basic strategy (color/number matching)
   - [ ] Hard: Advanced strategy and card counting
 
 - [ ] **Mixed PvP/PvC games**
@@ -167,6 +180,7 @@
 ## 📅 Phase 5 (Week 6-7) - Deployment & Production
 
 ### Deployment Strategy: Vercel + Railway
+
 - [ ] **Frontend deployment (Vercel)**
   - [ ] Configure Vite build for production
   - [ ] Set up environment variables for API endpoints
@@ -181,6 +195,7 @@
   - [ ] Configure health checks and monitoring
 
 ### Production Configuration
+
 - [ ] **Environment setup**
   - [ ] Configure staging and production environments
   - [ ] Set up CORS to allow Vercel domain → Railway API
@@ -195,6 +210,7 @@
 ## 🔄 Ongoing Tasks (Throughout Development)
 
 ### Code Quality & Testing
+
 - [ ] **Expand test coverage**
   - [ ] Add integration tests for WebSocket events
   - [ ] Test multiplayer game scenarios
@@ -208,6 +224,7 @@
   - [ ] Implement proper logging system
 
 ### Documentation & DevOps
+
 - [ ] **API documentation**
   - [ ] Document all WebSocket events
   - [ ] Create OpenAPI spec for REST endpoints
@@ -222,6 +239,7 @@
 ## 🎯 Future Considerations (Backlog)
 
 ### Authentication System
+
 - [ ] **User accounts (optional)**
   - [ ] Simple email/password registration
   - [ ] Guest player mode (current default)
@@ -229,9 +247,10 @@
   - [ ] Friend lists and invitations
 
 ### Advanced Features
+
 - [ ] **Tournament mode**
   - [ ] Bracket-style tournaments
-  - [ ] Leaderboards and rankings  
+  - [ ] Leaderboards and rankings
   - [ ] Scheduled tournaments
 
 - [ ] **Game variants**
@@ -240,6 +259,7 @@
   - [ ] Team play modes
 
 ### Mobile & Platform Support
+
 - [ ] **Mobile optimization**
   - [ ] Touch-friendly card interactions
   - [ ] Responsive design improvements
@@ -253,6 +273,7 @@
 ## 📊 Success Metrics to Track
 
 ### Technical Metrics
+
 - [ ] WebSocket connection stability (>99% uptime)
 - [ ] Game action latency (<100ms)
 - [ ] Client load time (<3 seconds)
@@ -260,6 +281,7 @@
 - [ ] Error rate tracking
 
 ### User Experience Metrics
+
 - [ ] Game completion rate
 - [ ] Average session duration
 - [ ] Player return rate
@@ -271,6 +293,7 @@
 ## 📊 **Current Project Status**
 
 ### ✅ **What's Working Right Now:**
+
 - **Fully playable basic Switch game** at http://localhost:3000
 - **Core mechanics**: Match suit/rank, draw when can't play, win by emptying hand
 - **Interactive UI**: Click cards to play, visual feedback for valid moves
@@ -279,11 +302,13 @@
 - **Responsive design**: Works on desktop and mobile
 
 ### 🎯 **Next Milestone: 2s Implementation**
+
 - Add first special card (Pick Up Two mechanics)
 - Introduce penalty system and card stacking
 - Update UI to show active penalties
 
 ### 📈 **Development Velocity:**
+
 - **Week 1**: Core foundation ✅ (Completed)
 - **Week 2**: First special card (2s) 🎯 (Current focus)
 - **Week 3**: Second special card (8s or Aces)
@@ -295,24 +320,28 @@
 ## 📝 Notes for Revised Development Strategy
 
 ### New Development Philosophy
+
 - **Perfect the core gameplay experience first** before adding complexity
 - **Single-player experience** must be polished and fun
 - **Local multiplayer** validates UI before networking challenges
 - **Networking last** ensures solid foundation before real-time complexity
 
 ### Architecture Reminders
+
 - Keep all game logic in shared package (can be used locally or networked)
-- Use TypeScript strictly across all packages  
+- Use TypeScript strictly across all packages
 - Build UI to work locally first, then add network sync later
 - Test each feature thoroughly in isolation
 
-### Code Organization  
+### Code Organization
+
 - Update FEATURES.md when completing major items
 - Focus on TODO.md Week 1-2 tasks first (core gameplay)
 - Create GitHub issues for bugs found during development
 - Document game rule decisions as they're made
 
 ### Development Tips for Current Phase
+
 - Test game with different card combinations manually
 - Focus on visual feedback and user experience
 - Make cards feel responsive and fun to interact with
@@ -320,6 +349,7 @@
 - Keep shared package built when making game engine changes
 
 ### Deployment Strategy Summary
+
 - **Frontend**: Vercel (great for static sites, you know it well)
 - **Backend**: Railway (excellent WebSocket support for real-time gaming)
 - **Database**: Railway PostgreSQL when needed
@@ -327,5 +357,5 @@
 
 ---
 
-*Last Updated: 2024-08-23*
-*Review and update weekly during active development*
+_Last Updated: 2024-08-23_
+_Review and update weekly during active development_

@@ -35,7 +35,11 @@ export interface GameAction {
   timestamp: Date;
 }
 
-export function createGameState(id: string, players: Player[], shuffledDeck: Card[]): GameState {
+export function createGameState(
+  id: string,
+  players: Player[],
+  shuffledDeck: Card[],
+): GameState {
   return {
     id,
     players: [...players],
@@ -66,13 +70,13 @@ export function getCurrentPlayer(gameState: GameState): Player | undefined {
 export function getNextPlayerIndex(gameState: GameState): number {
   const playerCount = gameState.players.length;
   let nextIndex = gameState.currentPlayerIndex + gameState.direction;
-  
+
   if (nextIndex >= playerCount) {
     nextIndex = 0;
   } else if (nextIndex < 0) {
     nextIndex = playerCount - 1;
   }
-  
+
   return nextIndex;
 }
 

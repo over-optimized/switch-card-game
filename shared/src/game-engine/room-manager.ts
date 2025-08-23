@@ -8,17 +8,17 @@ export class RoomManager {
   static generateRoomCode(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code = '';
-    
+
     for (let i = 0; i < GAME_CONFIG.ROOM_CODE_LENGTH; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    
+
     return code;
   }
 
   static createRoom(hostId: string, hostName: string, maxPlayers = 4): Room {
     let roomCode = RoomManager.generateRoomCode();
-    
+
     while (RoomManager.rooms.has(roomCode)) {
       roomCode = RoomManager.generateRoomCode();
     }
@@ -26,7 +26,7 @@ export class RoomManager {
     const host = createPlayer(hostId, hostName, true);
     const room = createRoom(roomCode, hostId, maxPlayers);
     room.players.push(host);
-    
+
     RoomManager.rooms.set(roomCode, room);
     return room;
   }
@@ -35,9 +35,13 @@ export class RoomManager {
     return RoomManager.rooms.get(roomCode);
   }
 
-  static joinRoom(roomCode: string, playerId: string, playerName: string): Room {
+  static joinRoom(
+    roomCode: string,
+    playerId: string,
+    playerName: string,
+  ): Room {
     const room = RoomManager.rooms.get(roomCode);
-    
+
     if (!room) {
       throw new Error('Room not found');
     }
@@ -56,13 +60,13 @@ export class RoomManager {
 
     const player = createPlayer(playerId, playerName);
     room.players.push(player);
-    
+
     return room;
   }
 
   static leaveRoom(roomCode: string, playerId: string): Room | null {
     const room = RoomManager.rooms.get(roomCode);
-    
+
     if (!room) {
       return null;
     }
@@ -105,7 +109,11 @@ export class RoomManager {
     return undefined;
   }
 
-  static updatePlayerConnection(roomCode: string, playerId: string, isConnected: boolean): Room | undefined {
+  static updatePlayerConnection(
+    roomCode: string,
+    playerId: string,
+    isConnected: boolean,
+  ): Room | undefined {
     const room = RoomManager.rooms.get(roomCode);
     if (!room) return undefined;
 

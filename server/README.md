@@ -5,6 +5,7 @@ Backend server for the Switch multiplayer card game, built with Node.js, Express
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - pnpm (recommended)
 - Built shared package (`pnpm build:shared` from root)
@@ -26,6 +27,7 @@ Server will start at: http://localhost:3001
 ## 🏗️ Architecture
 
 ### Technology Stack
+
 - **Runtime**: Node.js 18+ with ES modules
 - **Framework**: Express.js for HTTP endpoints
 - **Real-time**: Socket.IO for WebSocket communication
@@ -34,6 +36,7 @@ Server will start at: http://localhost:3001
 - **Security**: CORS, Helmet, and input validation
 
 ### Project Structure
+
 ```
 server/
 ├── src/
@@ -46,6 +49,7 @@ server/
 ### Key Components
 
 #### WebSocket Server (`index.ts`)
+
 - **Room Management**: Create, join, and manage game rooms
 - **Real-time Communication**: Socket.IO event handling
 - **Game State Sync**: Authoritative server game state
@@ -53,6 +57,7 @@ server/
 - **Security**: Input validation and rate limiting
 
 #### Express API Endpoints
+
 - **Health Check**: `/health` - Server status
 - **Room Info**: `/api/rooms/:id` - Room details (if implemented)
 - **Static Assets**: Serve client assets in production
@@ -65,7 +70,7 @@ pnpm dev                # Start development server with hot reload
 pnpm build              # Compile TypeScript to JavaScript
 pnpm start              # Start production server
 
-# Code Quality  
+# Code Quality
 pnpm lint               # ESLint validation
 pnpm lint:fix           # Auto-fix lint issues
 pnpm test               # Run unit tests
@@ -116,6 +121,7 @@ pnpm test:coverage      # Run tests with coverage
 ## 🎮 Current Features
 
 ### Room Management System
+
 - ✅ **Room Creation**: Generate unique 6-character room codes
 - ✅ **Room Joining**: Players join using room codes
 - ✅ **Player Management**: Track connected players per room
@@ -123,6 +129,7 @@ pnpm test:coverage      # Run tests with coverage
 - ✅ **Disconnect Handling**: Cleanup on player disconnect
 
 ### Game State Management
+
 - ✅ **Authoritative Server**: All game logic server-side
 - ✅ **State Synchronization**: Real-time updates to all clients
 - ✅ **Turn Management**: Enforce turn order and valid plays
@@ -130,7 +137,8 @@ pnpm test:coverage      # Run tests with coverage
 - ✅ **Win Condition**: Detect and broadcast game end
 
 ### Real-time Features
-- ✅ **WebSocket Connection**: Stable Socket.IO implementation  
+
+- ✅ **WebSocket Connection**: Stable Socket.IO implementation
 - ✅ **Event-driven Architecture**: Clean event handling system
 - ✅ **Connection Management**: Handle connect/disconnect gracefully
 - ✅ **Room Broadcasting**: Send updates to room members only
@@ -139,6 +147,7 @@ pnpm test:coverage      # Run tests with coverage
 ## 🔧 Configuration
 
 ### Environment Variables
+
 ```bash
 # Server Configuration
 PORT=3001                    # Server port (default: 3001)
@@ -151,6 +160,7 @@ LOG_LEVEL=info             # Logging verbosity
 ```
 
 ### Socket.IO Configuration
+
 - **CORS**: Configured for localhost:3000 in development
 - **Transports**: WebSocket and polling fallback
 - **Timeout**: Connection timeout and ping interval
@@ -159,21 +169,24 @@ LOG_LEVEL=info             # Logging verbosity
 ## 🛡️ Security Features
 
 ### Input Validation
+
 - **Room Codes**: Validate format and existence
 - **Card Plays**: Validate using shared game engine
 - **Player Names**: Sanitize and length limits
 - **Rate Limiting**: Prevent spam and abuse
 
 ### CORS Configuration
+
 ```typescript
 // Development
-origin: ['http://localhost:3000']
+origin: ['http://localhost:3000'];
 
-// Production  
-origin: ['https://your-domain.vercel.app']
+// Production
+origin: ['https://your-domain.vercel.app'];
 ```
 
 ### Error Handling
+
 - **Graceful Failures**: Never crash server on invalid input
 - **Client Feedback**: Send meaningful error messages
 - **Logging**: Comprehensive error logging
@@ -182,6 +195,7 @@ origin: ['https://your-domain.vercel.app']
 ## 🧪 Testing
 
 ### Test Strategy
+
 - **Unit Tests**: Room management and game logic integration
 - **Socket Tests**: WebSocket event handling
 - **Integration Tests**: Full client-server communication
@@ -201,6 +215,7 @@ pnpm test:integration
 ## 🚀 Deployment
 
 ### Production Build
+
 ```bash
 # Compile TypeScript
 pnpm build
@@ -212,6 +227,7 @@ pnpm start
 ### Deployment Platforms
 
 #### Railway (Recommended)
+
 ```bash
 # Railway deployment
 railway login
@@ -220,6 +236,7 @@ railway up
 ```
 
 #### Manual Deployment
+
 ```bash
 # Build and prepare
 pnpm build
@@ -227,6 +244,7 @@ NODE_ENV=production pnpm start
 ```
 
 ### Production Configuration
+
 - **Process Management**: PM2 or similar for production
 - **Load Balancing**: Multiple server instances if needed
 - **Database**: PostgreSQL for persistent room/game data
@@ -235,6 +253,7 @@ NODE_ENV=production pnpm start
 ## 🔍 Room Management Details
 
 ### Room Lifecycle
+
 1. **Creation**: Generate unique 6-character code
 2. **Joining**: Players join with code, validate room exists
 3. **Ready State**: Players mark ready, host can start game
@@ -243,12 +262,13 @@ NODE_ENV=production pnpm start
 6. **Cleanup**: Room cleanup after inactivity
 
 ### Room Data Structure
+
 ```typescript
 interface Room {
-  id: string;              // 6-character room code
-  host: string;            // Host player socket ID
-  players: Player[];       // Connected players
-  gameState: GameState;    // Current game state
+  id: string; // 6-character room code
+  host: string; // Host player socket ID
+  players: Player[]; // Connected players
+  gameState: GameState; // Current game state
   status: 'waiting' | 'active' | 'finished';
   createdAt: Date;
   lastActivity: Date;
@@ -258,15 +278,17 @@ interface Room {
 ## 🎯 Game Server Logic
 
 ### Authoritative Server Model
+
 - **Client Requests**: Players send action requests
 - **Server Validation**: Validate using shared game engine
 - **State Update**: Update authoritative game state
 - **Broadcast**: Send updates to all room players
 
 ### Turn Management
+
 ```typescript
 // Example turn handling
-socket.on('play-card', (data) => {
+socket.on('play-card', data => {
   // 1. Validate it's player's turn
   // 2. Validate card play using GameEngine
   // 3. Update game state
@@ -278,12 +300,14 @@ socket.on('play-card', (data) => {
 ## 📊 Performance Considerations
 
 ### Scalability
+
 - **Room Limits**: Maximum players per room (4)
 - **Concurrent Rooms**: Support multiple simultaneous games
 - **Memory Management**: Clean up inactive rooms
 - **Connection Limits**: Handle connection pooling
 
 ### Optimization
+
 - **State Sync**: Only send necessary game state updates
 - **Event Batching**: Batch related events when possible
 - **Database Queries**: Optimize room lookups (when DB added)
@@ -294,21 +318,25 @@ socket.on('play-card', (data) => {
 ### Common Issues
 
 **Server Won't Start**
+
 - Check port 3001 is available
 - Verify shared package is built: `pnpm build:shared`
 - Check Node.js version (18+ required)
 
-**WebSocket Connection Issues**  
+**WebSocket Connection Issues**
+
 - Verify CORS origin configuration
 - Check client connecting to correct port
 - Test with Socket.IO debugging enabled
 
 **Room Management Problems**
+
 - Check room code generation uniqueness
 - Verify room cleanup on disconnect
 - Monitor memory usage for room storage
 
 **Game State Issues**
+
 - Ensure shared GameEngine is properly imported
 - Validate all game actions server-side
 - Check state synchronization timing
@@ -316,18 +344,21 @@ socket.on('play-card', (data) => {
 ## 📚 Development Guidelines
 
 ### Code Style
+
 - Use TypeScript strict mode
 - Follow ESLint configuration
 - Use async/await for asynchronous operations
 - Implement comprehensive error handling
 
 ### WebSocket Development
+
 - Always validate incoming events
 - Use room-based broadcasting
 - Handle disconnections gracefully
 - Implement event acknowledgments
 
 ### Game Integration
+
 - Import ALL game logic from shared package
 - Never implement game rules in server code
 - Use shared types for all events

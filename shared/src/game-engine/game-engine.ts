@@ -1,4 +1,11 @@
-import { GameState, GameAction, getCurrentPlayer, getNextPlayerIndex, isGameFinished, getWinner } from '../types/game.js';
+import {
+  GameState,
+  GameAction,
+  getCurrentPlayer,
+  getNextPlayerIndex,
+  isGameFinished,
+  getWinner,
+} from '../types/game.js';
 import { removeCardFromHand } from '../types/player.js';
 import { Card } from '../types/card.js';
 import { DeckManager } from './deck-manager.js';
@@ -31,7 +38,7 @@ export class GameEngine {
 
     const currentPlayer = getCurrentPlayer(gameState);
     if (!currentPlayer || currentPlayer.id !== action.playerId) {
-      throw new Error('Not the current player\'s turn');
+      throw new Error("Not the current player's turn");
     }
 
     switch (action.type) {
@@ -44,7 +51,11 @@ export class GameEngine {
     }
   }
 
-  static playCard(gameState: GameState, playerId: string, cardId: string): GameState {
+  static playCard(
+    gameState: GameState,
+    playerId: string,
+    cardId: string,
+  ): GameState {
     const playerIndex = gameState.players.findIndex(p => p.id === playerId);
     if (playerIndex === -1) {
       throw new Error('Player not found');
@@ -79,7 +90,7 @@ export class GameEngine {
 
   static isValidPlay(gameState: GameState, card: Card): boolean {
     const topCard = DeckManager.getTopDiscardCard(gameState);
-    
+
     if (!topCard) {
       return true;
     }
@@ -99,7 +110,7 @@ export class GameEngine {
     }
 
     const nextPlayerIndex = getNextPlayerIndex(gameState);
-    
+
     return {
       ...gameState,
       currentPlayerIndex: nextPlayerIndex,

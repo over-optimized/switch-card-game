@@ -1,14 +1,14 @@
-import { 
+import {
   getCardDisplayName,
   getCardColorClass,
-  GameEngine, 
+  GameEngine,
   DeckManager,
   createGameState,
   createPlayer,
   GameState,
   Card,
   Rank,
-  Suit
+  Suit,
 } from 'switch-shared';
 
 interface RecentMove {
@@ -69,35 +69,55 @@ class SwitchApp {
 
   private getRankOrder(rank: Rank): number {
     const rankOrder: Record<Rank, number> = {
-      'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
-      '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13
+      A: 1,
+      '2': 2,
+      '3': 3,
+      '4': 4,
+      '5': 5,
+      '6': 6,
+      '7': 7,
+      '8': 8,
+      '9': 9,
+      '10': 10,
+      J: 11,
+      Q: 12,
+      K: 13,
     };
     return rankOrder[rank];
   }
 
   private getSuitOrder(suit: Suit): number {
     const suitOrder: Record<Suit, number> = {
-      'spades': 1, 'hearts': 2, 'diamonds': 3, 'clubs': 4
+      spades: 1,
+      hearts: 2,
+      diamonds: 3,
+      clubs: 4,
     };
     return suitOrder[suit];
   }
 
   private getSortedHand(cards: Card[]): Card[] {
     const cardsCopy = [...cards];
-    
+
     switch (this.state.handSortOrder) {
       case 'rank':
         return cardsCopy.sort((a, b) => {
-          const rankDiff = this.getRankOrder(a.rank) - this.getRankOrder(b.rank);
-          return rankDiff !== 0 ? rankDiff : this.getSuitOrder(a.suit) - this.getSuitOrder(b.suit);
+          const rankDiff =
+            this.getRankOrder(a.rank) - this.getRankOrder(b.rank);
+          return rankDiff !== 0
+            ? rankDiff
+            : this.getSuitOrder(a.suit) - this.getSuitOrder(b.suit);
         });
-      
+
       case 'suit':
         return cardsCopy.sort((a, b) => {
-          const suitDiff = this.getSuitOrder(a.suit) - this.getSuitOrder(b.suit);
-          return suitDiff !== 0 ? suitDiff : this.getRankOrder(a.rank) - this.getRankOrder(b.rank);
+          const suitDiff =
+            this.getSuitOrder(a.suit) - this.getSuitOrder(b.suit);
+          return suitDiff !== 0
+            ? suitDiff
+            : this.getRankOrder(a.rank) - this.getRankOrder(b.rank);
         });
-      
+
       case 'dealt':
       default:
         return cardsCopy;
@@ -113,7 +133,7 @@ class SwitchApp {
         handElement.classList.remove('sorting');
       }, 600); // Match CSS transition duration
     }
-    
+
     this.state.handSortOrder = sortOrder;
     this.render();
   }
@@ -125,23 +145,27 @@ class SwitchApp {
         createPlayer('player-1', 'You'),
         createPlayer('player-2', 'Computer'),
       ];
-      
+
       const gameState = createGameState('local-game', players, []);
       const startedGame = GameEngine.startGame(gameState);
-      
+
       const topCard = DeckManager.getTopDiscardCard(startedGame);
-      
+
       this.state = {
         isLoading: false,
         gameState: startedGame,
         playerId: 'player-1',
         message: 'Game started! Click or drag cards to play them.',
-        recentMoves: [{
-          timestamp: new Date(),
-          player: 'Game',
-          action: 'Game started',
-          details: topCard ? `Starting card: ${getCardDisplayName(topCard)}` : undefined
-        }],
+        recentMoves: [
+          {
+            timestamp: new Date(),
+            player: 'Game',
+            action: 'Game started',
+            ...(topCard && {
+              details: `Starting card: ${getCardDisplayName(topCard)}`,
+            }),
+          },
+        ],
         showRecentMoves: false,
         selectedCards: [],
         selectionMode: 'none',
@@ -214,17 +238,23 @@ class SwitchApp {
           </div>
           
           <div class="opponents-area">
-            ${gameState.players.filter(p => p.id !== playerId).map(player => `
+            ${gameState.players
+              .filter(p => p.id !== playerId)
+              .map(
+                player => `
               <div class="opponent ${currentTurnPlayer.id === player.id ? 'current-turn' : ''}">
                 <h4>${player.name}</h4>
                 <div class="opponent-hand">
-                  ${Array(player.hand.length).fill(0).map(() => 
-                    '<div class="card-back small">🂠</div>'
-                  ).join('')}
+                  ${Array(player.hand.length)
+                    .fill(0)
+                    .map(() => '<div class="card-back small">🂠</div>')
+                    .join('')}
                 </div>
                 <span class="card-count">${player.hand.length} cards</span>
               </div>
-            `).join('')}
+            `,
+              )
+              .join('')}
           </div>
           
           <div class="hand-area">
@@ -251,13 +281,22 @@ class SwitchApp {
             </div>
             
             <div class="hand">
-              ${this.getSortedHand(currentPlayer.hand).map(card => {
-                const isPlayable = playableCards.some(pc => pc.id === card.id);
-                const isDisabled = currentTurnPlayer.id !== playerId || gameState.phase === 'finished';
-                const isSelected = this.state.selectedCards.includes(card.id);
-                const isDragging = this.state.dragState.isDragging && this.state.dragState.draggedCards.includes(card.id);
-                const selectionOrder = isSelected ? this.state.cardSelectionOrder[card.id] : undefined;
-                return `
+              ${this.getSortedHand(currentPlayer.hand)
+                .map(card => {
+                  const isPlayable = playableCards.some(
+                    pc => pc.id === card.id,
+                  );
+                  const isDisabled =
+                    currentTurnPlayer.id !== playerId ||
+                    gameState.phase === 'finished';
+                  const isSelected = this.state.selectedCards.includes(card.id);
+                  const isDragging =
+                    this.state.dragState.isDragging &&
+                    this.state.dragState.draggedCards.includes(card.id);
+                  const selectionOrder = isSelected
+                    ? this.state.cardSelectionOrder[card.id]
+                    : undefined;
+                  return `
                   <div class="card ${isPlayable && !isDisabled ? 'playable' : ''} ${isDisabled ? 'disabled' : ''} ${isSelected ? 'selected' : ''} ${isDragging ? 'dragging' : ''} ${getCardColorClass(card)}" 
                        data-card-id="${card.id}"
                        draggable="${!isDisabled}">
@@ -265,7 +304,8 @@ class SwitchApp {
                     ${selectionOrder ? `<div class="selection-order">${selectionOrder}</div>` : ''}
                   </div>
                 `;
-              }).join('')}
+                })
+                .join('')}
             </div>
           </div>
         </div>
@@ -274,29 +314,44 @@ class SwitchApp {
           <div class="game-status">
             <p><strong>Status:</strong> ${this.getGameStatus()}</p>
             <p><strong>Message:</strong> ${this.state.message}</p>
-            ${gameState.phase === 'finished' ? `
+            ${
+              gameState.phase === 'finished'
+                ? `
               <button id="restart-btn" class="restart-btn">New Game</button>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
           
           <div class="debug-controls">
             <button id="recent-moves-btn" class="debug-btn">
               Recent Moves ${this.state.showRecentMoves ? '▼' : '▶'}
             </button>
-            ${this.state.showRecentMoves ? `
+            ${
+              this.state.showRecentMoves
+                ? `
               <div class="recent-moves-panel">
-                ${this.state.recentMoves.length > 0 ? 
-                  this.state.recentMoves.slice(-6).reverse().map(move => `
+                ${
+                  this.state.recentMoves.length > 0
+                    ? this.state.recentMoves
+                        .slice(-6)
+                        .reverse()
+                        .map(
+                          move => `
                     <div class="recent-move">
                       <span class="move-time">${move.timestamp.toLocaleTimeString()}</span>
                       <span class="move-text">${move.player}: ${move.action}</span>
                       ${move.details ? `<span class="move-details">${move.details}</span>` : ''}
                     </div>
-                  `).join('') : 
-                  '<div class="no-moves">No recent moves</div>'
+                  `,
+                        )
+                        .join('')
+                    : '<div class="no-moves">No recent moves</div>'
                 }
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
         </div>
       </div>
@@ -309,14 +364,14 @@ class SwitchApp {
     // Card click events
     const cards = this.appElement.querySelectorAll('.card[data-card-id]');
     cards.forEach(card => {
-      card.addEventListener('click', (e) => {
+      card.addEventListener('click', e => {
         const target = e.target as HTMLElement;
         const cardId = target.dataset.cardId;
         this.onCardClick(cardId);
       });
 
       // Drag events
-      card.addEventListener('dragstart', (e) => {
+      card.addEventListener('dragstart', e => {
         const target = e.target as HTMLElement;
         const cardId = target.dataset.cardId;
         this.onDragStart(e as DragEvent, cardId);
@@ -330,7 +385,7 @@ class SwitchApp {
     // Sort button events
     const sortBtns = this.appElement.querySelectorAll('.sort-btn');
     sortBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', e => {
         const target = e.target as HTMLElement;
         const sortType = target.dataset.sort as 'dealt' | 'rank' | 'suit';
         if (sortType) {
@@ -348,7 +403,9 @@ class SwitchApp {
     }
 
     // Clear selection button
-    const clearSelectionBtn = this.appElement.querySelector('#clear-selection-btn');
+    const clearSelectionBtn = this.appElement.querySelector(
+      '#clear-selection-btn',
+    );
     if (clearSelectionBtn) {
       clearSelectionBtn.addEventListener('click', () => {
         this.onClearSelection();
@@ -382,15 +439,15 @@ class SwitchApp {
     // Drop zone events (discard pile)
     const discardPile = this.appElement.querySelector('.discard-pile');
     if (discardPile) {
-      discardPile.addEventListener('dragover', (e) => {
+      discardPile.addEventListener('dragover', e => {
         this.onDragOver(e as DragEvent);
       });
 
-      discardPile.addEventListener('drop', (e) => {
+      discardPile.addEventListener('drop', e => {
         this.onDrop(e as DragEvent);
       });
 
-      discardPile.addEventListener('dragleave', (e) => {
+      discardPile.addEventListener('dragleave', e => {
         this.onDragLeave(e as DragEvent);
       });
     }
@@ -398,10 +455,10 @@ class SwitchApp {
 
   private onCardClick(cardId: string | undefined) {
     if (!cardId || !this.state.gameState) return;
-    
+
     const { gameState, playerId } = this.state;
     const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
-    
+
     // Check if it's the player's turn
     if (currentTurnPlayer.id !== playerId) {
       this.updateMessage("It's not your turn!");
@@ -410,62 +467,71 @@ class SwitchApp {
 
     // Check if game is finished
     if (gameState.phase === 'finished') {
-      this.updateMessage("Game is already finished!");
+      this.updateMessage('Game is already finished!');
       return;
     }
 
     // Toggle card selection
     const isCurrentlySelected = this.state.selectedCards.includes(cardId);
-    
+
     if (isCurrentlySelected) {
       // Deselect the card
-      this.state.selectedCards = this.state.selectedCards.filter(id => id !== cardId);
+      this.state.selectedCards = this.state.selectedCards.filter(
+        id => id !== cardId,
+      );
       delete this.state.cardSelectionOrder[cardId];
-      this.state.selectionMode = this.state.selectedCards.length > 0 ? 'selecting' : 'none';
-      this.updateMessage(`Card deselected. ${this.state.selectedCards.length} cards selected.`);
+      this.state.selectionMode =
+        this.state.selectedCards.length > 0 ? 'selecting' : 'none';
+      this.updateMessage(
+        `Card deselected. ${this.state.selectedCards.length} cards selected.`,
+      );
     } else {
       // Select the card
       const player = gameState.players.find(p => p.id === playerId);
       if (!player) return;
-      
+
       const cardToSelect = player.hand.find(c => c.id === cardId);
       if (!cardToSelect) return;
-      
+
       // Validate selection - all selected cards must have the same rank
       if (this.state.selectedCards.length > 0) {
-        const firstSelectedCard = player.hand.find(c => c.id === this.state.selectedCards[0]);
+        const firstSelectedCard = player.hand.find(
+          c => c.id === this.state.selectedCards[0],
+        );
         if (firstSelectedCard && firstSelectedCard.rank !== cardToSelect.rank) {
-          this.updateMessage("Can only select cards of the same rank!");
+          this.updateMessage('Can only select cards of the same rank!');
           return;
         }
       }
-      
+
       // Add to selection with order tracking
       this.state.selectedCards = [...this.state.selectedCards, cardId];
       this.state.selectionSequence += 1;
       this.state.cardSelectionOrder[cardId] = this.state.selectionSequence;
       this.state.selectionMode = 'selecting';
-      
+
       const cardDisplayName = getCardDisplayName(cardToSelect);
-      this.updateMessage(`${cardDisplayName} selected (#${this.state.selectionSequence}). ${this.state.selectedCards.length} cards selected.`);
+      this.updateMessage(
+        `${cardDisplayName} selected (#${this.state.selectionSequence}). ${this.state.selectedCards.length} cards selected.`,
+      );
     }
-    
+
     this.render();
   }
 
   private onPlaySelectedCards() {
     if (this.state.selectedCards.length === 0 || !this.state.gameState) return;
-    
+
     const { gameState, playerId } = this.state;
     const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
-    
+
     if (currentTurnPlayer.id !== playerId) {
       this.updateMessage("It's not your turn!");
       return;
     }
 
     if (gameState.phase === 'finished') {
-      this.updateMessage("Game is already finished!");
+      this.updateMessage('Game is already finished!');
       return;
     }
 
@@ -489,7 +555,9 @@ class SwitchApp {
       // Validate first card is playable against current top card
       const topCard = DeckManager.getTopDiscardCard(gameState);
       if (topCard && !GameEngine.isValidPlay(gameState, cardsToPlay[0])) {
-        this.updateMessage(`Cannot play ${getCardDisplayName(cardsToPlay[0])} on ${getCardDisplayName(topCard)}!`);
+        this.updateMessage(
+          `Cannot play ${getCardDisplayName(cardsToPlay[0])} on ${getCardDisplayName(topCard)}!`,
+        );
         return;
       }
 
@@ -497,10 +565,15 @@ class SwitchApp {
       for (let i = 1; i < cardsToPlay.length; i++) {
         const currentCard = cardsToPlay[i];
         const prevCard = cardsToPlay[i - 1];
-        
+
         // Each card must match rank or suit with the previous card in the sequence
-        if (currentCard.rank !== prevCard.rank && currentCard.suit !== prevCard.suit) {
-          this.updateMessage(`Invalid sequence: ${getCardDisplayName(currentCard)} cannot follow ${getCardDisplayName(prevCard)}!`);
+        if (
+          currentCard.rank !== prevCard.rank &&
+          currentCard.suit !== prevCard.suit
+        ) {
+          this.updateMessage(
+            `Invalid sequence: ${getCardDisplayName(currentCard)} cannot follow ${getCardDisplayName(prevCard)}!`,
+          );
           return;
         }
       }
@@ -508,21 +581,25 @@ class SwitchApp {
       // Play all cards in sequence, maintaining the original game state for turn checking
       // Each card after the first plays on the previous card in the sequence
       let updatedGameState = gameState;
-      
+
       for (let i = 0; i < cardsToPlay.length; i++) {
         const card = cardsToPlay[i];
-        
+
         // For multi-card plays, after the first card we manually update the game state
         // to play this card without advancing the turn
         if (i > 0) {
           // Manually update the game state to play this card without advancing turn
-          const playerIndex = updatedGameState.players.findIndex(p => p.id === playerId);
+          const playerIndex = updatedGameState.players.findIndex(
+            p => p.id === playerId,
+          );
           if (playerIndex === -1) return;
 
           const updatedPlayers = [...updatedGameState.players];
           updatedPlayers[playerIndex] = {
             ...updatedPlayers[playerIndex],
-            hand: updatedPlayers[playerIndex].hand.filter(c => c.id !== card.id)
+            hand: updatedPlayers[playerIndex].hand.filter(
+              c => c.id !== card.id,
+            ),
           };
 
           updatedGameState = {
@@ -536,7 +613,7 @@ class SwitchApp {
             type: 'play-card' as const,
             playerId,
             cardId: card.id,
-            timestamp: new Date()
+            timestamp: new Date(),
           };
           updatedGameState = GameEngine.processAction(gameState, action);
         }
@@ -544,40 +621,60 @@ class SwitchApp {
 
       // Update game state
       this.state.gameState = updatedGameState;
-      
+
       // Clear selection
       this.state.selectedCards = [];
       this.state.selectionMode = 'none';
       this.state.cardSelectionOrder = {};
-      
+
       // Track the move with order information
       if (cardsToPlay.length === 1) {
-        this.addRecentMove('You', 'played card', getCardDisplayName(cardsToPlay[0]));
+        this.addRecentMove(
+          'You',
+          'played card',
+          getCardDisplayName(cardsToPlay[0]),
+        );
       } else {
-        const cardSequence = cardsToPlay.map(c => getCardDisplayName(c)).join(' → ');
+        const cardSequence = cardsToPlay
+          .map(c => getCardDisplayName(c))
+          .join(' → ');
         const lastCard = cardsToPlay[cardsToPlay.length - 1];
-        this.addRecentMove('You', `played ${cardsToPlay.length} cards`, `${cardSequence} (${getCardDisplayName(lastCard)} on top)`);
+        this.addRecentMove(
+          'You',
+          `played ${cardsToPlay.length} cards`,
+          `${cardSequence} (${getCardDisplayName(lastCard)} on top)`,
+        );
       }
-      
+
       // Check win condition
       if (updatedGameState.phase === 'finished') {
         const winner = updatedGameState.winner;
-        this.updateMessage(winner?.id === playerId ? 'You won! 🎉' : `${winner?.name} wins!`);
-        this.addRecentMove('Game', winner?.id === playerId ? 'You won!' : `${winner?.name} won!`);
+        this.updateMessage(
+          winner?.id === playerId ? 'You won! 🎉' : `${winner?.name} wins!`,
+        );
+        this.addRecentMove(
+          'Game',
+          winner?.id === playerId ? 'You won!' : `${winner?.name} won!`,
+        );
       } else {
-        const nextPlayer = updatedGameState.players[updatedGameState.currentPlayerIndex];
+        const nextPlayer =
+          updatedGameState.players[updatedGameState.currentPlayerIndex];
         const lastCard = cardsToPlay[cardsToPlay.length - 1];
-        this.updateMessage(`${cardsToPlay.length} card${cardsToPlay.length > 1 ? 's' : ''} played! ${getCardDisplayName(lastCard)} is on top. ${nextPlayer.name}'s turn.`);
-        
+        this.updateMessage(
+          `${cardsToPlay.length} card${cardsToPlay.length > 1 ? 's' : ''} played! ${getCardDisplayName(lastCard)} is on top. ${nextPlayer.name}'s turn.`,
+        );
+
         // Simple AI for computer player
         if (nextPlayer.id !== playerId) {
           setTimeout(() => this.computerTurn(), 1000);
         }
       }
-      
+
       this.render();
     } catch (error) {
-      this.updateMessage(error instanceof Error ? error.message : 'Invalid move!');
+      this.updateMessage(
+        error instanceof Error ? error.message : 'Invalid move!',
+      );
       this.render();
     }
   }
@@ -600,10 +697,10 @@ class SwitchApp {
 
   private onDragStart(event: DragEvent, cardId: string | undefined) {
     if (!cardId || !this.state.gameState) return;
-    
+
     const { gameState, playerId } = this.state;
     const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
-    
+
     // Check if it's the player's turn
     if (currentTurnPlayer.id !== playerId) {
       event.preventDefault();
@@ -612,7 +709,7 @@ class SwitchApp {
 
     // Determine what cards are being dragged
     let cardsToDrag: string[] = [];
-    
+
     if (this.state.selectedCards.includes(cardId)) {
       // If dragging a selected card, drag all selected cards
       cardsToDrag = [...this.state.selectedCards];
@@ -628,7 +725,7 @@ class SwitchApp {
 
     // Set drag data
     event.dataTransfer?.setData('text/plain', JSON.stringify(cardsToDrag));
-    
+
     // Create custom drag image for multiple cards
     if (cardsToDrag.length > 1) {
       const dragPreview = this.createDragPreview(cardsToDrag);
@@ -650,7 +747,7 @@ class SwitchApp {
 
   private onDragOver(event: DragEvent) {
     event.preventDefault(); // Allow drop
-    
+
     // Add visual feedback
     const target = event.currentTarget as HTMLElement;
     target.classList.add('drag-over');
@@ -663,7 +760,7 @@ class SwitchApp {
 
   private onDrop(event: DragEvent) {
     event.preventDefault();
-    
+
     const target = event.currentTarget as HTMLElement;
     target.classList.remove('drag-over');
 
@@ -672,14 +769,13 @@ class SwitchApp {
 
     try {
       const cardIds = JSON.parse(dragData) as string[];
-      
+
       // Update selection to match dragged cards
       this.state.selectedCards = cardIds;
       this.state.selectionMode = cardIds.length > 0 ? 'selecting' : 'none';
-      
+
       // Play the dragged cards
       this.onPlaySelectedCards();
-      
     } catch (error) {
       console.error('Error parsing drag data:', error);
     }
@@ -697,7 +793,7 @@ class SwitchApp {
     preview.style.fontWeight = 'bold';
     preview.style.color = '#2c3e50';
     preview.style.whiteSpace = 'nowrap';
-    
+
     if (cardIds.length === 1) {
       // Single card preview
       const { gameState, playerId } = this.state;
@@ -708,16 +804,16 @@ class SwitchApp {
       // Multiple cards preview
       preview.textContent = `${cardIds.length} cards`;
     }
-    
+
     return preview;
   }
 
   private onDrawCard() {
     if (!this.state.gameState) return;
-    
+
     const { gameState, playerId } = this.state;
     const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
-    
+
     // Check if it's the player's turn
     if (currentTurnPlayer.id !== playerId) {
       this.updateMessage("It's not your turn!");
@@ -728,81 +824,103 @@ class SwitchApp {
       const action = {
         type: 'draw-card' as const,
         playerId,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       const updatedGameState = GameEngine.processAction(gameState, action);
       this.state.gameState = updatedGameState;
-      
+
       // Track the move
       this.addRecentMove('You', 'drew a card');
-      
-      const nextPlayer = updatedGameState.players[updatedGameState.currentPlayerIndex];
+
+      const nextPlayer =
+        updatedGameState.players[updatedGameState.currentPlayerIndex];
       this.updateMessage(`Card drawn! ${nextPlayer.name}'s turn.`);
-      
+
       // Simple AI for computer player
       if (nextPlayer.id !== playerId) {
         setTimeout(() => this.computerTurn(), 1000);
       }
-      
+
       this.render();
     } catch (error) {
-      this.updateMessage(error instanceof Error ? error.message : 'Cannot draw card!');
+      this.updateMessage(
+        error instanceof Error ? error.message : 'Cannot draw card!',
+      );
       this.render();
     }
   }
 
   private computerTurn() {
     if (!this.state.gameState) return;
-    
+
     const { gameState } = this.state;
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-    
+
     if (currentPlayer.id === this.state.playerId) return; // Not computer's turn
-    
+
     try {
-      const playableCards = GameEngine.getPlayableCards(gameState, currentPlayer.id);
-      
+      const playableCards = GameEngine.getPlayableCards(
+        gameState,
+        currentPlayer.id,
+      );
+
       if (playableCards.length > 0) {
         // Computer plays a random valid card
-        const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+        const randomCard =
+          playableCards[Math.floor(Math.random() * playableCards.length)];
         const action = {
           type: 'play-card' as const,
           playerId: currentPlayer.id,
           cardId: randomCard.id,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
-        
+
         const updatedGameState = GameEngine.processAction(gameState, action);
         this.state.gameState = updatedGameState;
-        
+
         // Track the move
-        this.addRecentMove(currentPlayer.name, 'played card', getCardDisplayName(randomCard));
-        
+        this.addRecentMove(
+          currentPlayer.name,
+          'played card',
+          getCardDisplayName(randomCard),
+        );
+
         if (updatedGameState.phase === 'finished') {
           const winner = updatedGameState.winner;
-          this.updateMessage(winner?.id === this.state.playerId ? 'You won! 🎉' : `${winner?.name} wins!`);
-          this.addRecentMove('Game', winner?.id === this.state.playerId ? 'You won!' : `${winner?.name} won!`);
+          this.updateMessage(
+            winner?.id === this.state.playerId
+              ? 'You won! 🎉'
+              : `${winner?.name} wins!`,
+          );
+          this.addRecentMove(
+            'Game',
+            winner?.id === this.state.playerId
+              ? 'You won!'
+              : `${winner?.name} won!`,
+          );
         } else {
-          this.updateMessage(`${currentPlayer.name} played ${getCardDisplayName(randomCard)}`);
+          this.updateMessage(
+            `${currentPlayer.name} played ${getCardDisplayName(randomCard)}`,
+          );
         }
       } else {
         // Computer draws a card
         const action = {
           type: 'draw-card' as const,
           playerId: currentPlayer.id,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
-        
+
         const updatedGameState = GameEngine.processAction(gameState, action);
         this.state.gameState = updatedGameState;
-        
+
         // Track the move
         this.addRecentMove(currentPlayer.name, 'drew a card');
-        
+
         this.updateMessage(`${currentPlayer.name} drew a card`);
       }
-      
+
       this.render();
     } catch (error) {
       console.error('Computer turn error:', error);
@@ -811,16 +929,18 @@ class SwitchApp {
 
   private getGameStatus(): string {
     if (!this.state.gameState) return 'No game';
-    
+
     const { gameState, playerId } = this.state;
-    
+
     if (gameState.phase === 'finished') {
       const winner = gameState.winner;
       return winner?.id === playerId ? 'You Win!' : `${winner?.name} Wins!`;
     }
-    
+
     const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-    return currentPlayer.id === playerId ? 'Your Turn' : `${currentPlayer.name}'s Turn`;
+    return currentPlayer.id === playerId
+      ? 'Your Turn'
+      : `${currentPlayer.name}'s Turn`;
   }
 
   private updateMessage(message: string) {
@@ -841,9 +961,9 @@ class SwitchApp {
       timestamp: new Date(),
       player,
       action,
-      details
+      ...(details !== undefined && { details }),
     };
-    
+
     // Add to beginning and keep only last 6 moves
     this.state.recentMoves = [move, ...this.state.recentMoves].slice(0, 6);
   }
