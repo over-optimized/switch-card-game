@@ -1,0 +1,75 @@
+import { GameState, Room } from './game.js';
+import { Player } from './player.js';
+export interface ClientToServerEvents {
+    'create-room': (data: {
+        playerName: string;
+        maxPlayers?: number;
+    }) => void;
+    'join-room': (data: {
+        roomCode: string;
+        playerName: string;
+    }) => void;
+    'leave-room': () => void;
+    'start-game': () => void;
+    'play-card': (data: {
+        cardId: string;
+    }) => void;
+    'draw-card': () => void;
+    'player-ready': () => void;
+    'player-unready': () => void;
+}
+export interface ServerToClientEvents {
+    'room-created': (data: {
+        room: Room;
+        player: Player;
+    }) => void;
+    'room-joined': (data: {
+        room: Room;
+        player: Player;
+    }) => void;
+    'room-updated': (data: {
+        room: Room;
+    }) => void;
+    'player-joined': (data: {
+        player: Player;
+        room: Room;
+    }) => void;
+    'player-left': (data: {
+        playerId: string;
+        room: Room;
+    }) => void;
+    'game-started': (data: {
+        gameState: GameState;
+    }) => void;
+    'game-state-updated': (data: {
+        gameState: GameState;
+    }) => void;
+    'card-played': (data: {
+        playerId: string;
+        cardId: string;
+        gameState: GameState;
+    }) => void;
+    'card-drawn': (data: {
+        playerId: string;
+        gameState: GameState;
+    }) => void;
+    'turn-changed': (data: {
+        currentPlayerId: string;
+        gameState: GameState;
+    }) => void;
+    'game-finished': (data: {
+        winner: Player;
+        gameState: GameState;
+    }) => void;
+    'error': (data: {
+        message: string;
+        code?: string;
+    }) => void;
+    'disconnect': () => void;
+}
+export interface InterServerEvents {
+}
+export interface SocketData {
+    playerId?: string;
+    roomCode?: string;
+}
