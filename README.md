@@ -37,6 +37,7 @@ pnpm run dev:server       # Server only
 
 # Building
 pnpm run build            # Build all packages
+pnpm run build:prod       # Production build with optimizations
 pnpm run build:client     # Build client only
 pnpm run build:server     # Build server only
 
@@ -44,10 +45,14 @@ pnpm run build:server     # Build server only
 pnpm test                 # Run all tests
 pnpm test:coverage        # Run tests with coverage
 
+# Maintenance
+pnpm clean                # Clean build artifacts from all packages
+
 # Quality Checks
-pnpm lint                 # Lint all packages
-pnpm format              # Format code with Prettier
-pnpm ci                  # Full CI pipeline (lint + test + build)
+pnpm lint                 # Lint shared package
+pnpm lint:all             # Lint all packages (shared, client, server)
+pnpm format               # Format code with Prettier
+pnpm ci                   # Full CI pipeline (lint + test + build)
 ```
 
 ## 🎮 How to Play
@@ -131,8 +136,8 @@ docker-compose up -d
 ### Manual Deployment
 
 ```bash
-# Production build
-pnpm run build
+# Production build with optimizations
+pnpm run build:prod
 
 # Start production server
 cd server && pnpm start
