@@ -67,7 +67,7 @@ pnpm ci                  # Full CI pipeline (lint + test + build)
 
 ### Project Structure
 ```
-switch/
+switch-card-game/
 ├── client/              # Frontend (Vite + TypeScript)
 ├── server/              # Backend (Node.js + Socket.IO)
 ├── shared/              # Shared types and game logic

@@ -16,6 +16,7 @@
     "lint": "cd shared && pnpm lint",
     "lint:fix": "cd shared && pnpm lint:fix",
     "format": "prettier --write \"**/*.{js,ts,json,md}\"",
+    "ci": "pnpm lint && pnpm test && pnpm build",
     "setup": "pnpm install && pnpm run build:shared"
   },
   "devDependencies": {
