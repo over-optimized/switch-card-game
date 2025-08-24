@@ -1,7 +1,7 @@
 import { useGameStore } from '../stores';
 
 interface GameHeaderProps {
-  onBackToMenu?: () => void;
+  onBackToMenu?: (() => void) | undefined;
 }
 
 export function GameHeader({ onBackToMenu }: GameHeaderProps) {

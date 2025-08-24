@@ -43,8 +43,8 @@ export interface Room {
 export interface GameAction {
   type: 'play-card' | 'draw-card' | 'pass-turn';
   playerId: string;
-  cardId?: string;
-  chosenSuit?: Suit;
+  cardId?: string | undefined;
+  chosenSuit?: Suit | undefined;
   timestamp: Date;
 }
 

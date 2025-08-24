@@ -39,10 +39,10 @@ export interface PendingAction {
   id: string;
   type: 'play-cards' | 'draw-card' | 'pass-turn';
   playerId: string;
-  cardIds?: string[];
+  cardIds?: string[] | undefined;
   timestamp: Date;
   status: ActionStatus;
-  error?: string;
+  error?: string | undefined;
   retryCount: number;
 }
 

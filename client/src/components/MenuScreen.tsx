@@ -4,7 +4,7 @@ export interface PlayerSetup {
   id: string;
   name: string;
   type: 'human' | 'ai';
-  aiDifficulty?: 'easy' | 'medium' | 'hard';
+  aiDifficulty?: 'easy' | 'medium' | 'hard' | undefined;
 }
 
 export interface GameSetupConfig {

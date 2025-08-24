@@ -7,7 +7,8 @@ export type LogCategory =
   | 'ui'
   | 'validation'
   | 'turn'
-  | 'cards';
+  | 'cards'
+  | 'debug';
 
 interface LogEntry {
   timestamp: Date;

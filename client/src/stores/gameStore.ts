@@ -699,7 +699,10 @@ export const useGameStore = create<GameStore>()(
       status: ActionStatus,
       error?: string,
     ) => {
-      logNetwork(`update-action-${actionId.slice(-6)}`, status, { error });
+      // Only log network actions for non-idle statuses
+      if (status !== 'idle') {
+        logNetwork(`update-action-${actionId.slice(-6)}`, status, { error });
+      }
 
       set(state => ({
         pendingActions: state.pendingActions.map(action =>
@@ -1055,12 +1058,23 @@ export const useGameStore = create<GameStore>()(
               suitCounts[card.suit]++;
             });
 
-            chosenSuit = Object.entries(suitCounts).reduce(
-              (best, [suit, count]) =>
-                count > suitCounts[best as Suit]
-                  ? (suit as Suit)
-                  : (best as Suit),
-            ) as Suit;
+            // Find suit with highest count
+            let bestSuit: Suit = 'hearts';
+            let maxCount = suitCounts.hearts;
+            
+            if (suitCounts.diamonds > maxCount) {
+              bestSuit = 'diamonds';
+              maxCount = suitCounts.diamonds;
+            }
+            if (suitCounts.clubs > maxCount) {
+              bestSuit = 'clubs';
+              maxCount = suitCounts.clubs;
+            }
+            if (suitCounts.spades > maxCount) {
+              bestSuit = 'spades';
+            }
+            
+            chosenSuit = bestSuit;
           }
 
           const action = {
