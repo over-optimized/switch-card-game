@@ -1,4 +1,4 @@
-import { Card } from './card.js';
+import { Card, Suit } from './card.js';
 import { Player } from './player.js';
 
 export type GamePhase = 'waiting' | 'playing' | 'finished';
@@ -22,6 +22,7 @@ export interface GameState {
   phase: GamePhase;
   gameMode: GameMode;
   penaltyState: PenaltyState;
+  chosenSuit?: Suit | undefined;
   winner?: Player | undefined;
   createdAt: Date;
   startedAt?: Date | undefined;
@@ -42,6 +43,7 @@ export interface GameAction {
   type: 'play-card' | 'draw-card' | 'pass-turn';
   playerId: string;
   cardId?: string;
+  chosenSuit?: Suit;
   timestamp: Date;
 }
 
@@ -64,6 +66,7 @@ export function createGameState(
       cards: 0,
       type: null,
     },
+    chosenSuit: undefined,
     createdAt: new Date(),
   };
 }

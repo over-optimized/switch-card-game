@@ -1,7 +1,23 @@
 import { useGameStore } from '../stores';
 import { DeckManager, GameEngine } from 'switch-shared';
 import { Card } from './Card';
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { Suit } from 'switch-shared';
+
+const getSuitSymbol = (suit: Suit): string => {
+  switch (suit) {
+    case 'hearts':
+      return '♥';
+    case 'diamonds':
+      return '♦';
+    case 'clubs':
+      return '♣';
+    case 'spades':
+      return '♠';
+    default:
+      return '?';
+  }
+};
 
 export function DeckArea() {
   const { gameState, playerId, drawCard, dropCards, dragState } = useGameStore(
@@ -102,6 +118,14 @@ export function DeckArea() {
       <div className="discard-pile">
         <Card card={topCard || null} isDiscard={true} disabled={true} />
         <span>Top Card</span>
+        {topCard?.rank === 'A' && gameState.chosenSuit && (
+          <div className="ace-suit-indicator">
+            <span className="suit-change">
+              {getSuitSymbol(topCard.suit)} →{' '}
+              {getSuitSymbol(gameState.chosenSuit)}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

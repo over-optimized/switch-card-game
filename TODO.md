@@ -67,31 +67,62 @@
   - [x] Test all existing game mechanics work in React
   - [x] Verify AI behavior and game flow remain intact
 
-## 🎯 Next Focus (Week 3) - Enhanced State Management for Trick Cards  
+## ✅ COMPLETED - 2s Trick Card Implementation (Commit: 79adea8)
 
-### High Priority - First Special Card on React Foundation
+### ✅ First Special Card on React Foundation - COMPLETE
 
-- [ ] **Test current basic gameplay thoroughly (on React)**
-  - [ ] Verify all migrated game rules work correctly
-  - [ ] Test edge cases (deck running out, win conditions) 
-  - [ ] Confirm AI behavior is reasonable in React version
+- [x] **Test current basic gameplay thoroughly (on React)**
+  - [x] Verified all migrated game rules work correctly
+  - [x] Tested edge cases (deck running out, win conditions) 
+  - [x] Confirmed AI behavior is reasonable in React version
 
-- [ ] **Design trick card state system (with Zustand)**
-  - [ ] Add game modes to Zustand stores ('normal', 'active-2s', 'active-run', etc.)
-  - [ ] Create penalty tracking system with React state management
-  - [ ] Design card state management (active vs dead) in stores
+- [x] **Design trick card state system (with Zustand)**
+  - [x] Added game modes to Zustand stores ('normal', 'active-2s', 'active-run', etc.)
+  - [x] Created penalty tracking system with React state management (PenaltyState interface)
+  - [x] Designed card state management (active vs dead) in stores
 
-- [ ] **Implement 2s - "Pick Up Two" cards (React Components)**
-  - [ ] Update game store actions to handle 2s stacking
-  - [ ] Add penalty accumulation logic with Zustand (2+2+2 = 6 cards)
-  - [ ] Implement "play 2 or pick up penalty" mechanic in React
-  - [ ] Handle 2s becoming "dead" after penalty served with state transitions
+- [x] **Implement 2s - "Pick Up Two" cards (React Components)**
+  - [x] Updated game store actions to handle 2s stacking
+  - [x] Added penalty accumulation logic with Zustand (2+2+2 = 6 cards)
+  - [x] Implemented "play 2 or pick up penalty" mechanic in React
+  - [x] Handle 2s becoming "dead" after penalty served with state transitions
+  - [x] **CRITICAL FIX**: Penalty serving now correctly ends turn (no extra plays)
 
-- [ ] **Update React UI for trick cards**
-  - [ ] Create PenaltyIndicator component for active penalties
-  - [ ] Add visual feedback components for "must counter or draw" state
-  - [ ] Update GameStatus component for trick card state messages
-  - [ ] Add visual distinction components for active vs dead cards
+- [x] **Update React UI for trick cards**
+  - [x] Created PenaltyIndicator component for active penalties with animations
+  - [x] Added "Serve Penalty" button in HandControls with visual feedback
+  - [x] Updated GameStatus component for trick card state messages  
+  - [x] Added visual distinction components for active vs dead cards
+  - [x] Enhanced CSS with penalty-specific styling and animations
+
+## ✅ COMPLETED - Ace Trick Card Implementation
+
+### ✅ Second Special Card (Ace - Suit Changer) - COMPLETE
+
+- [x] **Design Ace implementation architecture**
+  - [x] Added chosenSuit field to GameState for tracking suit changes
+  - [x] Updated GameAction to support suit selection parameter  
+  - [x] Planned suit selection UI/UX flow
+
+- [x] **Backend Ace logic (Shared Engine)**
+  - [x] Updated isValidPlay() to allow Aces on any suit (universal card)
+  - [x] Blocked Aces during active penalties (cannot play on active 2s)
+  - [x] Added handleAceEffect() method for suit changing
+  - [x] Updated card matching logic to use chosenSuit when top card is Ace
+
+- [x] **Frontend Ace implementation (Client)**
+  - [x] Created SuitSelector component modal for suit selection
+  - [x] Added suit selection state management to game store
+  - [x] Implemented AI suit selection algorithm (smart choice based on hand)
+  - [x] Updated card playing flow to handle suit selection step
+
+- [x] **Ace visual system**
+  - [x] Show chosen suit in top card display (A♠ → ♥ format)
+  - [x] Added suit selection modal with animated suit buttons
+  - [x] Updated card hints to show Aces as universally playable
+  - [x] Responsive suit selection for mobile devices
+
+## 🎯 Next Focus (Week 4-5) - Third Trick Card Implementation
 
 ### Medium Priority - Game Polish
 
@@ -343,20 +374,38 @@
 - **Feature Parity**: Maintained 100% compatibility with existing game functionality
 - **Build Status**: Production ready with 170KB optimized bundle
 
-### 🎯 **Next Milestone: 2s Implementation (on React foundation)**
+### ✅ **Completed Milestone: 2s Trick Card (Commit: 79adea8)**
 
-- Add first special card (Pick Up Two mechanics) using React components
-- Introduce penalty system and card stacking with Zustand stores
-- Update UI to show active penalties with dedicated React components
+- **Penalty System**: Full penalty stacking with PenaltyState management
+- **Visual Components**: Animated PenaltyIndicator and serve penalty button
+- **AI Integration**: Smart computer penalty handling and turn management
+- **Critical Fix**: Penalty serving correctly ends turn (no extra card plays)
+- **Settings**: 2s enabled by default, fully configurable
 
-### 📈 **Development Velocity (Updated for React Migration):**
+### ✅ **Completed Milestone: Ace Trick Card (Commit: TBD)**
+
+- **Universal Card Logic**: Aces playable on any suit (except during penalties)
+- **Suit Selection UI**: Modal with 2x2 grid, animations, mobile responsive
+- **Smart AI**: Intelligent suit selection based on hand composition
+- **Visual Indicators**: Golden glowing suit change display (♠ → ♥ format)
+- **State Management**: Full suit selection integration with game store
+- **Settings**: Aces enabled by default, fully configurable
+
+### 🎯 **Next Milestone: Third Trick Card (8s or Runs)**
+
+- Add third special card to build momentum for full trick card system
+- Consider 8s (skip turn) or Runs (sequential cards) for variety
+- Continue building robust trick card architecture
+
+### 📈 **Development Velocity (Updated for Trick Card Progress):**
 
 - **Week 1**: Core foundation ✅ (Completed)
-- **Week 2**: React migration foundation 🎯 (Current focus - Architecture first)
-- **Week 3**: First special card (2s) on React foundation
-- **Week 4**: Second special card (8s or Aces) + networking prep
-- **Week 5**: Third special card + networking implementation  
-- **Week 6+**: Advanced features (Runs, chat, settings, etc.)
+- **Week 2**: React migration foundation ✅ (Completed)
+- **Week 3**: First special card (2s) ✅ (Completed - Commit: 79adea8)
+- **Week 4**: Second special card (Aces) ✅ (Completed - Commit: TBD)
+- **Week 5**: Third special card (8s or Runs) 🎯 (Next focus)
+- **Week 6**: Advanced features (remaining trick cards, networking)  
+- **Week 7+**: Polish, multiplayer, deployment
 
 ### 🏗️ **Architecture Strategy:**
 - **React + Zustand foundation** enables complex state management for trick cards
@@ -405,5 +454,5 @@
 
 ---
 
-_Last Updated: 2024-08-23_
+_Last Updated: 2024-08-24 (After Ace Trick Card Completion)_
 _Review and update weekly during active development_

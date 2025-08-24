@@ -7,6 +7,7 @@ import {
   createGameState,
   createPlayer,
   getCardDisplayName,
+  Suit,
 } from 'switch-shared';
 import {
   ConnectionStatus,
@@ -53,6 +54,10 @@ interface GameStore {
   selectionMode: 'none' | 'selecting' | 'ready';
   cardSelectionOrder: Record<string, number>;
   dragState: DragState;
+
+  // Suit selection for Aces
+  suitSelectionOpen: boolean;
+  pendingAceCardId: string | null;
 
   // History and debugging
   recentMoves: RecentMove[];
@@ -116,6 +121,11 @@ interface GameStore {
   // Actions - Penalty handling
   servePenalty: (playerId: string) => Promise<boolean>;
 
+  // Actions - Suit selection for Aces
+  openSuitSelection: (cardId: string) => void;
+  closeSuitSelection: () => void;
+  selectSuit: (suit: Suit) => Promise<boolean>;
+
   // Actions - AI
   executeComputerTurn: () => void;
 }
@@ -152,6 +162,10 @@ export const useGameStore = create<GameStore>()(
       isDragging: false,
       draggedCards: [],
     },
+
+    // Suit selection for Aces
+    suitSelectionOpen: false,
+    pendingAceCardId: null,
 
     // History
     recentMoves: [],
@@ -417,6 +431,12 @@ export const useGameStore = create<GameStore>()(
         if (invalidCards.length > 0) {
           get().updateMessage(`All selected cards must be the same rank!`);
           return false;
+        }
+
+        // Handle Ace suit selection for single Ace plays
+        if (orderedCards.length === 1 && firstCard!.rank === 'A') {
+          get().openSuitSelection(firstCard!.id);
+          return true; // Return true but don't actually play yet
         }
 
         // Use GameEngine to play cards sequentially to handle trick card effects
@@ -889,6 +909,68 @@ export const useGameStore = create<GameStore>()(
       }
     },
 
+    openSuitSelection: (cardId: string) => {
+      set({
+        suitSelectionOpen: true,
+        pendingAceCardId: cardId,
+      });
+    },
+
+    closeSuitSelection: () => {
+      set({
+        suitSelectionOpen: false,
+        pendingAceCardId: null,
+      });
+    },
+
+    selectSuit: async (suit: Suit) => {
+      const { gameState, playerId, pendingAceCardId } = get();
+      if (!gameState || !pendingAceCardId) return false;
+
+      try {
+        const action = {
+          type: 'play-card' as const,
+          playerId,
+          cardId: pendingAceCardId,
+          chosenSuit: suit,
+          timestamp: new Date(),
+        };
+
+        const updatedGameState = GameEngine.processAction(gameState, action);
+
+        set({
+          gameState: updatedGameState,
+          gameMode: updatedGameState.gameMode,
+          penaltyState: updatedGameState.penaltyState,
+          suitSelectionOpen: false,
+          pendingAceCardId: null,
+          selectedCards: [],
+          selectionMode: 'none',
+          cardSelectionOrder: {},
+          message: `Ace played! Suit changed to ${suit}`,
+        });
+
+        get().addRecentMove('You', 'played Ace', `Changed suit to ${suit}`);
+
+        // Handle AI turn
+        if (updatedGameState.phase !== 'finished') {
+          const nextPlayer =
+            updatedGameState.players[updatedGameState.currentPlayerIndex];
+          if (nextPlayer.id !== get().playerId) {
+            setTimeout(() => get().executeComputerTurn(), 1500);
+          }
+        }
+
+        return true;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Invalid Ace play';
+        get().updateMessage(errorMessage);
+        get().closeSuitSelection();
+        return false;
+      }
+    },
+
     executeComputerTurn: () => {
       const { gameState } = get();
       if (!gameState) return;
@@ -952,10 +1034,29 @@ export const useGameStore = create<GameStore>()(
           // Computer plays a random valid card
           const randomCard =
             playableCards[Math.floor(Math.random() * playableCards.length)];
+
+          // AI suit selection for Aces
+          let chosenSuit: Suit | undefined;
+          if (randomCard.rank === 'A') {
+            // Smart suit selection: choose suit with most cards in hand
+            const suitCounts = { hearts: 0, diamonds: 0, clubs: 0, spades: 0 };
+            currentPlayer.hand.forEach(card => {
+              suitCounts[card.suit]++;
+            });
+
+            chosenSuit = Object.entries(suitCounts).reduce(
+              (best, [suit, count]) =>
+                count > suitCounts[best as Suit]
+                  ? (suit as Suit)
+                  : (best as Suit),
+            ) as Suit;
+          }
+
           const action = {
             type: 'play-card' as const,
             playerId: currentPlayer.id,
             cardId: randomCard.id,
+            chosenSuit,
             timestamp: new Date(),
           };
 
@@ -965,13 +1066,18 @@ export const useGameStore = create<GameStore>()(
             gameState: updatedGameState,
             gameMode: updatedGameState.gameMode,
             penaltyState: updatedGameState.penaltyState,
-            message: `${currentPlayer.name} played ${getCardDisplayName(randomCard)}`,
+            message:
+              randomCard.rank === 'A'
+                ? `${currentPlayer.name} played ${getCardDisplayName(randomCard)} (suit changed to ${chosenSuit})`
+                : `${currentPlayer.name} played ${getCardDisplayName(randomCard)}`,
           });
 
           get().addRecentMove(
             currentPlayer.name,
-            'played card',
-            `${getCardDisplayName(randomCard)}`,
+            randomCard.rank === 'A' ? 'played Ace' : 'played card',
+            randomCard.rank === 'A'
+              ? `${getCardDisplayName(randomCard)} → ${chosenSuit}`
+              : getCardDisplayName(randomCard),
           );
 
           if (updatedGameState.phase === 'finished') {

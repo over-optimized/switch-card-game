@@ -7,7 +7,7 @@ import {
   getWinner,
 } from '../types/game.js';
 import { removeCardFromHand } from '../types/player.js';
-import { Card } from '../types/card.js';
+import { Card, Suit } from '../types/card.js';
 import { DeckManager } from './deck-manager.js';
 
 export class GameEngine {
@@ -43,7 +43,12 @@ export class GameEngine {
 
     switch (action.type) {
       case 'play-card':
-        return GameEngine.playCard(gameState, action.playerId, action.cardId!);
+        return GameEngine.playCard(
+          gameState,
+          action.playerId,
+          action.cardId!,
+          action.chosenSuit,
+        );
       case 'draw-card':
         return GameEngine.drawCard(gameState, action.playerId);
       default:
@@ -55,6 +60,7 @@ export class GameEngine {
     gameState: GameState,
     playerId: string,
     cardId: string,
+    chosenSuit?: Suit,
   ): GameState {
     const playerIndex = gameState.players.findIndex(p => p.id === playerId);
     if (playerIndex === -1) {
@@ -80,8 +86,13 @@ export class GameEngine {
       discardPile: [...gameState.discardPile, card],
     };
 
-    // Handle 2s effects
+    // Handle card effects
     updatedGameState = GameEngine.handle2sEffect(updatedGameState, card);
+    updatedGameState = GameEngine.handleAceEffect(
+      updatedGameState,
+      card,
+      chosenSuit,
+    );
 
     return GameEngine.advanceTurn(updatedGameState);
   }
@@ -100,8 +111,13 @@ export class GameEngine {
 
     // Handle 2s penalty state
     if (gameState.penaltyState.active && gameState.penaltyState.type === '2s') {
-      // During active 2s penalty, only 2s can be played
+      // During active 2s penalty, only 2s can be played (Aces cannot counter penalties)
       return card.rank === '2';
+    }
+
+    // Aces are universal - can be played on any card (except during active penalties)
+    if (card.rank === 'A') {
+      return true;
     }
 
     // Normal play: 2s can be played on any 2 (suit doesn't matter)
@@ -109,8 +125,13 @@ export class GameEngine {
       return true;
     }
 
-    // Standard matching rules
-    return card.suit === topCard.suit || card.rank === topCard.rank;
+    // Standard matching rules - use chosenSuit if top card is an Ace
+    const effectiveSuit =
+      topCard.rank === 'A' && gameState.chosenSuit
+        ? gameState.chosenSuit
+        : topCard.suit;
+
+    return card.suit === effectiveSuit || card.rank === topCard.rank;
   }
 
   static advanceTurn(gameState: GameState): GameState {
@@ -169,6 +190,25 @@ export class GameEngine {
         cards: currentPenalty.cards + 2, // Each 2 adds 2 cards
         playerId: gameState.players[gameState.currentPlayerIndex]?.id,
       },
+    };
+  }
+
+  static handleAceEffect(
+    gameState: GameState,
+    playedCard: Card,
+    chosenSuit?: Suit,
+  ): GameState {
+    // Only handle if the played card is an Ace
+    if (playedCard.rank !== 'A') {
+      return gameState;
+    }
+
+    // If no suit chosen, default to the Ace's original suit
+    const newSuit = chosenSuit || playedCard.suit;
+
+    return {
+      ...gameState,
+      chosenSuit: newSuit,
     };
   }
 

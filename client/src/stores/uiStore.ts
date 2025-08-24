@@ -35,10 +35,10 @@ interface UIStore {
 }
 
 const defaultSettings: GameSettings = {
-  // Rule toggles - enable 2s by default as it's the first implemented trick card
+  // Rule toggles - enable implemented trick cards by default
   enable2s: true,
   enable8s: false,
-  enableAces: false,
+  enableAces: true,
   enableRuns: false,
   enableMirror: false,
   enable5Hearts: false,
