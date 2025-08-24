@@ -2,6 +2,7 @@ import { DeckArea } from './DeckArea';
 import { MultiOpponentArea } from './MultiOpponentArea';
 import { PlayerHandArea } from './PlayerHandArea';
 import { PenaltyIndicator } from './PenaltyIndicator';
+import { SkipIndicator } from './SkipIndicator';
 import { SuitSelector } from './SuitSelector';
 import { useGameStore } from '../stores';
 
@@ -28,6 +29,7 @@ export function GameBoard() {
         <PlayerHandArea />
       </div>
       <PenaltyIndicator penaltyState={penaltyState} />
+      <SkipIndicator gameState={gameState} />
       <SuitSelector
         isOpen={suitSelectionOpen}
         onSuitSelect={selectSuit}

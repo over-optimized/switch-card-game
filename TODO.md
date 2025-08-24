@@ -122,7 +122,51 @@
   - [x] Updated card hints to show Aces as universally playable
   - [x] Responsive suit selection for mobile devices
 
-## 🎯 Next Focus (Week 4-5) - Third Trick Card Implementation
+## ✅ COMPLETED - Jack Trick Card Implementation
+
+### ✅ Third Special Card (Jack - Skip Next Player) - COMPLETE
+
+- [x] **Design Jack implementation architecture**
+  - [x] Added skipsRemaining field to GameState for tracking active skips
+  - [x] Planned skip logic integration with existing turn advancement
+  - [x] No new game mode needed (unlike penalties)
+
+- [x] **Backend Jack logic (Shared Engine)**
+  - [x] Added handleJackEffect() method to increment skip counter per Jack played
+  - [x] Modified advanceTurn() to recursively skip players when skipsRemaining > 0
+  - [x] No special validation needed - Jacks follow normal matching rules
+  - [x] Support for multiple Jack stacking (1 Jack = 1 skip, 2 Jacks = 2 skips)
+
+- [x] **Frontend Jack implementation (Client)**
+  - [x] Added enableJacks setting to GameSettings (enabled by default)
+  - [x] Created SkipIndicator component showing which players will be skipped
+  - [x] Enhanced game messages for Jack plays with skip notifications
+  - [x] Updated recent moves tracking to show Jack effects
+
+- [x] **Jack visual system**
+  - [x] SkipIndicator with slide-in animation from right side
+  - [x] Shows "Jack Effect Active" with player names to be skipped
+  - [x] Blue gradient theme to distinguish from penalty indicator
+  - [x] Animated skip icon with bounce effect
+
+## 🎯 Next Focus (Week 5) - Fourth Trick Card Implementation
+
+### High Priority Options for Next Card
+
+- [ ] **8s (Reverse Direction)** - Changes turn order direction
+  - [ ] Add direction change logic to advanceTurn system
+  - [ ] Handle odd/even 8s stacking (1=reverse, 2=same direction)
+  - [ ] Update turn indicators to show current direction
+
+- [ ] **7s (Mirror Cards)** - Universal cards that mirror previous card rank/suit
+  - [ ] Add card mirroring logic to game state
+  - [ ] Update matching rules to use mirrored rank/suit
+  - [ ] Visual indicators showing mirrored state
+
+- [ ] **Runs (Starting with 3s)** - Sequential card chains
+  - [ ] Most complex - requires new game mode and validation
+  - [ ] Sequential rank progression system
+  - [ ] Run termination and penalty logic
 
 ### Medium Priority - Game Polish
 
@@ -382,7 +426,7 @@
 - **Critical Fix**: Penalty serving correctly ends turn (no extra card plays)
 - **Settings**: 2s enabled by default, fully configurable
 
-### ✅ **Completed Milestone: Ace Trick Card (Commit: TBD)**
+### ✅ **Completed Milestone: Ace Trick Card (Commit: 43cae5f)**
 
 - **Universal Card Logic**: Aces playable on any suit (except during penalties)
 - **Suit Selection UI**: Modal with 2x2 grid, animations, mobile responsive
@@ -391,19 +435,29 @@
 - **State Management**: Full suit selection integration with game store
 - **Settings**: Aces enabled by default, fully configurable
 
-### 🎯 **Next Milestone: Third Trick Card (8s or Runs)**
+### ✅ **Completed Milestone: Jack Trick Card (Commit: TBD)**
 
-- Add third special card to build momentum for full trick card system
-- Consider 8s (skip turn) or Runs (sequential cards) for variety
-- Continue building robust trick card architecture
+- **Skip Logic**: Players can skip opponents with strategic stacking
+- **Turn Control**: 1 Jack = 1 skip, 2 Jacks = 2 skips, etc.
+- **Visual Feedback**: SkipIndicator showing which players will be skipped
+- **Direction Aware**: Respects current game direction for proper skip order
+- **AI Integration**: Computer players can use Jacks tactically
+- **Settings**: Jacks enabled by default, fully configurable
+
+### 🎯 **Next Milestone: Fourth Trick Card (8s, 7s, or Runs)**
+
+- Add fourth special card to continue building trick card variety
+- Options: 8s (direction change), 7s (mirror), or Runs (sequential)
+- Continue refining trick card architecture and UI patterns
 
 ### 📈 **Development Velocity (Updated for Trick Card Progress):**
 
 - **Week 1**: Core foundation ✅ (Completed)
 - **Week 2**: React migration foundation ✅ (Completed)
 - **Week 3**: First special card (2s) ✅ (Completed - Commit: 79adea8)
-- **Week 4**: Second special card (Aces) ✅ (Completed - Commit: TBD)
-- **Week 5**: Third special card (8s or Runs) 🎯 (Next focus)
+- **Week 4**: Second special card (Aces) ✅ (Completed - Commit: 43cae5f)
+- **Week 4**: Third special card (Jacks) ✅ (Completed - Commit: TBD)
+- **Week 5**: Fourth special card (8s, 7s, or Runs) 🎯 (Next focus)
 - **Week 6**: Advanced features (remaining trick cards, networking)  
 - **Week 7+**: Polish, multiplayer, deployment
 
@@ -454,5 +508,5 @@
 
 ---
 
-_Last Updated: 2024-08-24 (After Ace Trick Card Completion)_
+_Last Updated: 2024-08-24 (After Jack Trick Card Completion)_
 _Review and update weekly during active development_

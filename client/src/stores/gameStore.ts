@@ -466,8 +466,15 @@ export const useGameStore = create<GameStore>()(
         const cardNames = orderedCards
           .map(card => getCardDisplayName(card!))
           .join(', ');
-        const message =
-          orderedCards.length === 1
+        const hasJacks = orderedCards.some(card => card?.rank === 'J');
+        const jackCount = orderedCards.filter(
+          card => card?.rank === 'J',
+        ).length;
+        const message = hasJacks
+          ? orderedCards.length === 1
+            ? `${cardNames} played! Next player skipped.`
+            : `${orderedCards.length} cards played: ${cardNames}. ${jackCount} skip${jackCount > 1 ? 's' : ''} added!`
+          : orderedCards.length === 1
             ? `${cardNames} played!`
             : `${orderedCards.length} cards played: ${cardNames}`;
 
@@ -481,11 +488,15 @@ export const useGameStore = create<GameStore>()(
           message,
         });
 
-        const moveDescription =
-          orderedCards.length === 1
+        const moveType = hasJacks ? 'played Jack' : 'played card';
+        const moveDescription = hasJacks
+          ? orderedCards.length === 1
+            ? `${cardNames} (skip)`
+            : `${orderedCards.length} cards (${cardNames}) - ${jackCount} skip${jackCount > 1 ? 's' : ''}`
+          : orderedCards.length === 1
             ? `${cardNames}`
             : `${orderedCards.length} cards (${cardNames})`;
-        get().addRecentMove('You', 'played card', moveDescription);
+        get().addRecentMove('You', moveType, moveDescription);
 
         logCardPlay(
           playerId,
@@ -1069,15 +1080,23 @@ export const useGameStore = create<GameStore>()(
             message:
               randomCard.rank === 'A'
                 ? `${currentPlayer.name} played ${getCardDisplayName(randomCard)} (suit changed to ${chosenSuit})`
-                : `${currentPlayer.name} played ${getCardDisplayName(randomCard)}`,
+                : randomCard.rank === 'J'
+                  ? `${currentPlayer.name} played ${getCardDisplayName(randomCard)} (next player skipped)`
+                  : `${currentPlayer.name} played ${getCardDisplayName(randomCard)}`,
           });
 
           get().addRecentMove(
             currentPlayer.name,
-            randomCard.rank === 'A' ? 'played Ace' : 'played card',
+            randomCard.rank === 'A'
+              ? 'played Ace'
+              : randomCard.rank === 'J'
+                ? 'played Jack'
+                : 'played card',
             randomCard.rank === 'A'
               ? `${getCardDisplayName(randomCard)} → ${chosenSuit}`
-              : getCardDisplayName(randomCard),
+              : randomCard.rank === 'J'
+                ? `${getCardDisplayName(randomCard)} (skip)`
+                : getCardDisplayName(randomCard),
           );
 
           if (updatedGameState.phase === 'finished') {

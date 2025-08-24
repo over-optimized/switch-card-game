@@ -100,6 +100,66 @@ body {
   100% { transform: translateX(2px); }
 }
 
+/* Skip Indicator */
+.skip-indicator {
+  position: fixed;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #3742fa, #2f3542);
+  border: 3px solid #70a1ff;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  max-width: 300px;
+  animation: skip-slide 0.5s ease-out;
+}
+
+.skip-indicator-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.skip-icon {
+  font-size: 2em;
+  animation: skip-bounce 1s infinite alternate;
+}
+
+.skip-info {
+  flex: 1;
+}
+
+.skip-title {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #70a1ff;
+  margin-bottom: 5px;
+}
+
+.skip-message {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.3;
+}
+
+@keyframes skip-slide {
+  0% { 
+    transform: translateY(-50%) translateX(100%);
+    opacity: 0;
+  }
+  100% { 
+    transform: translateY(-50%) translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes skip-bounce {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(3px); }
+}
+
 /* Suit Selector Modal */
 .suit-selector-backdrop {
   position: fixed;

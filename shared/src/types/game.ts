@@ -23,6 +23,7 @@ export interface GameState {
   gameMode: GameMode;
   penaltyState: PenaltyState;
   chosenSuit?: Suit | undefined;
+  skipsRemaining: number;
   winner?: Player | undefined;
   createdAt: Date;
   startedAt?: Date | undefined;
@@ -67,6 +68,7 @@ export function createGameState(
       type: null,
     },
     chosenSuit: undefined,
+    skipsRemaining: 0,
     createdAt: new Date(),
   };
 }

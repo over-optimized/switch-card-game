@@ -93,6 +93,7 @@ export class GameEngine {
       card,
       chosenSuit,
     );
+    updatedGameState = GameEngine.handleJackEffect(updatedGameState, card);
 
     return GameEngine.advanceTurn(updatedGameState);
   }
@@ -145,12 +146,30 @@ export class GameEngine {
       };
     }
 
-    const nextPlayerIndex = getNextPlayerIndex(gameState);
+    let updatedGameState = { ...gameState };
+    let nextPlayerIndex = getNextPlayerIndex(updatedGameState);
 
-    return {
-      ...gameState,
-      currentPlayerIndex: nextPlayerIndex,
-    };
+    // Handle skipping players when Jacks have been played
+    if (updatedGameState.skipsRemaining > 0) {
+      // Skip one player and decrement the counter
+      updatedGameState = {
+        ...updatedGameState,
+        currentPlayerIndex: nextPlayerIndex,
+        skipsRemaining: updatedGameState.skipsRemaining - 1,
+      };
+
+      // If more skips remain, advance again
+      if (updatedGameState.skipsRemaining > 0) {
+        return GameEngine.advanceTurn(updatedGameState);
+      }
+    } else {
+      updatedGameState = {
+        ...updatedGameState,
+        currentPlayerIndex: nextPlayerIndex,
+      };
+    }
+
+    return updatedGameState;
   }
 
   static canPlayerPlay(gameState: GameState, playerId: string): boolean {
@@ -209,6 +228,19 @@ export class GameEngine {
     return {
       ...gameState,
       chosenSuit: newSuit,
+    };
+  }
+
+  static handleJackEffect(gameState: GameState, playedCard: Card): GameState {
+    // Only handle if the played card is a Jack
+    if (playedCard.rank !== 'J') {
+      return gameState;
+    }
+
+    // Add 1 to skipsRemaining for each Jack played
+    return {
+      ...gameState,
+      skipsRemaining: gameState.skipsRemaining + 1,
     };
   }
 

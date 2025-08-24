@@ -71,6 +71,7 @@ export interface GameSettings {
   enable2s: boolean;
   enable8s: boolean;
   enableAces: boolean;
+  enableJacks: boolean;
   enableRuns: boolean;
   enableMirror: boolean;
   enable5Hearts: boolean;

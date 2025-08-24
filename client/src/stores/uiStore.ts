@@ -39,6 +39,7 @@ const defaultSettings: GameSettings = {
   enable2s: true,
   enable8s: false,
   enableAces: true,
+  enableJacks: true,
   enableRuns: false,
   enableMirror: false,
   enable5Hearts: false,
