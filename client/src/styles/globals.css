@@ -53,6 +53,47 @@ body {
   gap: 80px;
   align-items: center;
   margin-bottom: 20px;
+  position: relative;
+  padding: 20px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+/* Drag target highlighting */
+.deck-area.drag-target {
+  background: rgba(39, 174, 96, 0.1);
+  border: 3px dashed #27ae60;
+  box-shadow: 0 0 20px rgba(39, 174, 96, 0.3);
+  transform: scale(1.02);
+}
+
+.deck-area.drag-over {
+  background: rgba(39, 174, 96, 0.2);
+  border-color: #229954;
+  box-shadow: 0 0 30px rgba(39, 174, 96, 0.5);
+}
+
+/* Drop here label */
+.drop-here-label {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #27ae60;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9em;
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+  z-index: 10;
+  white-space: nowrap;
+  animation: bounce 1s ease-in-out infinite alternate;
+}
+
+@keyframes bounce {
+  0% { transform: translateX(-50%) translateY(0px); }
+  100% { transform: translateX(-50%) translateY(-5px); }
 }
 
 .deck, .discard-pile {

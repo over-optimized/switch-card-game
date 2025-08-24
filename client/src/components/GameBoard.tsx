@@ -5,8 +5,8 @@ import { PlayerHandArea } from './PlayerHandArea';
 export function GameBoard() {
   return (
     <div className="game-board">
-      <DeckArea />
       <OpponentArea />
+      <DeckArea />
       <PlayerHandArea />
     </div>
   );

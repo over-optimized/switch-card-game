@@ -462,6 +462,7 @@ export const useGameStore = create<GameStore>()(
     },
 
     startDrag: (cardIds: string[]) => {
+      logGame(`Starting drag with ${cardIds.length} cards`, { cardIds });
       set({
         dragState: {
           isDragging: true,
@@ -471,6 +472,7 @@ export const useGameStore = create<GameStore>()(
     },
 
     endDrag: () => {
+      logGame('Ending drag');
       set({
         dragState: {
           isDragging: false,
@@ -480,13 +482,27 @@ export const useGameStore = create<GameStore>()(
     },
 
     dropCards: async (cardIds: string[]) => {
+      logGame(`Dropping ${cardIds.length} cards on discard pile`, { cardIds });
+      
       // Update selection to match dragged cards
       set({
         selectedCards: cardIds,
         selectionMode: cardIds.length > 0 ? 'selecting' : 'none',
       });
       
-      return get().playSelectedCards();
+      // Play the dropped cards
+      const result = await get().playSelectedCards();
+      
+      // Always end the drag state after attempting to play cards
+      get().endDrag();
+      
+      if (result) {
+        logGame('Drop successful - cards played');
+      } else {
+        logGame('Drop failed - cards not played');
+      }
+      
+      return result;
     },
 
     // Network actions (stubs for now)
