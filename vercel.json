@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm --filter switch-shared run build:prod && cd client && pnpm run build:prod",
+  "buildCommand": "pnpm --filter switch-shared run build:prod && pnpm --filter switch-client run build:prod",
   "outputDirectory": "client/dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
