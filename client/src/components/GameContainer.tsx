@@ -5,7 +5,11 @@ import { GameInfo } from './GameInfo';
 import { LoadingScreen } from './LoadingScreen';
 import { ErrorScreen } from './ErrorScreen';
 
-export function GameContainer() {
+interface GameContainerProps {
+  onBackToMenu?: () => void;
+}
+
+export function GameContainer({ onBackToMenu }: GameContainerProps) {
   const { gameState, isLoading, message } = useGameStore(state => ({
     gameState: state.gameState,
     isLoading: state.isLoading,
@@ -22,7 +26,7 @@ export function GameContainer() {
 
   return (
     <div className="game-container">
-      <GameHeader />
+      <GameHeader onBackToMenu={onBackToMenu} />
       <GameBoard />
       <GameInfo />
     </div>

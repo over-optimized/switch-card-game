@@ -1,18 +1,33 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { GameState, GameEngine, DeckManager, createGameState, createPlayer, getCardDisplayName } from 'switch-shared';
-import { 
-  ConnectionStatus, 
-  GameMode, 
-  DragState, 
-  PenaltyState, 
-  RecentMove, 
+import {
+  GameState,
+  GameEngine,
+  DeckManager,
+  createGameState,
+  createPlayer,
+  getCardDisplayName,
+} from 'switch-shared';
+import {
+  ConnectionStatus,
+  GameMode,
+  DragState,
+  PenaltyState,
+  RecentMove,
   OptimisticUpdate,
   PlayerInfo,
   PendingAction,
   ActionStatus,
 } from './types';
-import { debugLogger, logGame, logTurn, logCardPlay, logNetwork, logValidation } from '../utils/debug';
+import {
+  debugLogger,
+  logGame,
+  logTurn,
+  logCardPlay,
+  logNetwork,
+  logValidation,
+} from '../utils/debug';
+import type { GameSetupConfig } from '../components/MenuScreen';
 
 interface GameStore {
   // Core game state
@@ -21,50 +36,50 @@ interface GameStore {
   isLoading: boolean;
   playerId: string;
   message: string;
-  
+
   // Network state
   connectionStatus: ConnectionStatus;
   roomCode: string | null;
   isHost: boolean;
   connectedPlayers: Record<string, PlayerInfo>;
   spectators: PlayerInfo[];
-  
+
   // Game flow
   gameMode: GameMode;
   penaltyState: PenaltyState;
-  
+
   // UI state
   selectedCards: string[];
   selectionMode: 'none' | 'selecting' | 'ready';
   cardSelectionOrder: Record<string, number>;
   dragState: DragState;
-  
+
   // History and debugging
   recentMoves: RecentMove[];
   showRecentMoves: boolean;
-  
+
   // Networking specific
   pendingActions: PendingAction[];
   optimisticUpdates: OptimisticUpdate[];
   currentAction: PendingAction | null;
-  
+
   // Actions - Local game management
-  setupLocalGame: () => void;
+  setupLocalGame: (config?: GameSetupConfig) => void;
   restartGame: () => void;
   updateMessage: (message: string) => void;
-  
+
   // Actions - Card interactions
   selectCard: (cardId: string) => void;
   clearSelection: () => void;
   playSelectedCards: () => Promise<boolean>;
   playCardsLocally: (cardIds: string[]) => boolean;
   drawCard: () => Promise<boolean>;
-  
+
   // Actions - Drag and drop
   startDrag: (cardIds: string[]) => void;
   endDrag: () => void;
   dropCards: (cardIds: string[]) => Promise<boolean>;
-  
+
   // Actions - Network state
   setConnectionStatus: (status: ConnectionStatus) => void;
   setRoomCode: (code: string | null) => void;
@@ -72,25 +87,32 @@ interface GameStore {
   addPlayer: (player: PlayerInfo) => void;
   removePlayer: (playerId: string) => void;
   updatePlayer: (playerId: string, updates: Partial<PlayerInfo>) => void;
-  
+
   // Actions - State synchronization
   syncWithServer: (serverState: GameState) => void;
-  
+
   // Actions - Async action management
-  createPendingAction: (type: PendingAction['type'], cardIds?: string[]) => string;
-  updateActionStatus: (actionId: string, status: ActionStatus, error?: string) => void;
+  createPendingAction: (
+    type: PendingAction['type'],
+    cardIds?: string[],
+  ) => string;
+  updateActionStatus: (
+    actionId: string,
+    status: ActionStatus,
+    error?: string,
+  ) => void;
   confirmAction: (actionId: string, serverState: GameState) => void;
   rollbackAction: (actionId: string) => void;
-  
+
   // Actions - Optimistic updates
   applyOptimisticUpdate: (actionId: string, cardIds?: string[]) => void;
   confirmOptimisticUpdate: (updateId: string) => void;
   rollbackOptimisticUpdate: (updateId: string) => void;
-  
+
   // Actions - History
   addRecentMove: (player: string, action: string, details?: string) => void;
   toggleRecentMoves: () => void;
-  
+
   // Actions - AI
   executeComputerTurn: () => void;
 }
@@ -103,14 +125,14 @@ export const useGameStore = create<GameStore>()(
     isLoading: true,
     playerId: 'player-1',
     message: '',
-    
+
     // Network state
     connectionStatus: 'offline',
     roomCode: null,
     isHost: false,
     connectedPlayers: {},
     spectators: [],
-    
+
     // Game flow
     gameMode: 'normal',
     penaltyState: {
@@ -118,7 +140,7 @@ export const useGameStore = create<GameStore>()(
       cards: 0,
       type: null,
     },
-    
+
     // UI state
     selectedCards: [],
     selectionMode: 'none',
@@ -127,25 +149,35 @@ export const useGameStore = create<GameStore>()(
       isDragging: false,
       draggedCards: [],
     },
-    
+
     // History
     recentMoves: [],
     showRecentMoves: false,
-    
+
     // Network
     pendingActions: [],
     optimisticUpdates: [],
     currentAction: null,
-    
+
     // Actions
-    setupLocalGame: () => {
+    setupLocalGame: (config?: GameSetupConfig) => {
       try {
-        logGame('Setting up local game');
-        
-        const players = [
-          createPlayer('player-1', 'You'),
-          createPlayer('player-2', 'Computer'),
-        ];
+        logGame('Setting up local game', { config: config?.playerCount || 2 });
+
+        // Create players based on config or use default 2-player setup
+        let players;
+        if (config) {
+          players = config.players.map((playerConfig, index) => {
+            const playerId = index === 0 ? 'player-1' : `player-${index + 1}`;
+            return createPlayer(playerId, playerConfig.name);
+          });
+        } else {
+          // Default 2-player setup for backward compatibility
+          players = [
+            createPlayer('player-1', 'You'),
+            createPlayer('player-2', 'Computer'),
+          ];
+        }
 
         const gameState = createGameState('local-game', players, []);
         const startedGame = GameEngine.startGame(gameState);
@@ -158,16 +190,26 @@ export const useGameStore = create<GameStore>()(
           playerHandSize: startedGame.players[0].hand.length,
         });
 
+        const playerCount = players.length;
+        const message =
+          playerCount === 2
+            ? 'Game started! Select cards to play them.'
+            : `${playerCount}-player game started! Select cards to play them.`;
+
         set({
           isLoading: false,
           gameState: startedGame,
-          message: 'Game started! Select cards to play them.',
-          recentMoves: [{
-            timestamp: new Date(),
-            player: 'Game',
-            action: 'Game started',
-            ...(topCard && { details: `Starting card: ${getCardDisplayName(topCard)}` }),
-          }],
+          message,
+          recentMoves: [
+            {
+              timestamp: new Date(),
+              player: 'Game',
+              action: 'Game started',
+              ...(topCard && {
+                details: `Starting card: ${getCardDisplayName(topCard)}`,
+              }),
+            },
+          ],
           selectedCards: [],
           selectionMode: 'none',
           cardSelectionOrder: {},
@@ -187,6 +229,8 @@ export const useGameStore = create<GameStore>()(
     restartGame: () => {
       set({ isLoading: true });
       setTimeout(() => {
+        // We'll need to get the current game config from the UI store
+        // For now, just restart with the same setup
         get().setupLocalGame();
       }, 500);
     },
@@ -201,7 +245,11 @@ export const useGameStore = create<GameStore>()(
 
       const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
       if (currentTurnPlayer.id !== playerId || gameState.phase === 'finished') {
-        get().updateMessage(gameState.phase === 'finished' ? 'Game is finished!' : "It's not your turn!");
+        get().updateMessage(
+          gameState.phase === 'finished'
+            ? 'Game is finished!'
+            : "It's not your turn!",
+        );
         return;
       }
 
@@ -228,8 +276,13 @@ export const useGameStore = create<GameStore>()(
         if (!cardToSelect) return;
 
         if (selectedCards.length > 0) {
-          const firstSelectedCard = player.hand.find(c => c.id === selectedCards[0]);
-          if (firstSelectedCard && firstSelectedCard.rank !== cardToSelect.rank) {
+          const firstSelectedCard = player.hand.find(
+            c => c.id === selectedCards[0],
+          );
+          if (
+            firstSelectedCard &&
+            firstSelectedCard.rank !== cardToSelect.rank
+          ) {
             get().updateMessage('Can only select cards of the same rank!');
             return;
           }
@@ -268,27 +321,40 @@ export const useGameStore = create<GameStore>()(
       // Validate it's the current player's turn
       const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
       if (currentTurnPlayer.id !== playerId || gameState.phase === 'finished') {
-        const reason = gameState.phase === 'finished' ? 'Game is finished' : 'Not current player turn';
-        logValidation('turn-check', false, { reason, currentPlayerId: currentTurnPlayer.id, playerId });
-        get().updateMessage(gameState.phase === 'finished' ? 'Game is finished!' : "It's not your turn!");
+        const reason =
+          gameState.phase === 'finished'
+            ? 'Game is finished'
+            : 'Not current player turn';
+        logValidation('turn-check', false, {
+          reason,
+          currentPlayerId: currentTurnPlayer.id,
+          playerId,
+        });
+        get().updateMessage(
+          gameState.phase === 'finished'
+            ? 'Game is finished!'
+            : "It's not your turn!",
+        );
         return false;
       }
 
-      logTurn(playerId, `Attempting to play ${selectedCards.length} cards`, { cardIds: selectedCards });
+      logTurn(playerId, `Attempting to play ${selectedCards.length} cards`, {
+        cardIds: selectedCards,
+      });
 
       if (connectionStatus === 'connected') {
         // Network mode - create pending action and apply optimistically
         const actionId = get().createPendingAction('play-cards', selectedCards);
-        
+
         // Apply optimistic update for immediate UI feedback
         get().applyOptimisticUpdate(actionId, selectedCards);
-        
+
         // TODO: Send to server
         // For now, simulate network success after delay
         setTimeout(() => {
           get().confirmAction(actionId, get().gameState!);
         }, 1000);
-        
+
         return true;
       } else {
         // Local mode
@@ -306,7 +372,10 @@ export const useGameStore = create<GameStore>()(
       try {
         const player = gameState.players.find(p => p.id === playerId);
         if (!player) {
-          logValidation('local-play', false, { reason: 'Player not found', playerId });
+          logValidation('local-play', false, {
+            reason: 'Player not found',
+            playerId,
+          });
           return false;
         }
 
@@ -316,7 +385,10 @@ export const useGameStore = create<GameStore>()(
           .filter(Boolean);
 
         if (orderedCards.length === 0) {
-          logValidation('local-play', false, { reason: 'No valid cards found', cardIds });
+          logValidation('local-play', false, {
+            reason: 'No valid cards found',
+            cardIds,
+          });
           return false;
         }
 
@@ -334,7 +406,9 @@ export const useGameStore = create<GameStore>()(
 
         // Validate all selected cards are the same rank
         const firstRank = firstCard!.rank;
-        const invalidCards = orderedCards.filter(card => card!.rank !== firstRank);
+        const invalidCards = orderedCards.filter(
+          card => card!.rank !== firstRank,
+        );
         if (invalidCards.length > 0) {
           get().updateMessage(`All selected cards must be the same rank!`);
           return false;
@@ -344,7 +418,9 @@ export const useGameStore = create<GameStore>()(
         let currentGameState = { ...gameState };
         for (const card of orderedCards) {
           // Remove card from player's hand and add to discard pile
-          const playerIndex = currentGameState.players.findIndex(p => p.id === playerId);
+          const playerIndex = currentGameState.players.findIndex(
+            p => p.id === playerId,
+          );
           if (playerIndex !== -1) {
             const player = currentGameState.players[playerIndex];
             const cardIndex = player.hand.findIndex(c => c.id === card!.id);
@@ -352,26 +428,31 @@ export const useGameStore = create<GameStore>()(
               // Remove card from hand
               const newHand = [...player.hand];
               newHand.splice(cardIndex, 1);
-              
+
               // Add to discard pile
               const newDiscardPile = [...currentGameState.discardPile, card!];
-              
+
               // Update game state
               currentGameState = {
                 ...currentGameState,
-                players: currentGameState.players.map((p, i) => 
-                  i === playerIndex ? { ...p, hand: newHand } : p
+                players: currentGameState.players.map((p, i) =>
+                  i === playerIndex ? { ...p, hand: newHand } : p,
                 ),
                 discardPile: newDiscardPile,
               };
             }
           }
         }
-        
+
         // Now advance the turn once after all cards are played
-        if (currentGameState.players[0].hand.length === 0 || currentGameState.players[1].hand.length === 0) {
+        if (
+          currentGameState.players[0].hand.length === 0 ||
+          currentGameState.players[1].hand.length === 0
+        ) {
           // Game finished
-          const winner = currentGameState.players.find(p => p.hand.length === 0);
+          const winner = currentGameState.players.find(
+            p => p.hand.length === 0,
+          );
           currentGameState = {
             ...currentGameState,
             phase: 'finished' as const,
@@ -381,15 +462,20 @@ export const useGameStore = create<GameStore>()(
           // Advance to next player
           currentGameState = {
             ...currentGameState,
-            currentPlayerIndex: (currentGameState.currentPlayerIndex + 1) % currentGameState.players.length,
+            currentPlayerIndex:
+              (currentGameState.currentPlayerIndex + 1) %
+              currentGameState.players.length,
           };
         }
-        
-        const cardNames = orderedCards.map(card => getCardDisplayName(card!)).join(', ');
-        const message = orderedCards.length === 1 
-          ? `${cardNames} played!`
-          : `${orderedCards.length} cards played: ${cardNames}`;
-        
+
+        const cardNames = orderedCards
+          .map(card => getCardDisplayName(card!))
+          .join(', ');
+        const message =
+          orderedCards.length === 1
+            ? `${cardNames} played!`
+            : `${orderedCards.length} cards played: ${cardNames}`;
+
         set({
           gameState: currentGameState,
           selectedCards: [],
@@ -398,16 +484,23 @@ export const useGameStore = create<GameStore>()(
           message,
         });
 
-        const moveDescription = orderedCards.length === 1
-          ? `${cardNames}`
-          : `${orderedCards.length} cards (${cardNames})`;
+        const moveDescription =
+          orderedCards.length === 1
+            ? `${cardNames}`
+            : `${orderedCards.length} cards (${cardNames})`;
         get().addRecentMove('You', 'played card', moveDescription);
 
-        logCardPlay(playerId, cardIds, true, `Played ${orderedCards.length} cards locally`);
+        logCardPlay(
+          playerId,
+          cardIds,
+          true,
+          `Played ${orderedCards.length} cards locally`,
+        );
 
         // Handle AI turn if needed
         if (currentGameState.phase !== 'finished') {
-          const nextPlayer = currentGameState.players[currentGameState.currentPlayerIndex];
+          const nextPlayer =
+            currentGameState.players[currentGameState.currentPlayerIndex];
           if (nextPlayer.id !== playerId) {
             setTimeout(() => get().executeComputerTurn(), 1000);
           }
@@ -415,7 +508,8 @@ export const useGameStore = create<GameStore>()(
 
         return true;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Invalid move!';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Invalid move!';
         logCardPlay(playerId, cardIds, false, errorMessage);
         get().updateMessage(errorMessage);
         return false;
@@ -440,7 +534,7 @@ export const useGameStore = create<GameStore>()(
         };
 
         const updatedGameState = GameEngine.processAction(gameState, action);
-        
+
         set({
           gameState: updatedGameState,
           message: 'Card drawn!',
@@ -449,14 +543,17 @@ export const useGameStore = create<GameStore>()(
         get().addRecentMove('You', 'drew a card');
 
         // Handle AI turn
-        const nextPlayer = updatedGameState.players[updatedGameState.currentPlayerIndex];
+        const nextPlayer =
+          updatedGameState.players[updatedGameState.currentPlayerIndex];
         if (nextPlayer.id !== playerId) {
           setTimeout(() => get().executeComputerTurn(), 1000);
         }
 
         return true;
       } catch (error) {
-        get().updateMessage(error instanceof Error ? error.message : 'Cannot draw card!');
+        get().updateMessage(
+          error instanceof Error ? error.message : 'Cannot draw card!',
+        );
         return false;
       }
     },
@@ -483,25 +580,25 @@ export const useGameStore = create<GameStore>()(
 
     dropCards: async (cardIds: string[]) => {
       logGame(`Dropping ${cardIds.length} cards on discard pile`, { cardIds });
-      
+
       // Update selection to match dragged cards
       set({
         selectedCards: cardIds,
         selectionMode: cardIds.length > 0 ? 'selecting' : 'none',
       });
-      
+
       // Play the dropped cards
       const result = await get().playSelectedCards();
-      
+
       // Always end the drag state after attempting to play cards
       get().endDrag();
-      
+
       if (result) {
         logGame('Drop successful - cards played');
       } else {
         logGame('Drop failed - cards not played');
       }
-      
+
       return result;
     },
 
@@ -552,7 +649,7 @@ export const useGameStore = create<GameStore>()(
         phase: serverState.phase,
         currentPlayer: serverState.currentPlayerIndex,
       });
-      
+
       set({
         gameState: serverState,
         serverGameState: serverState,
@@ -563,12 +660,12 @@ export const useGameStore = create<GameStore>()(
     createPendingAction: (type: PendingAction['type'], cardIds?: string[]) => {
       const actionId = `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const { playerId } = get();
-      
+
       const pendingAction: PendingAction = {
         id: actionId,
         type,
         playerId,
-        cardIds,
+        ...(cardIds && { cardIds }),
         timestamp: new Date(),
         status: 'pending',
         retryCount: 0,
@@ -587,27 +684,33 @@ export const useGameStore = create<GameStore>()(
       return actionId;
     },
 
-    updateActionStatus: (actionId: string, status: ActionStatus, error?: string) => {
+    updateActionStatus: (
+      actionId: string,
+      status: ActionStatus,
+      error?: string,
+    ) => {
       logNetwork(`update-action-${actionId.slice(-6)}`, status, { error });
-      
+
       set(state => ({
         pendingActions: state.pendingActions.map(action =>
-          action.id === actionId 
-            ? { ...action, status, error }
-            : action
+          action.id === actionId ? { ...action, status, error } : action,
         ),
-        currentAction: state.currentAction?.id === actionId 
-          ? { ...state.currentAction, status, error }
-          : state.currentAction,
+        currentAction:
+          state.currentAction?.id === actionId
+            ? { ...state.currentAction, status, error }
+            : state.currentAction,
       }));
     },
 
     confirmAction: (actionId: string, serverState: GameState) => {
-      const { pendingActions, optimisticUpdates } = get();
+      const { pendingActions } = get();
       const action = pendingActions.find(a => a.id === actionId);
-      
+
       if (!action) {
-        debugLogger.warn('network', `Cannot confirm unknown action: ${actionId}`);
+        debugLogger.warn(
+          'network',
+          `Cannot confirm unknown action: ${actionId}`,
+        );
         return;
       }
 
@@ -619,8 +722,11 @@ export const useGameStore = create<GameStore>()(
       // Remove confirmed action and related optimistic updates
       set(state => ({
         pendingActions: state.pendingActions.filter(a => a.id !== actionId),
-        optimisticUpdates: state.optimisticUpdates.filter(u => u.actionId !== actionId),
-        currentAction: state.currentAction?.id === actionId ? null : state.currentAction,
+        optimisticUpdates: state.optimisticUpdates.filter(
+          u => u.actionId !== actionId,
+        ),
+        currentAction:
+          state.currentAction?.id === actionId ? null : state.currentAction,
         gameState: serverState,
         serverGameState: serverState,
       }));
@@ -629,10 +735,15 @@ export const useGameStore = create<GameStore>()(
     rollbackAction: (actionId: string) => {
       const { pendingActions, optimisticUpdates } = get();
       const action = pendingActions.find(a => a.id === actionId);
-      const optimisticUpdate = optimisticUpdates.find(u => u.actionId === actionId);
-      
+      const optimisticUpdate = optimisticUpdates.find(
+        u => u.actionId === actionId,
+      );
+
       if (!action) {
-        debugLogger.warn('network', `Cannot rollback unknown action: ${actionId}`);
+        debugLogger.warn(
+          'network',
+          `Cannot rollback unknown action: ${actionId}`,
+        );
         return;
       }
 
@@ -644,7 +755,9 @@ export const useGameStore = create<GameStore>()(
       // Restore original state if we have an optimistic update
       const updates: any = {
         pendingActions: pendingActions.filter(a => a.id !== actionId),
-        optimisticUpdates: optimisticUpdates.filter(u => u.actionId !== actionId),
+        optimisticUpdates: optimisticUpdates.filter(
+          u => u.actionId !== actionId,
+        ),
         currentAction: null,
       };
 
@@ -663,7 +776,7 @@ export const useGameStore = create<GameStore>()(
       try {
         // Create optimistic state by simulating the action
         let optimisticState = { ...gameState };
-        
+
         for (const cardId of cardIds) {
           const action = {
             type: 'play-card' as const,
@@ -688,8 +801,11 @@ export const useGameStore = create<GameStore>()(
         debugLogger.debug('game', 'Applied optimistic update', {
           updateId: updateId.slice(-6),
           cardIds,
-          originalHandSize: gameState.players.find(p => p.id === playerId)?.hand.length,
-          optimisticHandSize: optimisticState.players.find(p => p.id === playerId)?.hand.length,
+          originalHandSize: gameState.players.find(p => p.id === playerId)?.hand
+            .length,
+          optimisticHandSize: optimisticState.players.find(
+            p => p.id === playerId,
+          )?.hand.length,
         });
 
         set(state => ({
@@ -707,18 +823,23 @@ export const useGameStore = create<GameStore>()(
 
     confirmOptimisticUpdate: (updateId: string) => {
       logNetwork(`confirm-optimistic-${updateId.slice(-6)}`, 'success');
-      
+
       set(state => ({
-        optimisticUpdates: state.optimisticUpdates.filter(u => u.id !== updateId),
+        optimisticUpdates: state.optimisticUpdates.filter(
+          u => u.id !== updateId,
+        ),
       }));
     },
 
     rollbackOptimisticUpdate: (updateId: string) => {
       const { optimisticUpdates } = get();
       const update = optimisticUpdates.find(u => u.id === updateId);
-      
+
       if (!update) {
-        debugLogger.warn('game', `Cannot rollback unknown optimistic update: ${updateId}`);
+        debugLogger.warn(
+          'game',
+          `Cannot rollback unknown optimistic update: ${updateId}`,
+        );
         return;
       }
 
@@ -726,7 +847,9 @@ export const useGameStore = create<GameStore>()(
 
       set(state => ({
         gameState: update.originalState,
-        optimisticUpdates: state.optimisticUpdates.filter(u => u.id !== updateId),
+        optimisticUpdates: state.optimisticUpdates.filter(
+          u => u.id !== updateId,
+        ),
       }));
     },
 
@@ -757,11 +880,15 @@ export const useGameStore = create<GameStore>()(
       if (currentPlayer.id === get().playerId) return; // Not computer's turn
 
       try {
-        const playableCards = GameEngine.getPlayableCards(gameState, currentPlayer.id);
+        const playableCards = GameEngine.getPlayableCards(
+          gameState,
+          currentPlayer.id,
+        );
 
         if (playableCards.length > 0) {
           // Computer plays a random valid card
-          const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+          const randomCard =
+            playableCards[Math.floor(Math.random() * playableCards.length)];
           const action = {
             type: 'play-card' as const,
             playerId: currentPlayer.id,
@@ -770,18 +897,24 @@ export const useGameStore = create<GameStore>()(
           };
 
           const updatedGameState = GameEngine.processAction(gameState, action);
-          
+
           set({
             gameState: updatedGameState,
             message: `${currentPlayer.name} played ${getCardDisplayName(randomCard)}`,
           });
 
-          get().addRecentMove(currentPlayer.name, 'played card', `${getCardDisplayName(randomCard)}`);
+          get().addRecentMove(
+            currentPlayer.name,
+            'played card',
+            `${getCardDisplayName(randomCard)}`,
+          );
 
           if (updatedGameState.phase === 'finished') {
             const winner = updatedGameState.winner;
             get().updateMessage(
-              winner?.id === get().playerId ? 'You won! 🎉' : `${winner?.name} wins!`
+              winner?.id === get().playerId
+                ? 'You won! 🎉'
+                : `${winner?.name} wins!`,
             );
           }
         } else {
@@ -793,7 +926,7 @@ export const useGameStore = create<GameStore>()(
           };
 
           const updatedGameState = GameEngine.processAction(gameState, action);
-          
+
           set({
             gameState: updatedGameState,
             message: `${currentPlayer.name} drew a card`,

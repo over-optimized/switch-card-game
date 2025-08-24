@@ -3,6 +3,7 @@ export { GameContainer } from './GameContainer';
 export { GameHeader } from './GameHeader';
 export { GameBoard } from './GameBoard';
 export { GameInfo } from './GameInfo';
+export { MenuScreen } from './MenuScreen';
 
 // Game area components
 export { DeckArea } from './DeckArea';

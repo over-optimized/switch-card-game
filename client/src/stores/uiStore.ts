@@ -1,23 +1,30 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { GameSettings } from './types';
+import { GameSetupConfig } from '../components/MenuScreen';
 
 interface UIStore {
+  // Screen navigation
+  currentScreen: 'menu' | 'game' | 'settings';
+  gameSetup: GameSetupConfig | null;
+
   // Settings
   settings: GameSettings;
   settingsOpen: boolean;
-  
+
   // Chat (for future implementation)
   chatOpen: boolean;
-  
+
   // UI state
   sidebarOpen: boolean;
   activeTab: 'game' | 'settings' | 'chat' | 'help';
-  
+
   // Theme and appearance
   theme: 'light' | 'dark' | 'auto';
-  
+
   // Actions
+  setCurrentScreen: (screen: 'menu' | 'game' | 'settings') => void;
+  setGameSetup: (config: GameSetupConfig) => void;
   updateSettings: (updates: Partial<GameSettings>) => void;
   resetSettings: () => void;
   toggleSettings: () => void;
@@ -35,13 +42,13 @@ const defaultSettings: GameSettings = {
   enableRuns: false,
   enableMirror: false,
   enable5Hearts: false,
-  
+
   // UI preferences
   handSortOrder: 'dealt',
   showAnimations: true,
   playSound: false, // Default off to avoid autoplay issues
   showRecentMoves: false,
-  
+
   // Accessibility
   highContrast: false,
   largeText: false,
@@ -49,16 +56,25 @@ const defaultSettings: GameSettings = {
 
 export const useUIStore = create<UIStore>()(
   persist(
-    (set) => ({
+    set => ({
       // Initial state
+      currentScreen: 'menu',
+      gameSetup: null,
       settings: defaultSettings,
       settingsOpen: false,
       chatOpen: false,
       sidebarOpen: false,
       activeTab: 'game',
       theme: 'auto',
-      
+
       // Actions
+      setCurrentScreen: (screen: 'menu' | 'game' | 'settings') => {
+        set({ currentScreen: screen });
+      },
+
+      setGameSetup: (config: GameSetupConfig) => {
+        set({ gameSetup: config });
+      },
       updateSettings: (updates: Partial<GameSettings>) => {
         set(state => ({
           settings: {
@@ -104,8 +120,8 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: 'switch-game-ui',
-      // Only persist settings and theme, not UI state
-      partialize: (state) => ({
+      // Only persist settings and theme, not UI state or screens
+      partialize: state => ({
         settings: state.settings,
         theme: state.theme,
       }),

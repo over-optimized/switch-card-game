@@ -1,18 +1,35 @@
-import { useEffect } from 'react';
-import { GameContainer } from './components/GameContainer';
-import { useGameStore } from './stores';
+import { GameContainer, MenuScreen } from './components';
+import { useUIStore, useGameStore } from './stores';
+import { GameSetupConfig } from './components/MenuScreen';
 
 export function App() {
+  const { currentScreen, setCurrentScreen, setGameSetup } = useUIStore(
+    state => ({
+      currentScreen: state.currentScreen,
+      setCurrentScreen: state.setCurrentScreen,
+      setGameSetup: state.setGameSetup,
+    }),
+  );
+
   const setupLocalGame = useGameStore(state => state.setupLocalGame);
-  
-  // Initialize the game on app start
-  useEffect(() => {
-    setupLocalGame();
-  }, [setupLocalGame]);
-  
+
+  const handleStartGame = (config: GameSetupConfig) => {
+    setGameSetup(config);
+    setupLocalGame(config);
+    setCurrentScreen('game');
+  };
+
+  const handleBackToMenu = () => {
+    setCurrentScreen('menu');
+  };
+
   return (
     <div className="app">
-      <GameContainer />
+      {currentScreen === 'menu' && <MenuScreen onStartGame={handleStartGame} />}
+
+      {currentScreen === 'game' && (
+        <GameContainer onBackToMenu={handleBackToMenu} />
+      )}
     </div>
   );
 }
