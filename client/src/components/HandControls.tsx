@@ -1,4 +1,4 @@
-import { useUIStore } from '../stores';
+import { useGameStore, useUIStore } from '../stores';
 
 interface HandControlsProps {
   selectedCount: number;
@@ -16,6 +16,15 @@ export function HandControls({
     updateSettings: state.updateSettings,
   }));
 
+  const { gameState, penaltyState, playerId, servePenalty } = useGameStore(
+    state => ({
+      gameState: state.gameState,
+      penaltyState: state.penaltyState,
+      playerId: state.playerId,
+      servePenalty: state.servePenalty,
+    }),
+  );
+
   const handleSortChange = (sortOrder: 'dealt' | 'rank' | 'suit') => {
     updateSettings({ handSortOrder: sortOrder });
   };
@@ -23,6 +32,17 @@ export function HandControls({
   const handleHintsToggle = () => {
     updateSettings({ showCardHints: !settings.showCardHints });
   };
+
+  const handleServePenalty = async () => {
+    await servePenalty(playerId);
+  };
+
+  // Check if current player can serve penalty
+  const canServePenalty =
+    gameState &&
+    penaltyState.active &&
+    penaltyState.type === '2s' &&
+    gameState.players[gameState.currentPlayerIndex]?.id === playerId;
 
   return (
     <div className="hand-controls">
@@ -76,6 +96,15 @@ export function HandControls({
         >
           Clear Selection
         </button>
+        {canServePenalty && (
+          <button
+            className="penalty-btn"
+            onClick={handleServePenalty}
+            title={`Draw ${penaltyState.cards} cards and end turn`}
+          >
+            Serve Penalty ({penaltyState.cards} cards)
+          </button>
+        )}
       </div>
     </div>
   );

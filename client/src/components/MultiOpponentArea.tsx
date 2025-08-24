@@ -10,7 +10,11 @@ interface OpponentAreaProps {
   isCurrentTurn: boolean;
 }
 
-function PositionedOpponentArea({ position, player, isCurrentTurn }: OpponentAreaProps) {
+function PositionedOpponentArea({
+  position,
+  player,
+  isCurrentTurn,
+}: OpponentAreaProps) {
   const baseClasses = `opponent-area opponent-${position}`;
   const turnClass = isCurrentTurn ? 'current-turn' : '';
   const className = `${baseClasses} ${turnClass}`.trim();
@@ -44,40 +48,43 @@ export function MultiOpponentArea() {
 
   const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
   const playerCount = gameState.players.length;
-  
+
   // Find the human player's index
   const humanPlayerIndex = gameState.players.findIndex(p => p.id === playerId);
-  
+
   if (humanPlayerIndex === -1) return null;
 
   // Create positioned opponents based on clockwise order from human player
   const getPositionedOpponents = () => {
     const opponents = [];
-    
+
     for (let i = 1; i < playerCount; i++) {
       const opponentIndex = (humanPlayerIndex + i) % playerCount;
       const opponent = gameState.players[opponentIndex];
-      
+
       // Map relative position to screen position (clockwise from bottom)
       let position: 'top' | 'left' | 'right';
-      
+
       if (playerCount === 2) {
         position = 'top'; // Opponent directly across
       } else if (playerCount === 3) {
         position = i === 1 ? 'left' : 'top'; // First opponent left, second top
-      } else { // playerCount === 4
-        if (i === 1) position = 'left';       // First opponent (clockwise left)
-        else if (i === 2) position = 'top';   // Second opponent (across/top)
-        else position = 'right';               // Third opponent (clockwise right)
+      } else {
+        // playerCount === 4
+        if (i === 1)
+          position = 'left'; // First opponent (clockwise left)
+        else if (i === 2)
+          position = 'top'; // Second opponent (across/top)
+        else position = 'right'; // Third opponent (clockwise right)
       }
-      
+
       opponents.push({
         player: opponent,
         position,
         isCurrentTurn: currentTurnPlayer.id === opponent.id,
       });
     }
-    
+
     return opponents;
   };
 

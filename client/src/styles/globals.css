@@ -47,6 +47,59 @@ body {
   align-items: center;
 }
 
+/* Penalty Indicator */
+.penalty-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, #ff4757, #ff3838);
+  border: 3px solid #feca57;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  max-width: 400px;
+  text-align: center;
+  animation: penalty-pulse 2s infinite;
+}
+
+.penalty-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.penalty-icon {
+  font-size: 2em;
+  animation: penalty-shake 0.5s infinite alternate;
+}
+
+.penalty-message {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: white;
+}
+
+.penalty-hint {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.9);
+  font-style: italic;
+}
+
+@keyframes penalty-pulse {
+  0% { box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
+  50% { box-shadow: 0 8px 35px rgba(255, 71, 87, 0.4); }
+  100% { box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3); }
+}
+
+@keyframes penalty-shake {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(2px); }
+}
+
 /* Deck Area */
 .deck-area {
   display: flex;
@@ -240,7 +293,7 @@ body {
   align-items: center;
 }
 
-.sort-btn, .play-btn, .clear-btn, .hint-btn {
+.sort-btn, .play-btn, .clear-btn, .hint-btn, .penalty-btn {
   padding: 8px 16px;
   border: none;
   border-radius: 6px;
@@ -315,6 +368,25 @@ body {
   background: #f1c40f;
   color: #2c3e50;
   border-color: #f39c12;
+}
+
+.penalty-btn {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.4);
+  animation: penalty-btn-pulse 2s infinite;
+}
+
+.penalty-btn:hover {
+  background: rgba(231, 76, 60, 0.3);
+  border-color: #e74c3c;
+  transform: scale(1.05);
+}
+
+@keyframes penalty-btn-pulse {
+  0% { box-shadow: 0 0 5px rgba(231, 76, 60, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(231, 76, 60, 0.5); }
+  100% { box-shadow: 0 0 5px rgba(231, 76, 60, 0.3); }
 }
 
 /* Cards */

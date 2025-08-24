@@ -3,6 +3,14 @@ import { Player } from './player.js';
 
 export type GamePhase = 'waiting' | 'playing' | 'finished';
 export type GameDirection = 1 | -1;
+export type GameMode = 'normal' | 'active-2s' | 'active-run' | 'mirror-mode';
+
+export interface PenaltyState {
+  active: boolean;
+  cards: number;
+  type: '2s' | 'run' | null;
+  playerId?: string;
+}
 
 export interface GameState {
   id: string;
@@ -12,6 +20,8 @@ export interface GameState {
   currentPlayerIndex: number;
   direction: GameDirection;
   phase: GamePhase;
+  gameMode: GameMode;
+  penaltyState: PenaltyState;
   winner?: Player | undefined;
   createdAt: Date;
   startedAt?: Date | undefined;
@@ -48,6 +58,12 @@ export function createGameState(
     currentPlayerIndex: 0,
     direction: 1,
     phase: 'waiting',
+    gameMode: 'normal',
+    penaltyState: {
+      active: false,
+      cards: 0,
+      type: null,
+    },
     createdAt: new Date(),
   };
 }

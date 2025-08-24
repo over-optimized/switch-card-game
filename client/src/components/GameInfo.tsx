@@ -51,10 +51,7 @@ export function GameInfo() {
       </div>
 
       <div className="debug-controls">
-        <button
-          className="debug-btn"
-          onClick={toggleRecentMoves}
-        >
+        <button className="debug-btn" onClick={toggleRecentMoves}>
           Recent Moves {showRecentMoves ? '▼' : '▶'}
         </button>
 

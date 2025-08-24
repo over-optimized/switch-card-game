@@ -113,6 +113,9 @@ interface GameStore {
   addRecentMove: (player: string, action: string, details?: string) => void;
   toggleRecentMoves: () => void;
 
+  // Actions - Penalty handling
+  servePenalty: (playerId: string) => Promise<boolean>;
+
   // Actions - AI
   executeComputerTurn: () => void;
 }
@@ -199,6 +202,8 @@ export const useGameStore = create<GameStore>()(
         set({
           isLoading: false,
           gameState: startedGame,
+          gameMode: startedGame.gameMode,
+          penaltyState: startedGame.penaltyState,
           message,
           recentMoves: [
             {
@@ -414,55 +419,28 @@ export const useGameStore = create<GameStore>()(
           return false;
         }
 
-        // Play all selected cards sequentially without advancing turn between cards
+        // Use GameEngine to play cards sequentially to handle trick card effects
         let currentGameState = { ...gameState };
         for (const card of orderedCards) {
-          // Remove card from player's hand and add to discard pile
-          const playerIndex = currentGameState.players.findIndex(
-            p => p.id === playerId,
-          );
-          if (playerIndex !== -1) {
-            const player = currentGameState.players[playerIndex];
-            const cardIndex = player.hand.findIndex(c => c.id === card!.id);
-            if (cardIndex !== -1) {
-              // Remove card from hand
-              const newHand = [...player.hand];
-              newHand.splice(cardIndex, 1);
-
-              // Add to discard pile
-              const newDiscardPile = [...currentGameState.discardPile, card!];
-
-              // Update game state
-              currentGameState = {
-                ...currentGameState,
-                players: currentGameState.players.map((p, i) =>
-                  i === playerIndex ? { ...p, hand: newHand } : p,
-                ),
-                discardPile: newDiscardPile,
-              };
-            }
+          try {
+            currentGameState = GameEngine.playCard(
+              currentGameState,
+              playerId,
+              card!.id,
+            );
+          } catch (error) {
+            logValidation('local-play', false, {
+              reason: 'GameEngine.playCard failed',
+              error: error instanceof Error ? error.message : String(error),
+              cardId: card!.id,
+            });
+            get().updateMessage(
+              `Cannot play ${getCardDisplayName(card!)}: ${
+                error instanceof Error ? error.message : 'Unknown error'
+              }`,
+            );
+            return false;
           }
-        }
-
-        // Now advance the turn once after all cards are played
-        // Check if any player has won (has 0 cards)
-        const winner = currentGameState.players.find(p => p.hand.length === 0);
-
-        if (winner) {
-          // Game finished
-          currentGameState = {
-            ...currentGameState,
-            phase: 'finished' as const,
-            winner,
-          };
-        } else {
-          // Advance to next player
-          currentGameState = {
-            ...currentGameState,
-            currentPlayerIndex:
-              (currentGameState.currentPlayerIndex + 1) %
-              currentGameState.players.length,
-          };
         }
 
         const cardNames = orderedCards
@@ -475,6 +453,8 @@ export const useGameStore = create<GameStore>()(
 
         set({
           gameState: currentGameState,
+          gameMode: currentGameState.gameMode,
+          penaltyState: currentGameState.penaltyState,
           selectedCards: [],
           selectionMode: 'none',
           cardSelectionOrder: {},
@@ -534,6 +514,8 @@ export const useGameStore = create<GameStore>()(
 
         set({
           gameState: updatedGameState,
+          gameMode: updatedGameState.gameMode,
+          penaltyState: updatedGameState.penaltyState,
           message: 'Card drawn!',
         });
 
@@ -869,6 +851,44 @@ export const useGameStore = create<GameStore>()(
       }));
     },
 
+    servePenalty: async (playerId: string) => {
+      const { gameState } = get();
+      if (!gameState) return false;
+
+      try {
+        const updatedGameState = GameEngine.servePenalty(gameState, playerId);
+        const penaltyCards = gameState.penaltyState.cards;
+        set({
+          gameState: updatedGameState,
+          gameMode: updatedGameState.gameMode,
+          penaltyState: updatedGameState.penaltyState,
+          message: `Penalty served! Drew ${penaltyCards} cards.`,
+        });
+
+        get().addRecentMove(
+          playerId === get().playerId ? 'You' : 'Computer',
+          'served penalty',
+          `${penaltyCards} cards`,
+        );
+
+        // Handle AI turn after penalty is served
+        if (updatedGameState.phase !== 'finished') {
+          const nextPlayer =
+            updatedGameState.players[updatedGameState.currentPlayerIndex];
+          if (nextPlayer.id !== get().playerId) {
+            setTimeout(() => get().executeComputerTurn(), 1500);
+          }
+        }
+
+        return true;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to serve penalty';
+        get().updateMessage(errorMessage);
+        return false;
+      }
+    },
+
     executeComputerTurn: () => {
       const { gameState } = get();
       if (!gameState) return;
@@ -877,6 +897,52 @@ export const useGameStore = create<GameStore>()(
       if (currentPlayer.id === get().playerId) return; // Not computer's turn
 
       try {
+        // Check if penalty needs to be served first
+        if (
+          gameState.penaltyState.active &&
+          gameState.penaltyState.type === '2s'
+        ) {
+          const playableCards = GameEngine.getPlayableCards(
+            gameState,
+            currentPlayer.id,
+          );
+
+          // Check if computer has any 2s to play
+          const has2s = playableCards.some(card => card.rank === '2');
+
+          if (!has2s) {
+            // Computer must serve penalty
+            const updatedGameState = GameEngine.servePenalty(
+              gameState,
+              currentPlayer.id,
+            );
+            const penaltyCards = gameState.penaltyState.cards;
+
+            set({
+              gameState: updatedGameState,
+              gameMode: updatedGameState.gameMode,
+              penaltyState: updatedGameState.penaltyState,
+              message: `${currentPlayer.name} served penalty (${penaltyCards} cards)`,
+            });
+
+            get().addRecentMove(
+              currentPlayer.name,
+              'served penalty',
+              `${penaltyCards} cards`,
+            );
+
+            // Continue with next AI turn if needed
+            if (updatedGameState.phase !== 'finished') {
+              const nextPlayer =
+                updatedGameState.players[updatedGameState.currentPlayerIndex];
+              if (nextPlayer.id !== get().playerId) {
+                setTimeout(() => get().executeComputerTurn(), 1500);
+              }
+            }
+            return;
+          }
+        }
+
         const playableCards = GameEngine.getPlayableCards(
           gameState,
           currentPlayer.id,
@@ -897,6 +963,8 @@ export const useGameStore = create<GameStore>()(
 
           set({
             gameState: updatedGameState,
+            gameMode: updatedGameState.gameMode,
+            penaltyState: updatedGameState.penaltyState,
             message: `${currentPlayer.name} played ${getCardDisplayName(randomCard)}`,
           });
 
@@ -915,7 +983,8 @@ export const useGameStore = create<GameStore>()(
             );
           } else {
             // Check if the next player is also an AI
-            const nextPlayer = updatedGameState.players[updatedGameState.currentPlayerIndex];
+            const nextPlayer =
+              updatedGameState.players[updatedGameState.currentPlayerIndex];
             if (nextPlayer.id !== get().playerId) {
               setTimeout(() => get().executeComputerTurn(), 1500);
             }
@@ -932,6 +1001,8 @@ export const useGameStore = create<GameStore>()(
 
           set({
             gameState: updatedGameState,
+            gameMode: updatedGameState.gameMode,
+            penaltyState: updatedGameState.penaltyState,
             message: `${currentPlayer.name} drew a card`,
           });
 
@@ -939,7 +1010,8 @@ export const useGameStore = create<GameStore>()(
 
           // Check if the next player is also an AI after drawing
           if (updatedGameState.phase !== 'finished') {
-            const nextPlayer = updatedGameState.players[updatedGameState.currentPlayerIndex];
+            const nextPlayer =
+              updatedGameState.players[updatedGameState.currentPlayerIndex];
             if (nextPlayer.id !== get().playerId) {
               setTimeout(() => get().executeComputerTurn(), 1500);
             }

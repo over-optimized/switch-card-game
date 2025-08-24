@@ -74,11 +74,14 @@ export class GameEngine {
     const updatedPlayers = [...gameState.players];
     updatedPlayers[playerIndex] = removeCardFromHand(player, cardId);
 
-    const updatedGameState: GameState = {
+    let updatedGameState: GameState = {
       ...gameState,
       players: updatedPlayers,
       discardPile: [...gameState.discardPile, card],
     };
+
+    // Handle 2s effects
+    updatedGameState = GameEngine.handle2sEffect(updatedGameState, card);
 
     return GameEngine.advanceTurn(updatedGameState);
   }
@@ -95,6 +98,18 @@ export class GameEngine {
       return true;
     }
 
+    // Handle 2s penalty state
+    if (gameState.penaltyState.active && gameState.penaltyState.type === '2s') {
+      // During active 2s penalty, only 2s can be played
+      return card.rank === '2';
+    }
+
+    // Normal play: 2s can be played on any 2 (suit doesn't matter)
+    if (card.rank === '2' && topCard.rank === '2') {
+      return true;
+    }
+
+    // Standard matching rules
     return card.suit === topCard.suit || card.rank === topCard.rank;
   }
 
@@ -135,5 +150,52 @@ export class GameEngine {
     if (!topCard) return player.hand; // Can play any card if no top card
 
     return player.hand.filter(card => GameEngine.isValidPlay(gameState, card));
+  }
+
+  static handle2sEffect(gameState: GameState, playedCard: Card): GameState {
+    // Only handle if the played card is a 2
+    if (playedCard.rank !== '2') {
+      return gameState;
+    }
+
+    // Activate or increase 2s penalty
+    const currentPenalty = gameState.penaltyState;
+    return {
+      ...gameState,
+      gameMode: 'active-2s',
+      penaltyState: {
+        active: true,
+        type: '2s',
+        cards: currentPenalty.cards + 2, // Each 2 adds 2 cards
+        playerId: gameState.players[gameState.currentPlayerIndex]?.id,
+      },
+    };
+  }
+
+  static servePenalty(gameState: GameState, playerId: string): GameState {
+    if (!gameState.penaltyState.active) {
+      return gameState;
+    }
+
+    const penaltyCards = gameState.penaltyState.cards;
+    // Draw penalty cards for the player
+    let updatedGameState = { ...gameState };
+    for (let i = 0; i < penaltyCards; i++) {
+      updatedGameState = DeckManager.drawCard(updatedGameState, playerId);
+    }
+
+    // Clear penalty and return to normal mode
+    updatedGameState = {
+      ...updatedGameState,
+      gameMode: 'normal',
+      penaltyState: {
+        active: false,
+        cards: 0,
+        type: null,
+      },
+    };
+
+    // Advance turn after serving penalty - penalty ends the turn
+    return GameEngine.advanceTurn(updatedGameState);
   }
 }

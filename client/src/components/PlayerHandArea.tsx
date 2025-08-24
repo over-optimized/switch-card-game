@@ -187,7 +187,8 @@ export function PlayerHandArea() {
 
       <div className="hand">
         {sortedHand.map(card => {
-          const isPlayable = showCardHints && playableCards.some(pc => pc.id === card.id);
+          const isPlayable =
+            showCardHints && playableCards.some(pc => pc.id === card.id);
           const isDisabled = !isPlayerTurn || isGameFinished;
           const isSelected = selectedCards.includes(card.id);
           const isDragging =

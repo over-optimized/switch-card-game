@@ -1,10 +1,12 @@
 import { DeckArea } from './DeckArea';
 import { MultiOpponentArea } from './MultiOpponentArea';
 import { PlayerHandArea } from './PlayerHandArea';
+import { PenaltyIndicator } from './PenaltyIndicator';
 import { useGameStore } from '../stores';
 
 export function GameBoard() {
   const gameState = useGameStore(state => state.gameState);
+  const penaltyState = useGameStore(state => state.penaltyState);
 
   if (!gameState) return null;
 
@@ -19,6 +21,7 @@ export function GameBoard() {
       <div className="player-area">
         <PlayerHandArea />
       </div>
+      <PenaltyIndicator penaltyState={penaltyState} />
     </div>
   );
 }
