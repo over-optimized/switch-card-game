@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd client && pnpm run clean && pnpm exec vite build --mode production",
+  "buildCommand": "pnpm --filter switch-client run clean && pnpm --filter switch-client exec vite build --mode production",
   "outputDirectory": "client/dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
