@@ -20,15 +20,52 @@
 - [x] Win condition detection
 - [x] TypeScript type system across all components
 
-### Architecture & Infrastructure 🟢
+### Architecture & Infrastructure 🟡 (Upgrading)
 
 - [x] Monorepo setup with pnpm workspaces
 - [x] Shared types package for client/server communication
 - [x] Node.js server with Express and Socket.IO
-- [x] HTML5 client with Vite and TypeScript
+- [x] ~~HTML5 client with Vite and TypeScript~~ → **Migrating to React**
+- [ ] **React + TypeScript client with component architecture**
+- [ ] **Zustand state management with persistence middleware**
+- [ ] **Network-aware action abstraction layer** 
 - [x] Unit test framework with Vitest
-- [x] ESLint and Prettier code quality tools
+- [ ] **React Testing Library for component testing**
+- [x] ESLint and Prettier code quality tools  
+- [ ] **React-specific ESLint rules and configurations**
 - [x] Build system and CI pipeline
+
+---
+
+## 🏗️ Phase 1.5: React Architecture Migration (Current Priority)
+
+### Frontend Architecture Upgrade 🟡
+
+- [ ] **React + TypeScript Setup**
+  - [ ] Install React 18 with TypeScript support
+  - [ ] Configure Vite for optimal React development
+  - [ ] Set up React DevTools integration
+
+- [ ] **State Management System**
+  - [ ] Zustand stores for game state management  
+  - [ ] Persistence middleware for user settings
+  - [ ] Network-aware action abstraction layer
+  - [ ] Optimistic updates with rollback capability
+
+- [ ] **Component Architecture**
+  - [ ] Base component system with shared interfaces
+  - [ ] GameContainer (main app wrapper)
+  - [ ] GameBoard (central game area)
+  - [ ] Card component (drag/drop, selection, animations)
+  - [ ] PlayerHand (sorting, multi-selection)
+  - [ ] OpponentArea (real-time status indicators)
+  - [ ] GameStatus (messages, controls, debug panel)
+
+- [ ] **Development Experience**
+  - [ ] React Testing Library for component testing
+  - [ ] Storybook for component development (optional)
+  - [ ] React-specific ESLint rules and Prettier config
+  - [ ] Hot module replacement optimization
 
 ---
 
@@ -64,13 +101,15 @@
 
 ## 🎮 Phase 3: Game Mechanics
 
-### Switch Card Game Rules 🔴
+### Switch Card Game Rules 🟡 (Enhancing on React)
 
-- [ ] Basic play rules (match suit or rank)
-- [ ] Special card effects (if any)
-- [ ] Draw card when can't play
-- [ ] "Switch" mechanic implementation
-- [ ] Game rule validation and enforcement
+- [x] Basic play rules (match suit or rank) ✅
+- [x] Draw card when can't play ✅
+- [x] Game rule validation and enforcement ✅
+- [ ] **Special card effects (2s, 8s, Aces) with React state management**
+- [ ] **Complex trick card mechanics (Runs, Mirror cards)**
+- [ ] **Game mode state management with Zustand stores**
+- [ ] **Penalty tracking system for trick cards**
 
 ### Game Flow Enhancement 🔴
 
@@ -91,13 +130,15 @@
 
 ## 🎨 Phase 4: User Experience
 
-### Interactive UI 🔴
+### Interactive UI 🟡 (Migrating to React)
 
-- [ ] Drag and drop card playing
-- [ ] Card hover effects and animations
-- [ ] Smooth card transitions
-- [ ] Game board visual improvements
-- [ ] Mobile-responsive design
+- [x] ~~Basic card interaction (vanilla JS)~~ → **Migrating to React**
+- [ ] **React-based drag and drop card playing**
+- [ ] **Component-level card hover effects and animations**
+- [ ] **React transition components for smooth card movements**
+- [ ] **Modular game board components with optimized rendering**
+- [ ] **Mobile-responsive React components**
+- [ ] **Framer Motion integration for advanced animations**
 
 ### Visual Polish 🔴
 
@@ -221,13 +262,16 @@
 - **TypeScript First**: Full type safety across the stack
 - **Modular Design**: Easy to add/modify features independently
 
-### Technology Choices
+### Technology Choices (Updated for React Migration)
 
-- **Frontend**: HTML5 + TypeScript for broad compatibility
-- **Backend**: Node.js for JavaScript consistency
-- **Real-Time**: Socket.IO for robust WebSocket handling
-- **Database**: Start with SQLite, migrate to PostgreSQL for scale
-- **Testing**: Vitest for speed and modern features
+- **Frontend**: ~~HTML5 + TypeScript~~ → **React 18 + TypeScript** for component architecture
+- **State Management**: **Zustand** for simple, performant state management  
+- **Styling**: **CSS Modules** with PostCSS for scoped, maintainable styles
+- **Animation**: **Framer Motion** for smooth card and UI animations
+- **Backend**: Node.js for JavaScript consistency (unchanged)
+- **Real-Time**: Socket.IO for robust WebSocket handling (unchanged)
+- **Database**: Start with SQLite, migrate to PostgreSQL for scale (unchanged)
+- **Testing**: Vitest + **React Testing Library** for modern testing
 
 ### Future Considerations
 

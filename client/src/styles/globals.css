@@ -1,0 +1,534 @@
+/* Global styles for the Switch Card Game */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app {
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+}
+
+/* Game Container */
+.game-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Game Header */
+.game-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.game-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5em;
+}
+
+/* Game Board */
+.game-board {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+
+/* Deck Area */
+.deck-area {
+  display: flex;
+  gap: 80px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.deck, .discard-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.deck.draw-enabled {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Card Back */
+.card-back {
+  width: 80px;
+  height: 120px;
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.card-back:hover, .deck.draw-enabled .card-back:hover {
+  transform: translateY(-5px);
+}
+
+.card-back.small {
+  width: 30px;
+  height: 45px;
+  font-size: 1em;
+  cursor: default;
+}
+
+/* Deck and Card Counts */
+.deck-count, .card-count {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.draw-hint {
+  font-size: 0.8em;
+  color: #f39c12;
+  font-weight: bold;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.5; }
+}
+
+/* Opponents Area */
+.opponents-area {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.opponent {
+  text-align: center;
+  padding: 15px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  min-width: 150px;
+}
+
+.opponent.current-turn {
+  background: rgba(52, 152, 219, 0.2);
+  border: 2px solid #3498db;
+}
+
+.opponent h4 {
+  margin: 0 0 10px 0;
+  color: #ecf0f1;
+}
+
+.opponent-hand {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+/* Hand Area */
+.hand-area {
+  width: 100%;
+  text-align: center;
+}
+
+.hand-area h3 {
+  margin-bottom: 15px;
+  color: #ecf0f1;
+}
+
+.hand {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+/* Hand Controls */
+.hand-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.sort-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.action-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sort-btn, .play-btn, .clear-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.sort-btn {
+  background: rgba(52, 152, 219, 0.2);
+  color: #3498db;
+  border: 1px solid rgba(52, 152, 219, 0.4);
+}
+
+.sort-btn:hover {
+  background: rgba(52, 152, 219, 0.3);
+  border-color: #3498db;
+}
+
+.sort-btn.active {
+  background: #3498db;
+  color: white;
+  border-color: #2980b9;
+}
+
+.play-btn {
+  background: #27ae60;
+  color: white;
+  border: 1px solid #229954;
+}
+
+.play-btn:hover:not(.disabled) {
+  background: #229954;
+}
+
+.play-btn.disabled {
+  background: rgba(39, 174, 96, 0.3);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: not-allowed;
+}
+
+.clear-btn {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.clear-btn:hover {
+  background: rgba(231, 76, 60, 0.3);
+  border-color: #e74c3c;
+}
+
+.clear-btn.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Cards */
+.card {
+  width: 65px;
+  height: 95px;
+  background: white;
+  color: #2c3e50;
+  border: 2px solid #34495e;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  position: relative;
+}
+
+.card-red {
+  color: #e74c3c;
+}
+
+.card-black {
+  color: #2c3e50;
+}
+
+.card.playable {
+  border-color: #27ae60;
+  box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+}
+
+.card.playable:hover {
+  transform: translateY(-15px) scale(1.1);
+  background: #e8f5e8;
+  box-shadow: 0 15px 30px rgba(39, 174, 96, 0.4);
+  z-index: 10;
+  border-color: #27ae60;
+}
+
+.card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.card.disabled:hover {
+  transform: none;
+  background: white;
+  box-shadow: none;
+}
+
+.card:not(.disabled):not(.playable):hover {
+  transform: translateY(-8px) scale(1.05);
+  background: #f8f9fa;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 5;
+}
+
+/* Card Selection */
+.card.selected {
+  transform: translateY(-20px);
+  box-shadow: 0 15px 30px rgba(52, 152, 219, 0.4);
+  border-color: #3498db !important;
+  border-width: 3px;
+  background: #e8f4fd !important;
+  z-index: 10;
+  position: relative;
+}
+
+.card.selected:hover {
+  transform: translateY(-25px) scale(1.05);
+}
+
+/* Selection Order Indicator */
+.selection-order {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: #3498db;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 15;
+}
+
+/* Drag and Drop */
+.card[draggable="true"] {
+  cursor: grab;
+}
+
+.card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.card.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+}
+
+.discard-pile.drag-over {
+  background: rgba(39, 174, 96, 0.2);
+  transform: scale(1.1);
+}
+
+.discard-pile.drag-over .card {
+  border-color: #27ae60 !important;
+  box-shadow: 0 0 20px rgba(39, 174, 96, 0.6);
+}
+
+/* Discard Pile Cards */
+.discard-pile .card {
+  width: 80px;
+  height: 120px;
+  font-size: 1.2em;
+  cursor: default;
+  border-color: #e74c3c;
+}
+
+.discard-pile .card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Sorting Animation */
+.hand.sorting .card {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Game Info */
+.game-info {
+  margin-top: 30px;
+  text-align: center;
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.game-status {
+  margin-bottom: 20px;
+}
+
+.game-info p {
+  margin: 8px 0;
+  color: #ecf0f1;
+}
+
+/* Debug Controls */
+.debug-controls {
+  border-top: 1px solid rgba(255,255,255,0.2);
+  padding-top: 15px;
+}
+
+.debug-btn {
+  background: rgba(52, 152, 219, 0.2);
+  color: #3498db;
+  border: 1px solid #3498db;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.debug-btn:hover {
+  background: rgba(52, 152, 219, 0.3);
+}
+
+.recent-moves-panel {
+  margin-top: 15px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+  padding: 12px;
+  text-align: left;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.recent-move {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+.move-time {
+  color: #95a5a6;
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.move-text {
+  color: #ecf0f1;
+  font-weight: 500;
+}
+
+.move-details {
+  color: #f39c12;
+  font-weight: bold;
+}
+
+.no-moves {
+  color: #95a5a6;
+  font-style: italic;
+  text-align: center;
+}
+
+/* Restart Button */
+.restart-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background 0.2s;
+}
+
+.restart-btn:hover {
+  background: #2980b9;
+}
+
+/* Error and Loading States */
+.error {
+  text-align: center;
+  padding: 40px;
+  color: #e74c3c;
+}
+
+.error button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.loading {
+  text-align: center;
+  font-size: 1.2em;
+  color: #ecf0f1;
+  animation: pulse 2s infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hand-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .sort-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .action-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .sort-btn, .play-btn, .clear-btn {
+    font-size: 0.8em;
+    padding: 6px 12px;
+  }
+}
