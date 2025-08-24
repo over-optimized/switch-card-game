@@ -28,13 +28,29 @@ export interface RecentMove {
   details?: string;
 }
 
+// Async action states
+export type ActionStatus = 'idle' | 'pending' | 'success' | 'error';
+
+export interface PendingAction {
+  id: string;
+  type: 'play-cards' | 'draw-card' | 'pass-turn';
+  playerId: string;
+  cardIds?: string[];
+  timestamp: Date;
+  status: ActionStatus;
+  error?: string;
+  retryCount: number;
+}
+
 // Optimistic update tracking
 export interface OptimisticUpdate {
   id: string;
+  actionId: string; // Links to PendingAction
   type: 'play-card' | 'draw-card';
   timestamp: Date;
   originalState: GameState;
-  cardId?: string;
+  optimisticState: GameState;
+  cardIds?: string[];
 }
 
 // Player info for multiplayer

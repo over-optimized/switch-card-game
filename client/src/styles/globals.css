@@ -265,7 +265,7 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 1em;
+  font-size: 1.2em;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
