@@ -48,6 +48,7 @@ const defaultSettings: GameSettings = {
   showAnimations: true,
   playSound: false, // Default off to avoid autoplay issues
   showRecentMoves: false,
+  showCardHints: true, // Default on to help new players
 
   // Accessibility
   highContrast: false,

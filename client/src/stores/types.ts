@@ -80,6 +80,7 @@ export interface GameSettings {
   showAnimations: boolean;
   playSound: boolean;
   showRecentMoves: boolean;
+  showCardHints: boolean;
 
   // Accessibility
   highContrast: boolean;

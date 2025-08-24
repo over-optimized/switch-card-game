@@ -445,14 +445,11 @@ export const useGameStore = create<GameStore>()(
         }
 
         // Now advance the turn once after all cards are played
-        if (
-          currentGameState.players[0].hand.length === 0 ||
-          currentGameState.players[1].hand.length === 0
-        ) {
+        // Check if any player has won (has 0 cards)
+        const winner = currentGameState.players.find(p => p.hand.length === 0);
+
+        if (winner) {
           // Game finished
-          const winner = currentGameState.players.find(
-            p => p.hand.length === 0,
-          );
           currentGameState = {
             ...currentGameState,
             phase: 'finished' as const,
@@ -916,6 +913,12 @@ export const useGameStore = create<GameStore>()(
                 ? 'You won! 🎉'
                 : `${winner?.name} wins!`,
             );
+          } else {
+            // Check if the next player is also an AI
+            const nextPlayer = updatedGameState.players[updatedGameState.currentPlayerIndex];
+            if (nextPlayer.id !== get().playerId) {
+              setTimeout(() => get().executeComputerTurn(), 1500);
+            }
           }
         } else {
           // Computer draws a card
@@ -933,6 +936,14 @@ export const useGameStore = create<GameStore>()(
           });
 
           get().addRecentMove(currentPlayer.name, 'drew a card');
+
+          // Check if the next player is also an AI after drawing
+          if (updatedGameState.phase !== 'finished') {
+            const nextPlayer = updatedGameState.players[updatedGameState.currentPlayerIndex];
+            if (nextPlayer.id !== get().playerId) {
+              setTimeout(() => get().executeComputerTurn(), 1500);
+            }
+          }
         }
       } catch (error) {
         console.error('Computer turn error:', error);

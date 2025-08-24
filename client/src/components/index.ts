@@ -8,6 +8,7 @@ export { MenuScreen } from './MenuScreen';
 // Game area components
 export { DeckArea } from './DeckArea';
 export { OpponentArea } from './OpponentArea';
+export { MultiOpponentArea } from './MultiOpponentArea';
 export { PlayerHandArea } from './PlayerHandArea';
 
 // UI components

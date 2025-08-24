@@ -20,6 +20,10 @@ export function HandControls({
     updateSettings({ handSortOrder: sortOrder });
   };
 
+  const handleHintsToggle = () => {
+    updateSettings({ showCardHints: !settings.showCardHints });
+  };
+
   return (
     <div className="hand-controls">
       <div className="sort-controls">
@@ -40,6 +44,20 @@ export function HandControls({
           onClick={() => handleSortChange('dealt')}
         >
           As Dealt
+        </button>
+      </div>
+
+      <div className="hint-controls">
+        <button
+          className={`hint-btn ${settings.showCardHints ? 'active' : ''}`}
+          onClick={handleHintsToggle}
+          title={
+            settings.showCardHints
+              ? 'Hide card hints'
+              : 'Show valid cards with green border'
+          }
+        >
+          💡 Hints {settings.showCardHints ? 'On' : 'Off'}
         </button>
       </div>
 

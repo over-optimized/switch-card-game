@@ -29,7 +29,10 @@ export function PlayerHandArea() {
     endDrag: state.endDrag,
   }));
 
-  const handSortOrder = useUIStore(state => state.settings.handSortOrder);
+  const { handSortOrder, showCardHints } = useUIStore(state => ({
+    handSortOrder: state.settings.handSortOrder,
+    showCardHints: state.settings.showCardHints,
+  }));
 
   const currentPlayer = gameState?.players.find(p => p.id === playerId);
 
@@ -184,7 +187,7 @@ export function PlayerHandArea() {
 
       <div className="hand">
         {sortedHand.map(card => {
-          const isPlayable = playableCards.some(pc => pc.id === card.id);
+          const isPlayable = showCardHints && playableCards.some(pc => pc.id === card.id);
           const isDisabled = !isPlayerTurn || isGameFinished;
           const isSelected = selectedCards.includes(card.id);
           const isDragging =
