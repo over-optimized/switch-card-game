@@ -11,9 +11,7 @@ export function ErrorScreen({ message }: ErrorScreenProps) {
     <div className="error">
       <h2>Game Error</h2>
       <p>{message}</p>
-      <button onClick={handleRestart}>
-        Restart Game
-      </button>
+      <button onClick={handleRestart}>Restart Game</button>
     </div>
   );
 }

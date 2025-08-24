@@ -1,4 +1,8 @@
-import { Card as CardType, getCardDisplayName, getCardColorClass } from 'switch-shared';
+import {
+  Card as CardType,
+  getCardDisplayName,
+  getCardColorClass,
+} from 'switch-shared';
 
 interface CardProps {
   card: CardType | null;
@@ -14,8 +18,8 @@ interface CardProps {
   onDragEnd?: () => void;
 }
 
-export function Card({ 
-  card, 
+export function Card({
+  card,
   isPlayable = false,
   isSelected = false,
   isDisabled = false,
@@ -28,11 +32,7 @@ export function Card({
   onDragEnd,
 }: CardProps) {
   if (!card) {
-    return (
-      <div className="card">
-        🃏
-      </div>
-    );
+    return <div className="card">🃏</div>;
   }
 
   const classes = [
@@ -42,7 +42,9 @@ export function Card({
     isDisabled || disabled ? 'disabled' : '',
     isSelected ? 'selected' : '',
     isDragging ? 'dragging' : '',
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const handleClick = () => {
     if (!disabled && !isDisabled && onClick) {
@@ -77,9 +79,7 @@ export function Card({
     >
       {getCardDisplayName(card)}
       {selectionOrder && (
-        <div className="selection-order">
-          {selectionOrder}
-        </div>
+        <div className="selection-order">{selectionOrder}</div>
       )}
     </div>
   );

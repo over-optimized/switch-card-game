@@ -4,13 +4,15 @@ import { Card } from './Card';
 import { useEffect, useRef } from 'react';
 
 export function DeckArea() {
-  const { gameState, playerId, drawCard, dropCards, dragState } = useGameStore(state => ({
-    gameState: state.gameState,
-    playerId: state.playerId,
-    drawCard: state.drawCard,
-    dropCards: state.dropCards,
-    dragState: state.dragState,
-  }));
+  const { gameState, playerId, drawCard, dropCards, dragState } = useGameStore(
+    state => ({
+      gameState: state.gameState,
+      playerId: state.playerId,
+      drawCard: state.drawCard,
+      dropCards: state.dropCards,
+      dragState: state.dragState,
+    }),
+  );
 
   const deckAreaRef = useRef<HTMLDivElement>(null);
 
@@ -52,19 +54,19 @@ export function DeckArea() {
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
-    
+
     // Only process drops if we're actually dragging
     if (!dragState.isDragging) {
       return;
     }
-    
+
     const dragData = e.dataTransfer?.getData('text/plain');
     if (!dragData) return;
 
     try {
       const cardIds = JSON.parse(dragData) as string[];
       console.log('Cards dropped on discard pile:', cardIds);
-      
+
       // Call the store's dropCards method to play the cards
       await dropCards(cardIds);
     } catch (error) {
@@ -76,7 +78,7 @@ export function DeckArea() {
   const deckAreaClass = `deck-area ${isDragging ? 'drag-target' : ''}`;
 
   return (
-    <div 
+    <div
       ref={deckAreaRef}
       className={deckAreaClass}
       onDragOver={handleDragOver}
@@ -84,12 +86,10 @@ export function DeckArea() {
       onDrop={handleDrop}
     >
       {isDragging && (
-        <div className="drop-here-label">
-          Drop here to play cards
-        </div>
+        <div className="drop-here-label">Drop here to play cards</div>
       )}
-      
-      <div 
+
+      <div
         className={`deck ${canDrawNow ? 'draw-enabled' : ''}`}
         onClick={handleDrawClick}
         style={{ cursor: canDrawNow ? 'pointer' : 'default' }}
@@ -98,13 +98,9 @@ export function DeckArea() {
         <span className="deck-count">{gameState.drawPile.length} cards</span>
         {canDrawNow && <span className="draw-hint">Click to draw</span>}
       </div>
-      
+
       <div className="discard-pile">
-        <Card 
-          card={topCard || null}
-          isDiscard={true}
-          disabled={true}
-        />
+        <Card card={topCard || null} isDiscard={true} disabled={true} />
         <span>Top Card</span>
       </div>
     </div>

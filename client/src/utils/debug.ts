@@ -1,7 +1,13 @@
 // Debug logging utility for Switch Card Game
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-export type LogCategory = 'game' | 'network' | 'ui' | 'validation' | 'turn' | 'cards';
+export type LogCategory =
+  | 'game'
+  | 'network'
+  | 'ui'
+  | 'validation'
+  | 'turn'
+  | 'cards';
 
 interface LogEntry {
   timestamp: Date;
@@ -14,7 +20,12 @@ interface LogEntry {
 class DebugLogger {
   private logs: LogEntry[] = [];
   private maxLogs = 500;
-  private enabledCategories: Set<LogCategory> = new Set(['game', 'network', 'validation', 'turn']);
+  private enabledCategories: Set<LogCategory> = new Set([
+    'game',
+    'network',
+    'validation',
+    'turn',
+  ]);
   private logLevel: LogLevel = 'debug';
 
   private shouldLog(level: LogLevel, category: LogCategory): boolean {
@@ -25,7 +36,12 @@ class DebugLogger {
     );
   }
 
-  private log(level: LogLevel, category: LogCategory, message: string, data?: any) {
+  private log(
+    level: LogLevel,
+    category: LogCategory,
+    message: string,
+    data?: any,
+  ) {
     if (!this.shouldLog(level, category)) return;
 
     const entry: LogEntry = {
@@ -83,21 +99,40 @@ class DebugLogger {
     this.info('turn', `Player ${playerId}: ${action}`, data);
   }
 
-  logCardPlay(playerId: string, cards: string[], success: boolean, reason?: string) {
-    this.info('cards', `Card play - Player: ${playerId}, Cards: [${cards.join(', ')}], Success: ${success}`, {
-      reason,
-      cardCount: cards.length,
-    });
+  logCardPlay(
+    playerId: string,
+    cards: string[],
+    success: boolean,
+    reason?: string,
+  ) {
+    this.info(
+      'cards',
+      `Card play - Player: ${playerId}, Cards: [${cards.join(', ')}], Success: ${success}`,
+      {
+        reason,
+        cardCount: cards.length,
+      },
+    );
   }
 
-  logNetworkAction(action: string, status: 'pending' | 'success' | 'error', data?: any) {
-    const level = status === 'error' ? 'error' : status === 'pending' ? 'debug' : 'info';
+  logNetworkAction(
+    action: string,
+    status: 'pending' | 'success' | 'error',
+    data?: any,
+  ) {
+    const level =
+      status === 'error' ? 'error' : status === 'pending' ? 'debug' : 'info';
     this.log(level, 'network', `${action} - ${status}`, data);
   }
 
   logValidation(type: string, result: boolean, details?: any) {
     const level = result ? 'debug' : 'warn';
-    this.log(level, 'validation', `${type} validation: ${result ? 'PASS' : 'FAIL'}`, details);
+    this.log(
+      level,
+      'validation',
+      `${type} validation: ${result ? 'PASS' : 'FAIL'}`,
+      details,
+    );
   }
 
   // Configuration
@@ -136,11 +171,20 @@ class DebugLogger {
 export const debugLogger = new DebugLogger();
 
 // Convenience exports
-export const logGame = (message: string, data?: any) => debugLogger.info('game', message, data);
-export const logTurn = (playerId: string, action: string, data?: any) => debugLogger.logTurn(playerId, action, data);
-export const logCardPlay = (playerId: string, cards: string[], success: boolean, reason?: string) => 
-  debugLogger.logCardPlay(playerId, cards, success, reason);
-export const logNetwork = (action: string, status: 'pending' | 'success' | 'error', data?: any) => 
-  debugLogger.logNetworkAction(action, status, data);
-export const logValidation = (type: string, result: boolean, details?: any) => 
+export const logGame = (message: string, data?: any) =>
+  debugLogger.info('game', message, data);
+export const logTurn = (playerId: string, action: string, data?: any) =>
+  debugLogger.logTurn(playerId, action, data);
+export const logCardPlay = (
+  playerId: string,
+  cards: string[],
+  success: boolean,
+  reason?: string,
+) => debugLogger.logCardPlay(playerId, cards, success, reason);
+export const logNetwork = (
+  action: string,
+  status: 'pending' | 'success' | 'error',
+  data?: any,
+) => debugLogger.logNetworkAction(action, status, data);
+export const logValidation = (type: string, result: boolean, details?: any) =>
   debugLogger.logValidation(type, result, details);

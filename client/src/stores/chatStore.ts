@@ -14,33 +14,33 @@ interface ChatStore {
   messages: ChatMessage[];
   unreadCount: number;
   maxMessages: number;
-  
+
   // Typing indicators
   typingUsers: Record<string, { name: string; timestamp: Date }>;
-  
+
   // Chat state
   isEnabled: boolean;
   isVisible: boolean;
-  
+
   // Input state
   currentMessage: string;
   isTyping: boolean;
-  
+
   // Actions
   addMessage: (message: Omit<ChatMessage, 'id'>) => void;
   addSystemMessage: (text: string) => void;
   addGameMessage: (text: string) => void;
   clearMessages: () => void;
   markAllRead: () => void;
-  
+
   // Typing actions
   setTyping: (userId: string, userName: string, isTyping: boolean) => void;
   clearOldTypingUsers: () => void;
-  
+
   // Input actions
   setCurrentMessage: (message: string) => void;
   sendMessage: () => void;
-  
+
   // Visibility actions
   setVisible: (visible: boolean) => void;
   setEnabled: (enabled: boolean) => void;
@@ -56,7 +56,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   isVisible: false,
   currentMessage: '',
   isTyping: false,
-  
+
   // Actions
   addMessage: (message: Omit<ChatMessage, 'id'>) => {
     const id = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -64,12 +64,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       id,
       ...message,
     };
-    
+
     set(state => {
-      const newMessages = [...state.messages, newMessage].slice(-state.maxMessages);
+      const newMessages = [...state.messages, newMessage].slice(
+        -state.maxMessages,
+      );
       return {
         messages: newMessages,
-        unreadCount: state.isVisible ? state.unreadCount : state.unreadCount + 1,
+        unreadCount: state.isVisible
+          ? state.unreadCount
+          : state.unreadCount + 1,
       };
     });
   },
@@ -108,7 +112,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setTyping: (userId: string, userName: string, isTyping: boolean) => {
     set(state => {
       const newTypingUsers = { ...state.typingUsers };
-      
+
       if (isTyping) {
         newTypingUsers[userId] = {
           name: userName,
@@ -117,7 +121,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       } else {
         delete newTypingUsers[userId];
       }
-      
+
       return { typingUsers: newTypingUsers };
     });
   },
@@ -125,11 +129,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   clearOldTypingUsers: () => {
     const now = new Date();
     const timeout = 5000; // 5 seconds
-    
+
     set(state => {
       const newTypingUsers = { ...state.typingUsers };
       let hasChanges = false;
-      
+
       Object.keys(newTypingUsers).forEach(userId => {
         const user = newTypingUsers[userId];
         if (now.getTime() - user.timestamp.getTime() > timeout) {
@@ -137,7 +141,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           hasChanges = true;
         }
       });
-      
+
       return hasChanges ? { typingUsers: newTypingUsers } : state;
     });
   },
@@ -149,7 +153,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   sendMessage: () => {
     const { currentMessage } = get();
     if (!currentMessage.trim()) return;
-    
+
     // In the future, this would send via Socket.IO
     // For now, just add as a local message
     get().addMessage({
@@ -159,7 +163,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       timestamp: new Date(),
       type: 'chat',
     });
-    
+
     set({ currentMessage: '' });
   },
 

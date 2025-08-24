@@ -1,7 +1,11 @@
 import { GameState } from 'switch-shared';
 
 // Connection states
-export type ConnectionStatus = 'offline' | 'connecting' | 'connected' | 'reconnecting';
+export type ConnectionStatus =
+  | 'offline'
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting';
 
 // Game modes for trick cards
 export type GameMode = 'normal' | 'active-2s' | 'active-run' | 'mirror-mode';
@@ -70,13 +74,13 @@ export interface GameSettings {
   enableRuns: boolean;
   enableMirror: boolean;
   enable5Hearts: boolean;
-  
+
   // UI preferences
   handSortOrder: 'dealt' | 'rank' | 'suit';
   showAnimations: boolean;
   playSound: boolean;
   showRecentMoves: boolean;
-  
+
   // Accessibility
   highContrast: boolean;
   largeText: boolean;
