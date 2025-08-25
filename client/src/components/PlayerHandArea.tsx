@@ -2,9 +2,12 @@ import { useGameStore, useUIStore } from '../stores';
 import { GameEngine } from 'switch-shared';
 import { Card } from './Card';
 import { HandControls } from './HandControls';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 export function PlayerHandArea() {
+  const [isMobile, setIsMobile] = useState(false);
+  const [touchStartTime, setTouchStartTime] = useState(0);
+
   const {
     gameState,
     playerId,
@@ -35,6 +38,17 @@ export function PlayerHandArea() {
   }));
 
   const currentPlayer = gameState?.players.find(p => p.id === playerId);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 480);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (!gameState || !currentPlayer) return null;
 
@@ -118,6 +132,41 @@ export function PlayerHandArea() {
     selectCard(cardId);
   };
 
+  // Mobile-specific touch handlers
+  const handleCardTouchStart = () => {
+    if (isMobile) {
+      setTouchStartTime(Date.now());
+    }
+  };
+
+  const handleCardTouchEnd = (cardId: string) => {
+    if (isMobile) {
+      const touchDuration = Date.now() - touchStartTime;
+
+      // Long press for multi-select (500ms+)
+      if (touchDuration >= 500) {
+        selectCard(cardId);
+        // Add haptic feedback if available
+        if ('vibrate' in navigator) {
+          (navigator as any).vibrate(50);
+        }
+      } else {
+        // Quick tap - play single card if playable
+        const isPlayable = GameEngine.getPlayableCards(
+          gameState!,
+          playerId,
+        ).some(pc => pc.id === cardId);
+        if (isPlayable && isPlayerTurn && !isGameFinished) {
+          // Quick play single card
+          selectCard(cardId);
+          setTimeout(() => playSelectedCards(), 100);
+        } else {
+          selectCard(cardId);
+        }
+      }
+    }
+  };
+
   const handleCardDragStart = (e: React.DragEvent, cardId: string) => {
     // Determine what cards are being dragged
     let cardsToDrag: string[] = [];
@@ -185,7 +234,7 @@ export function PlayerHandArea() {
         onClearSelection={handleClearSelection}
       />
 
-      <div className="hand">
+      <div className={`hand ${isMobile ? 'mobile-horizontal' : ''}`}>
         {sortedHand.map(card => {
           const isPlayable =
             showCardHints && playableCards.some(pc => pc.id === card.id);
@@ -206,9 +255,15 @@ export function PlayerHandArea() {
               isDisabled={isDisabled}
               isDragging={isDragging}
               selectionOrder={selectionOrder}
-              onClick={() => handleCardClick(card.id)}
-              onDragStart={e => handleCardDragStart(e, card.id)}
-              onDragEnd={handleCardDragEnd}
+              onClick={isMobile ? undefined : () => handleCardClick(card.id)}
+              onTouchStart={isMobile ? handleCardTouchStart : undefined}
+              onTouchEnd={
+                isMobile ? () => handleCardTouchEnd(card.id) : undefined
+              }
+              onDragStart={
+                isMobile ? undefined : e => handleCardDragStart(e, card.id)
+              }
+              onDragEnd={isMobile ? undefined : handleCardDragEnd}
             />
           );
         })}

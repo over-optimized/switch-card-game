@@ -13,9 +13,11 @@ interface CardProps {
   isDiscard?: boolean;
   selectionOrder?: number | undefined;
   disabled?: boolean;
-  onClick?: () => void;
-  onDragStart?: (e: React.DragEvent) => void;
-  onDragEnd?: () => void;
+  onClick?: (() => void) | undefined;
+  onTouchStart?: (() => void) | undefined;
+  onTouchEnd?: (() => void) | undefined;
+  onDragStart?: ((e: React.DragEvent) => void) | undefined;
+  onDragEnd?: (() => void) | undefined;
 }
 
 export function Card({
@@ -28,6 +30,8 @@ export function Card({
   selectionOrder,
   disabled = false,
   onClick,
+  onTouchStart,
+  onTouchEnd,
   onDragStart,
   onDragEnd,
 }: CardProps) {
@@ -68,10 +72,24 @@ export function Card({
     }
   };
 
+  const handleTouchStart = () => {
+    if (!disabled && !isDisabled && onTouchStart) {
+      onTouchStart();
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!disabled && !isDisabled && onTouchEnd) {
+      onTouchEnd();
+    }
+  };
+
   return (
     <div
       className={classes}
       onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       draggable={!disabled && !isDisabled && !isDiscard}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}

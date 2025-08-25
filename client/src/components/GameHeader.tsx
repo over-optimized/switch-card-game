@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../stores';
 
 interface GameHeaderProps {
@@ -5,7 +6,19 @@ interface GameHeaderProps {
 }
 
 export function GameHeader({ onBackToMenu }: GameHeaderProps) {
+  const [isMobile, setIsMobile] = useState(false);
   const gameState = useGameStore(state => state.gameState);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 480);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const getSubtitle = () => {
     if (gameState?.phase === 'finished') {
@@ -15,16 +28,20 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
   };
 
   return (
-    <header className="game-header">
-      <div className="header-content">
-        <h1>🎴 Switch Card Game</h1>
-        <p>{getSubtitle()}</p>
-      </div>
+    <header className={`game-header ${isMobile ? 'mobile' : ''}`}>
       {onBackToMenu && (
-        <button className="back-to-menu-btn" onClick={onBackToMenu}>
-          ← Back to Menu
+        <button 
+          className={`back-to-menu-btn ${isMobile ? 'mobile-back' : ''}`} 
+          onClick={onBackToMenu}
+          title="Back to Menu"
+        >
+          {isMobile ? '←' : '← Back to Menu'}
         </button>
       )}
+      <div className="header-content">
+        <h1>{isMobile ? 'Switch' : '🎴 Switch Card Game'}</h1>
+        {!isMobile && <p>{getSubtitle()}</p>}
+      </div>
     </header>
   );
 }

@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../stores';
 
 export function GameInfo() {
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const {
     gameState,
     playerId,
@@ -19,6 +22,22 @@ export function GameInfo() {
     toggleRecentMoves: state.toggleRecentMoves,
   }));
 
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 480);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle mobile panel toggle
+  const toggleMobilePanel = () => {
+    setIsMobileExpanded(!isMobileExpanded);
+  };
+
   if (!gameState) return null;
 
   const getGameStatus = () => {
@@ -34,7 +53,10 @@ export function GameInfo() {
   };
 
   return (
-    <div className="game-info">
+    <div
+      className={`game-info ${isMobileExpanded ? 'expanded' : ''}`}
+      onClick={isMobile ? toggleMobilePanel : undefined}
+    >
       <div className="game-status">
         <p>
           <strong>Status:</strong> {getGameStatus()}
