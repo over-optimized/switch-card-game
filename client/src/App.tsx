@@ -21,7 +21,7 @@ export function App() {
     } else {
       document.body.classList.remove('game-active');
     }
-    
+
     // Cleanup on unmount
     return () => {
       document.body.classList.remove('game-active');

@@ -1,8 +1,7 @@
-import { useGameStore } from '../stores';
-import { DeckManager, GameEngine } from 'switch-shared';
-import { Card } from './Card';
 import React, { useEffect, useRef } from 'react';
-import { Suit } from 'switch-shared';
+import { useGameStore } from '../stores';
+import { DeckManager, GameEngine, Suit } from 'switch-shared';
+import { Card } from './Card';
 
 const getSuitSymbol = (suit: Suit): string => {
   switch (suit) {

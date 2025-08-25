@@ -24,7 +24,7 @@ export function GameBoard() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 480);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -37,8 +37,10 @@ export function GameBoard() {
   // Prepare opponents data for mobile
   const getOpponents = () => {
     if (!gameState || !playerId) return [];
-    
-    const humanPlayerIndex = gameState.players.findIndex(p => p.id === playerId);
+
+    const humanPlayerIndex = gameState.players.findIndex(
+      p => p.id === playerId,
+    );
     if (humanPlayerIndex === -1) return [];
 
     const opponents = [];
@@ -46,7 +48,7 @@ export function GameBoard() {
       const opponentIndex = (humanPlayerIndex + i) % playerCount;
       const opponent = gameState.players[opponentIndex];
       const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
-      
+
       opponents.push({
         id: opponent.id,
         name: opponent.name,
@@ -54,14 +56,16 @@ export function GameBoard() {
         isCurrentTurn: currentTurnPlayer.id === opponent.id,
       });
     }
-    
+
     return opponents;
   };
 
   const opponents = getOpponents();
 
   return (
-    <div className={`game-board game-board-${playerCount}p ${isMobile ? 'mobile' : ''}`}>
+    <div
+      className={`game-board game-board-${playerCount}p ${isMobile ? 'mobile' : ''}`}
+    >
       {isMobile && opponents.length > 0 ? (
         <MobileOpponentArea opponents={opponents} />
       ) : (

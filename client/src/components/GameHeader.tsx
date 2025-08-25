@@ -14,7 +14,7 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 480);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -30,8 +30,8 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
   return (
     <header className={`game-header ${isMobile ? 'mobile' : ''}`}>
       {onBackToMenu && (
-        <button 
-          className={`back-to-menu-btn ${isMobile ? 'mobile-back' : ''}`} 
+        <button
+          className={`back-to-menu-btn ${isMobile ? 'mobile-back' : ''}`}
           onClick={onBackToMenu}
           title="Back to Menu"
         >

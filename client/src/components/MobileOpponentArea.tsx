@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../stores';
 
 interface MobileOpponentAreaProps {
@@ -33,7 +33,7 @@ export function MobileOpponentArea({ opponents }: MobileOpponentAreaProps) {
     // Auto-show current turn opponent (if not user's turn)
     if (!userTurn) {
       const currentTurnOpponentIndex = opponents.findIndex(
-        opp => opp.id === currentTurnPlayer.id
+        opp => opp.id === currentTurnPlayer.id,
       );
       if (currentTurnOpponentIndex !== -1) {
         setCurrentOpponentIndex(currentTurnOpponentIndex);
@@ -62,13 +62,13 @@ export function MobileOpponentArea({ opponents }: MobileOpponentAreaProps) {
     if (Math.abs(diffX) > minSwipeDistance) {
       if (diffX > 0) {
         // Swipe left - next opponent
-        setCurrentOpponentIndex(prev => 
-          prev < opponents.length - 1 ? prev + 1 : 0
+        setCurrentOpponentIndex(prev =>
+          prev < opponents.length - 1 ? prev + 1 : 0,
         );
       } else {
         // Swipe right - previous opponent
-        setCurrentOpponentIndex(prev => 
-          prev > 0 ? prev - 1 : opponents.length - 1
+        setCurrentOpponentIndex(prev =>
+          prev > 0 ? prev - 1 : opponents.length - 1,
         );
       }
     }
@@ -92,14 +92,16 @@ export function MobileOpponentArea({ opponents }: MobileOpponentAreaProps) {
       >
         <div className="opponent-display">
           <div className="opponent-info">
-            <h4 className={`opponent-name ${currentOpponent.isCurrentTurn ? 'current-turn' : ''}`}>
+            <h4
+              className={`opponent-name ${currentOpponent.isCurrentTurn ? 'current-turn' : ''}`}
+            >
               {currentOpponent.name} ({currentOpponent.hand.length})
             </h4>
             {currentOpponent.isCurrentTurn && !isUserTurn && (
               <span className="turn-indicator">👤 TURN</span>
             )}
           </div>
-          
+
           <div className="opponent-cards-container">
             <div className="opponent-cards">
               {Array(Math.min(currentOpponent.hand.length, 8))
@@ -130,10 +132,11 @@ export function MobileOpponentArea({ opponents }: MobileOpponentAreaProps) {
           </div>
         )}
       </div>
-      
+
       {showSwipeIndicators && (
         <div className="swipe-hint">
-          Swipe to see other players • {currentOpponentIndex + 1} of {opponents.length}
+          Swipe to see other players • {currentOpponentIndex + 1} of{' '}
+          {opponents.length}
         </div>
       )}
     </div>

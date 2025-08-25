@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { GameSettings } from './types';
+import { GameSettings, HandShelfState } from './types';
 import { GameSetupConfig } from '../components/MenuScreen';
 
 interface UIStore {
@@ -19,6 +19,9 @@ interface UIStore {
   sidebarOpen: boolean;
   activeTab: 'game' | 'settings' | 'chat' | 'help';
 
+  // Mobile hand shelf state
+  handShelf: HandShelfState;
+
   // Theme and appearance
   theme: 'light' | 'dark' | 'auto';
 
@@ -32,6 +35,12 @@ interface UIStore {
   toggleSidebar: () => void;
   setActiveTab: (tab: 'game' | 'settings' | 'chat' | 'help') => void;
   setTheme: (theme: 'light' | 'dark' | 'auto') => void;
+
+  // Hand shelf actions
+  setHandShelfPosition: (position: number) => void;
+  setHandShelfDragging: (isDragging: boolean) => void;
+  enableHandShelf: (enabled: boolean) => void;
+  resetHandShelfPosition: () => void;
 }
 
 const defaultSettings: GameSettings = {
@@ -51,9 +60,18 @@ const defaultSettings: GameSettings = {
   showRecentMoves: false,
   showCardHints: true, // Default on to help new players
 
+  // Mobile preferences
+  handShelfPosition: 0, // Default to bottom position
+
   // Accessibility
   highContrast: false,
   largeText: false,
+};
+
+const defaultHandShelf: HandShelfState = {
+  position: 0, // Start at default bottom position
+  isDragging: false,
+  isEnabled: false, // Will be enabled automatically on mobile devices
 };
 
 export const useUIStore = create<UIStore>()(
@@ -67,6 +85,7 @@ export const useUIStore = create<UIStore>()(
       chatOpen: false,
       sidebarOpen: false,
       activeTab: 'game',
+      handShelf: defaultHandShelf,
       theme: 'auto',
 
       // Actions
@@ -119,13 +138,45 @@ export const useUIStore = create<UIStore>()(
       setTheme: (theme: 'light' | 'dark' | 'auto') => {
         set({ theme });
       },
+
+      // Hand shelf actions
+      setHandShelfPosition: (position: number) => {
+        set(state => ({
+          handShelf: { ...state.handShelf, position },
+          settings: { ...state.settings, handShelfPosition: position },
+        }));
+      },
+
+      setHandShelfDragging: (isDragging: boolean) => {
+        set(state => ({
+          handShelf: { ...state.handShelf, isDragging },
+        }));
+      },
+
+      enableHandShelf: (enabled: boolean) => {
+        set(state => ({
+          handShelf: { ...state.handShelf, isEnabled: enabled },
+        }));
+      },
+
+      resetHandShelfPosition: () => {
+        set(state => ({
+          handShelf: { ...state.handShelf, position: 0 },
+          settings: { ...state.settings, handShelfPosition: 0 },
+        }));
+      },
     }),
     {
       name: 'switch-game-ui',
-      // Only persist settings and theme, not UI state or screens
+      // Only persist settings, theme, and shelf position, not UI state or screens
       partialize: state => ({
         settings: state.settings,
         theme: state.theme,
+        handShelf: {
+          position: state.handShelf.position,
+          isEnabled: state.handShelf.isEnabled,
+          isDragging: false, // Never persist dragging state
+        },
       }),
     },
   ),

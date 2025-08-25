@@ -65,6 +65,13 @@ export interface PlayerInfo {
   status: 'waiting' | 'ready' | 'playing';
 }
 
+// Mobile hand shelf positioning
+export interface HandShelfState {
+  position: number; // Bottom offset in pixels (0 = default bottom position)
+  isDragging: boolean;
+  isEnabled: boolean; // Whether shelf is draggable on current device
+}
+
 // Game settings
 export interface GameSettings {
   // Rule toggles
@@ -82,6 +89,9 @@ export interface GameSettings {
   playSound: boolean;
   showRecentMoves: boolean;
   showCardHints: boolean;
+
+  // Mobile preferences
+  handShelfPosition: number; // Persisted shelf position preference
 
   // Accessibility
   highContrast: boolean;

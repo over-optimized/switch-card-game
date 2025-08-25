@@ -2,7 +2,8 @@ import { useGameStore, useUIStore } from '../stores';
 import { GameEngine } from 'switch-shared';
 import { Card } from './Card';
 import { HandControls } from './HandControls';
-import { useMemo, useState, useEffect } from 'react';
+import { HandShelf } from './HandShelf';
+import React, { useMemo, useState, useEffect } from 'react';
 
 export function PlayerHandArea() {
   const [isMobile, setIsMobile] = useState(false);
@@ -32,33 +33,40 @@ export function PlayerHandArea() {
     endDrag: state.endDrag,
   }));
 
-  const { handSortOrder, showCardHints } = useUIStore(state => ({
+  const { handSortOrder, showCardHints, handShelf } = useUIStore(state => ({
     handSortOrder: state.settings.handSortOrder,
     showCardHints: state.settings.showCardHints,
+    handShelf: state.handShelf,
   }));
 
   const currentPlayer = gameState?.players.find(p => p.id === playerId);
 
-  // Detect mobile screen size
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 480);
-    };
+  // Create dynamic styles for shelf positioning (must be before early return)
+  const handAreaStyle = useMemo(() => {
+    if (!isMobile || !handShelf.isEnabled) return {};
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    return {
+      '--shelf-offset': `${handShelf.position}px`,
+    } as React.CSSProperties;
+  }, [isMobile, handShelf.isEnabled, handShelf.position]);
 
-  if (!gameState || !currentPlayer) return null;
+  // Create CSS classes for hand area (must be before early return)
+  const handAreaClasses = useMemo(() => {
+    const classes = ['hand-area'];
 
-  const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
-  const playableCards = GameEngine.getPlayableCards(gameState, playerId);
-  const isPlayerTurn = currentTurnPlayer.id === playerId;
-  const isGameFinished = gameState.phase === 'finished';
+    if (isMobile && handShelf.isEnabled) {
+      classes.push('with-shelf');
+      if (handShelf.isDragging) {
+        classes.push('dragging');
+      }
+    }
 
-  // Sort hand based on user preference
+    return classes.join(' ');
+  }, [isMobile, handShelf.isEnabled, handShelf.isDragging]);
+
+  // Sort hand based on user preference (must be before early return)
   const sortedHand = useMemo(() => {
+    if (!currentPlayer) return [];
     const cards = [...currentPlayer.hand];
 
     switch (handSortOrder) {
@@ -126,7 +134,25 @@ export function PlayerHandArea() {
       default:
         return cards;
     }
-  }, [currentPlayer.hand, handSortOrder]);
+  }, [currentPlayer, handSortOrder]);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 480);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  if (!gameState || !currentPlayer) return null;
+
+  const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
+  const playableCards = GameEngine.getPlayableCards(gameState, playerId);
+  const isPlayerTurn = currentTurnPlayer.id === playerId;
+  const isGameFinished = gameState.phase === 'finished';
 
   const handleCardClick = (cardId: string) => {
     selectCard(cardId);
@@ -147,8 +173,10 @@ export function PlayerHandArea() {
       if (touchDuration >= 500) {
         selectCard(cardId);
         // Add haptic feedback if available
-        if ('vibrate' in navigator) {
-          (navigator as any).vibrate(50);
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          (
+            navigator as unknown as { vibrate: (duration: number) => void }
+          ).vibrate(50);
         }
       } else {
         // Quick tap - play single card if playable
@@ -222,7 +250,8 @@ export function PlayerHandArea() {
   };
 
   return (
-    <div className="hand-area">
+    <div className={handAreaClasses} style={handAreaStyle}>
+      <HandShelf />
       <h3>
         Your Hand ({currentPlayer.hand.length} cards)
         {isPlayerTurn ? ' - Your Turn' : ''}
