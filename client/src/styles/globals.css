@@ -1109,12 +1109,22 @@ body {
 
   /* Mobile game board layout with swipable opponents */
   .game-board.mobile {
+    display: flex;
     flex-direction: column;
     height: calc(100vh - 200px);
     padding: 10px 0 0 0;
     gap: 0;
     justify-content: flex-start;
     margin-bottom: 200px;
+  }
+
+  /* Switch to absolute positioning when shelf is enabled */
+  .game-board.mobile.with-shelf {
+    display: block !important;
+    position: relative;
+    height: 100vh;
+    padding: 0;
+    margin-bottom: 0;
   }
 
   .game-board.mobile .mobile-opponent-container {
@@ -1126,6 +1136,21 @@ body {
     display: flex;
     justify-content: center;
     z-index: 10;
+  }
+
+  /* Absolute positioning for opponent when shelf is enabled */
+  .game-board.mobile.with-shelf .mobile-opponent-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .game-board.mobile .center-area {
@@ -1147,6 +1172,21 @@ body {
     min-height: 0;
     margin-top: 0;
     overflow: visible;
+  }
+
+  /* Absolute positioning for player area when shelf is enabled */
+  .game-board.mobile.with-shelf .player-area {
+    position: absolute !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--hand-height, 200px);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    /* Override flex properties */
+    order: unset !important;
+    flex: none !important;
   }
 }
 
@@ -1258,15 +1298,34 @@ body {
     padding-bottom: 180px;
   }
 
-  /* Reduce app container padding on mobile */
-  .app {
-    padding: 0;
-  }
-
-  /* Tighten mobile margins */
+  /* Mobile-First Root Container Reset */
+  /* Reset body for mobile-first approach */
   body {
     margin: 0;
     padding: 0;
+    display: block !important; /* Override flex centering from index.html */
+    justify-content: unset !important;
+    align-items: unset !important;
+    min-height: 100vh;
+  }
+
+  /* Reset #app for mobile-first approach */
+  #app {
+    padding: 0 !important; /* Override index.html padding */
+    margin: 0;
+    max-width: none !important; /* Full width on mobile */
+    width: 100% !important;
+    height: 100vh;
+    box-sizing: border-box;
+  }
+
+  /* Reset .app container */
+  .app {
+    padding: 0;
+    margin: 0;
+    height: 100vh;
+    width: 100%;
+    position: relative;
   }
 
   .game-container {
@@ -2259,11 +2318,17 @@ body {
      ================================= */
 
   .hand-shelf-container {
-    position: absolute;
-    top: -45px;
+    position: fixed;
     left: 50%;
     transform: translateX(-50%);
     z-index: 120;
+    height: 40px;
+    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* bottom position is now set via inline styles */
+  }
+
+  .hand-shelf-container.dragging {
+    transition: none;
   }
 
   .hand-shelf-drag-handle {
@@ -2329,13 +2394,63 @@ body {
     color: rgba(255, 255, 255, 1);
   }
 
-  /* Dynamic positioning for hand area based on shelf position */
+  /* Hand area styling - positioning handled by .player-area */
   .hand-area.with-shelf {
-    bottom: var(--shelf-offset, 0px);
-    transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%; /* Fill parent .player-area */
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Visual indication of expanded space */
+    border-top: 2px solid rgba(52, 152, 219, 0.3);
+    background: linear-gradient(to top, 
+      rgba(0,0,0,0.95), 
+      rgba(0,0,0,0.9) 70%, 
+      rgba(52, 152, 219, 0.1));
   }
 
   .hand-area.with-shelf.dragging {
     transition: none;
+    border-top-color: rgba(52, 152, 219, 0.6);
   }
+
+  /* Fixed height deck area with dynamic positioning */
+  .game-board.mobile.with-shelf .center-area {
+    position: absolute !important;
+    top: var(--deck-top, 140px) !important; /* 120px opponent + 20px gap */
+    left: 0;
+    right: 0;
+    height: 179px; /* Fixed height - matches actual deck content */
+    margin: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50; /* Above background, below shelf */
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Override flex properties */
+    order: unset !important;
+    flex: none !important;
+  }
+
+  /* Ensure deck-area is properly centered within center-area */
+  .game-board.mobile.with-shelf .center-area .deck-area {
+    margin: 0 !important; /* Remove auto margins that interfere with flex centering */
+    margin-bottom: 0 !important; /* Remove bottom margin */
+    position: relative !important; /* Ensure it's not absolutely positioned */
+    top: unset !important; /* Remove any top positioning */
+    left: unset !important; /* Remove any left positioning */
+    transform: none !important; /* Remove any transforms, including drag scaling */
+    /* Temporary debug border to see actual boundaries */
+    border: 2px solid red !important;
+  }
+
+  /* Temporary debug border for center-area */
+  .game-board.mobile.with-shelf .center-area {
+    border: 2px solid green !important;
+  }
+
+
+  .game-board.mobile.with-shelf.dragging .center-area {
+    transition: none;
+  }
+
+
 }

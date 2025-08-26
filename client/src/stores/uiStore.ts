@@ -168,15 +168,14 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: 'switch-game-ui',
-      // Only persist settings, theme, and shelf position, not UI state or screens
+      // Only persist settings and theme, not shelf position or UI state
       partialize: state => ({
-        settings: state.settings,
-        theme: state.theme,
-        handShelf: {
-          position: state.handShelf.position,
-          isEnabled: state.handShelf.isEnabled,
-          isDragging: false, // Never persist dragging state
+        settings: {
+          ...state.settings,
+          handShelfPosition: 0, // Always reset shelf position to default
         },
+        theme: state.theme,
+        // Don't persist handShelf state - let it initialize fresh each time
       }),
     },
   ),

@@ -1,0 +1,194 @@
+/* Mobile Player Sheet - Bottom Sheet Component */
+.playerSheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, 
+    rgba(0,0,0,0.95), 
+    rgba(0,0,0,0.9) 70%, 
+    rgba(52, 152, 219, 0.1));
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  z-index: 300;
+  /* Dynamic height that grows as sheet expands upward */
+  height: calc(200px + var(--sheet-expansion, 0px));
+  max-height: calc(100vh - 100px); /* Leave space for header and some content */
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.playerSheet.dragging {
+  transition: none;
+}
+
+/* Drag Handle */
+.dragHandle {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  min-width: 80px;
+  z-index: 310;
+}
+
+.dragHandle:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateX(-50%) scale(1.05);
+}
+
+.dragHandle.dragging {
+  background: rgba(52, 152, 219, 0.8);
+  border-color: rgba(52, 152, 219, 0.6);
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+  transform: translateX(-50%) scale(1.1);
+  cursor: grabbing;
+}
+
+.dragHandleIcon {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+}
+
+.gripLine {
+  width: 25px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  transition: background 0.2s ease;
+}
+
+.dragHandle.dragging .gripLine {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.dragHandleLabel {
+  font-size: 0.75em;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: color 0.2s ease;
+}
+
+.dragHandle.dragging .dragHandleLabel {
+  color: rgba(255, 255, 255, 1);
+}
+
+/* Sheet Content - Floated to Top */
+.sheetContent {
+  padding: 30px 16px 40px 16px; /* Increased top padding to avoid drag handle overlap */
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Content sticks to top of sheet */
+  justify-content: flex-start;
+  /* Ensure content doesn't overflow when sheet expands */
+  overflow-y: auto;
+}
+
+/* Player Info Header */
+.playerInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.playerName {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: white;
+}
+
+.turnIndicator {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Hand Controls */
+.handControls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.controlButton {
+  flex: 1;
+  min-width: 80px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9em;
+}
+
+.playButton {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  color: white;
+}
+
+.playButton:not(:disabled):hover {
+  background: linear-gradient(135deg, #229954, #27ae60);
+  transform: scale(1.02);
+}
+
+.playButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clearButton {
+  background: rgba(231, 76, 60, 0.2);
+  border: 2px solid #e74c3c;
+  color: #e74c3c;
+}
+
+.clearButton:hover {
+  background: rgba(231, 76, 60, 0.3);
+  transform: scale(1.02);
+}
+
+/* Hand Cards */
+.handCards {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-start;
+  align-content: flex-start;
+  overflow-y: auto;
+  /* Ensure cards are visible at top of sheet */
+  min-height: 120px;
+}
+
+/* Mobile Hand Area Styling */
+.handCards :global(.mobile-hand) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  justify-content: flex-start;
+  align-content: flex-start;
+}

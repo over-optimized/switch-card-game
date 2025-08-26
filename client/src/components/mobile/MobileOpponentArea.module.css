@@ -1,0 +1,80 @@
+/* Mobile Opponent Area - Fixed positioning component */
+.opponentContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin: 0 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.opponentWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: fit-content;
+  height: 100%;
+  padding: 0 10px;
+}
+
+/* Single opponent display */
+.singleOpponent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+}
+
+.opponentName {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1em;
+  text-align: center;
+}
+
+.cardCount {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9em;
+}
+
+/* Multiple opponents with swipe indicator */
+.multipleOpponents {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 100%;
+}
+
+.currentOpponent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.swipeIndicator {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.swipeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.swipeDot.active {
+  background: #3498db;
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.6);
+}

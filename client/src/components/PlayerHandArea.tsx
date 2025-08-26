@@ -41,14 +41,10 @@ export function PlayerHandArea() {
 
   const currentPlayer = gameState?.players.find(p => p.id === playerId);
 
-  // Create dynamic styles for shelf positioning (must be before early return)
+  // Hand area style is now managed by GameBoard, just pass through the classes
   const handAreaStyle = useMemo(() => {
-    if (!isMobile || !handShelf.isEnabled) return {};
-
-    return {
-      '--shelf-offset': `${handShelf.position}px`,
-    } as React.CSSProperties;
-  }, [isMobile, handShelf.isEnabled, handShelf.position]);
+    return {}; // Styles are handled at GameBoard level
+  }, []);
 
   // Create CSS classes for hand area (must be before early return)
   const handAreaClasses = useMemo(() => {
