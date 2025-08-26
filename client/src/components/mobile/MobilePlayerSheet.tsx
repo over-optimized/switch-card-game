@@ -8,6 +8,9 @@ export function MobilePlayerSheet() {
   const gameState = useGameStore(state => state.gameState);
   const players = useGameStore(state => state.gameState?.players || []);
   const playerId = useGameStore(state => state.playerId);
+  const selectedCards = useGameStore(state => state.selectedCards);
+  const playSelectedCards = useGameStore(state => state.playSelectedCards);
+  const clearSelection = useGameStore(state => state.clearSelection);
 
   // Bottom sheet positioning state
   const [sheetPosition, setSheetPosition] = useState(0); // 0 = default, positive = pulled up
@@ -129,11 +132,22 @@ export function MobilePlayerSheet() {
         <div className={styles.handControls}>
           <button
             className={`${styles.controlButton} ${styles.playButton}`}
-            disabled={!isPlayerTurn}
+            disabled={!isPlayerTurn || selectedCards.length === 0}
+            onClick={() => {
+              console.log('🎮 MOBILE PLAY BUTTON CLICKED:', selectedCards.length);
+              playSelectedCards();
+            }}
           >
-            🎯 Play (0)
+            🎴 Play ({selectedCards.length})
           </button>
-          <button className={`${styles.controlButton} ${styles.clearButton}`}>
+          <button
+            className={`${styles.controlButton} ${styles.clearButton}`}
+            disabled={selectedCards.length === 0}
+            onClick={() => {
+              console.log('🧹 MOBILE CLEAR BUTTON CLICKED');
+              clearSelection();
+            }}
+          >
             Clear
           </button>
         </div>

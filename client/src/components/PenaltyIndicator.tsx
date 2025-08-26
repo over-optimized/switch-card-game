@@ -8,9 +8,14 @@ interface PenaltyIndicatorProps {
 export const PenaltyIndicator: React.FC<PenaltyIndicatorProps> = ({
   penaltyState,
 }) => {
+  console.log('⚠️ PENALTY INDICATOR - State:', penaltyState);
+  
   if (!penaltyState.active) {
+    console.log('⚠️ PENALTY INDICATOR - Not active, hiding');
     return null;
   }
+  
+  console.log('⚠️ PENALTY INDICATOR - Active, showing penalty');
 
   const getPenaltyMessage = () => {
     switch (penaltyState.type) {

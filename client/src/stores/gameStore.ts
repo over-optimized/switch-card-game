@@ -259,8 +259,14 @@ export const useGameStore = create<GameStore>()(
     },
 
     selectCard: (cardId: string) => {
+      console.log('🎯 SELECTCARD CALLED:', { cardId });
       const { gameState, playerId, selectedCards, cardSelectionOrder } = get();
-      if (!gameState) return;
+      console.log('🎯 Current state:', { selectedCards, playerId });
+      
+      if (!gameState) {
+        console.log('🎯 ERROR: No gameState');
+        return;
+      }
 
       const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
       if (currentTurnPlayer.id !== playerId || gameState.phase === 'finished') {
@@ -278,11 +284,13 @@ export const useGameStore = create<GameStore>()(
       const isCurrentlySelected = selectedCards.includes(cardId);
 
       if (isCurrentlySelected) {
+        console.log('🎯 DESELECTING card:', cardId);
         // Deselect card
         const newSelection = selectedCards.filter(id => id !== cardId);
         const newOrder = { ...cardSelectionOrder };
         delete newOrder[cardId];
 
+        console.log('🎯 New selection after deselect:', newSelection);
         set({
           selectedCards: newSelection,
           cardSelectionOrder: newOrder,
@@ -307,8 +315,11 @@ export const useGameStore = create<GameStore>()(
           }
         }
 
+        console.log('🎯 SELECTING card:', cardId);
         const newSelectedCards = [...selectedCards, cardId];
         const selectionOrder = newSelectedCards.length; // 1, 2, 3, etc.
+        console.log('🎯 New selection after select:', newSelectedCards);
+        
         set({
           selectedCards: newSelectedCards,
           cardSelectionOrder: {
@@ -505,8 +516,21 @@ export const useGameStore = create<GameStore>()(
           `Played ${orderedCards.length} cards locally`,
         );
 
-        // Handle AI turn if needed
-        if (currentGameState.phase !== 'finished') {
+        // Check for win condition first
+        if (currentGameState.phase === 'finished') {
+          const winner = currentGameState.winner;
+          console.log('🏆 GAME FINISHED!', { winner, playerId });
+          get().updateMessage(
+            winner?.id === playerId
+              ? 'You won! 🎉'
+              : `${winner?.name} wins!`,
+          );
+          get().addRecentMove(
+            'Game',
+            winner?.id === playerId ? 'You won!' : `${winner?.name} won!`,
+          );
+        } else {
+          // Handle AI turn if needed
           const nextPlayer =
             currentGameState.players[currentGameState.currentPlayerIndex];
           if (nextPlayer.id !== playerId) {
@@ -890,8 +914,21 @@ export const useGameStore = create<GameStore>()(
       if (!gameState) return false;
 
       try {
-        const updatedGameState = GameEngine.servePenalty(gameState, playerId);
         const penaltyCards = gameState.penaltyState.cards;
+        console.log('🚨 SERVING PENALTY:', {
+          playerId,
+          penaltyCards,
+          type: gameState.penaltyState.type,
+        });
+
+        const updatedGameState = GameEngine.servePenalty(gameState, playerId);
+        console.log('🚨 PENALTY SERVED:', {
+          playerId,
+          cardsDrawn: penaltyCards,
+          newHandSize: updatedGameState.players.find(p => p.id === playerId)
+            ?.hand.length,
+          penaltyActive: updatedGameState.penaltyState.active,
+        });
         set({
           gameState: updatedGameState,
           gameMode: updatedGameState.gameMode,
@@ -992,12 +1029,24 @@ export const useGameStore = create<GameStore>()(
       const currentPlayer = gameState.players[gameState.currentPlayerIndex];
       if (currentPlayer.id === get().playerId) return; // Not computer's turn
 
+      console.log('🤖 COMPUTER TURN START:', {
+        playerId: currentPlayer.id,
+        playerName: currentPlayer.name,
+        penaltyActive: gameState.penaltyState.active,
+        penaltyType: gameState.penaltyState.type,
+        penaltyCards: gameState.penaltyState.cards,
+      });
+
       try {
         // Check if penalty needs to be served first
         if (
           gameState.penaltyState.active &&
           gameState.penaltyState.type === '2s'
         ) {
+          console.log('🤖 COMPUTER FACING 2s PENALTY:', {
+            penaltyCards: gameState.penaltyState.cards,
+            playerId: currentPlayer.id,
+          });
           const playableCards = GameEngine.getPlayableCards(
             gameState,
             currentPlayer.id,
@@ -1005,8 +1054,16 @@ export const useGameStore = create<GameStore>()(
 
           // Check if computer has any 2s to play
           const has2s = playableCards.some(card => card.rank === '2');
+          const available2s = playableCards.filter(card => card.rank === '2');
+
+          console.log('🤖 COMPUTER 2s CHECK:', {
+            has2s,
+            available2s: available2s.map(c => c.id),
+            totalPlayableCards: playableCards.length,
+          });
 
           if (!has2s) {
+            console.log('🤖 COMPUTER NO 2s - SERVING PENALTY');
             // Computer must serve penalty
             const updatedGameState = GameEngine.servePenalty(
               gameState,
@@ -1044,10 +1101,21 @@ export const useGameStore = create<GameStore>()(
           currentPlayer.id,
         );
 
+        console.log('🤖 COMPUTER NORMAL TURN:', {
+          playableCards: playableCards.length,
+          penaltyActive: gameState.penaltyState.active,
+        });
+
         if (playableCards.length > 0) {
           // Computer plays a random valid card
           const randomCard =
             playableCards[Math.floor(Math.random() * playableCards.length)];
+
+          console.log('🤖 COMPUTER PLAYING CARD:', {
+            cardId: randomCard.id,
+            rank: randomCard.rank,
+            suit: randomCard.suit,
+          });
 
           // AI suit selection for Aces
           let chosenSuit: Suit | undefined;
