@@ -1,6 +1,6 @@
 # Switch Card Game
 
-A multiplayer HTML5 card game with real-time networking capabilities. Play Switch with 2-4 players online with friends using shareable room codes.
+A mobile-first multiplayer card game built with React and TypeScript. Play Switch with 2-4 players online with friends using shareable room codes, optimized for both mobile and desktop play.
 
 ## 🚀 Quick Start
 
@@ -77,7 +77,11 @@ pnpm ci                   # Full CI pipeline (lint + test + build)
 
 ```
 switch-card-game/
-├── client/              # Frontend (Vite + TypeScript)
+├── client/              # Frontend (React + TypeScript + Vite)
+│   ├── src/components/  # React components
+│   │   ├── mobile/      # Mobile-specific components
+│   │   └── ...          # Shared/desktop components
+│   └── src/stores/      # Zustand state management
 ├── server/              # Backend (Node.js + Socket.IO)
 ├── shared/              # Shared types and game logic
 └── docs/                # Documentation
@@ -85,15 +89,24 @@ switch-card-game/
 
 ### Technology Stack
 
-- **Frontend**: HTML5, TypeScript, CSS3, Vite
+- **Frontend**: React 18, TypeScript, Zustand, CSS Modules, Vite
 - **Backend**: Node.js, Express, Socket.IO
 - **Shared**: TypeScript types and game engine
-- **Testing**: Vitest, coverage reporting
+- **Testing**: Vitest, React Testing Library, coverage reporting
 - **Development**: ESLint, Prettier, hot reloading
 
 ### Key Components
 
-- **Game Engine**: Core game logic with deck management
+#### Mobile-First Architecture
+- **MobileGameBoard**: Mobile-optimized game layout with bottom sheets
+- **MobileWinModal**: Full-screen celebration modal for game completion
+- **MobilePlayerSheet**: Draggable bottom sheet for player hand management
+- **MobileHandArea**: Touch-optimized card interaction system
+
+#### Shared Components
+- **Game Engine**: Core game logic with penalty and special card systems
+- **GameContainer**: Main app wrapper with responsive design detection
+- **State Management**: Zustand stores with network-ready architecture
 - **Room Manager**: Handles multiplayer room creation/joining
 - **WebSocket Events**: Real-time communication between players
 - **Type Safety**: Shared TypeScript interfaces across client/server
