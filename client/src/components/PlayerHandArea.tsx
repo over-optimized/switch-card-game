@@ -151,6 +151,7 @@ export function PlayerHandArea() {
   const isGameFinished = gameState.phase === 'finished';
 
   const handleCardClick = (cardId: string) => {
+    console.log('🟢 PLAYER HAND AREA - Card clicked (desktop):', cardId);
     selectCard(cardId);
   };
 
@@ -164,9 +165,11 @@ export function PlayerHandArea() {
   const handleCardTouchEnd = (cardId: string) => {
     if (isMobile) {
       const touchDuration = Date.now() - touchStartTime;
+      console.log('🟢 PLAYER HAND AREA - Touch end (mobile):', { cardId, touchDuration });
 
       // Long press for multi-select (500ms+)
       if (touchDuration >= 500) {
+        console.log('🟢 PLAYER HAND AREA - Long press detected, selecting card');
         selectCard(cardId);
         // Add haptic feedback if available
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
@@ -181,6 +184,7 @@ export function PlayerHandArea() {
           playerId,
         ).some(pc => pc.id === cardId);
         if (isPlayable && isPlayerTurn && !isGameFinished) {
+          console.log('🟢 PLAYER HAND AREA - Quick tap on playable card');
           // Quick play single card
           selectCard(cardId);
           setTimeout(() => playSelectedCards(), 100);
