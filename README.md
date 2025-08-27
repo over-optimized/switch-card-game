@@ -97,18 +97,20 @@ switch-card-game/
 
 ### Key Components
 
-#### Mobile-First Architecture
-- **MobileGameBoard**: Mobile-optimized game layout with bottom sheets
+#### Unified Mobile-First Architecture
+- **GameBoard**: Unified responsive component using mobile-first patterns
+- **MobileGameBoard**: Mobile-optimized game layout with bottom sheets  
 - **MobileWinModal**: Full-screen celebration modal for game completion
 - **MobilePlayerSheet**: Draggable bottom sheet for player hand management
-- **MobileHandArea**: Touch-optimized card interaction system
+- **MobileHandArea**: Unified touch/click-optimized card interaction system
+- **HandControls**: CSS modules-based responsive controls (75%/25% layout)
 
-#### Shared Components
+#### Network-First Game Architecture
 - **Game Engine**: Core game logic with penalty and special card systems
-- **GameContainer**: Main app wrapper with responsive design detection
-- **State Management**: Zustand stores with network-ready architecture
-- **Room Manager**: Handles multiplayer room creation/joining
-- **WebSocket Events**: Real-time communication between players
+- **WebSocket Client**: Environment-based URLs (dev vs production)
+- **State Management**: Zustand stores with optimistic updates
+- **Room Manager**: Handles multiplayer room creation/joining and AI opponents
+- **Server**: Express + Socket.IO with Railway deployment configuration
 - **Type Safety**: Shared TypeScript interfaces across client/server
 
 ## 🧪 Testing
@@ -135,44 +137,57 @@ pnpm test:coverage
 
 ## 🚀 Deployment
 
-### Docker (Recommended)
+### Production Deployment
 
-```bash
-# Build Docker images
-docker build -t switch-client ./client
-docker build -t switch-server ./server
+**Frontend (Vercel)**
+- Deployed at: https://switch-card-game.vercel.app
+- Automatic deployments from main branch
+- Optimized for mobile and desktop
 
-# Run with Docker Compose
-docker-compose up -d
-```
+**Backend (Railway)** 
+- Server deployment ready with Railway configuration
+- See `RAILWAY_DEPLOY.md` for deployment guide
+- Production WebSocket URLs configured
 
-### Manual Deployment
+### Development Deployment
 
 ```bash
 # Production build with optimizations
 pnpm run build:prod
 
-# Start production server
-cd server && pnpm start
+# Start production server locally
+cd server && pnpm start:prod
+```
+
+### Environment Configuration
+
+```bash
+# Development (automatic)
+VITE_WS_URL=http://localhost:3001
+
+# Production (Vercel)  
+VITE_WS_URL=https://your-railway-app.railway.app
 ```
 
 ## 📋 Roadmap
 
-### 🚨 CRITICAL: Architecture Consolidation (Week 5) 🟡
+### 🟢 CRITICAL: Architecture Consolidation (Week 5) - 95% COMPLETE!
 
-**Phase 1 Complete (85% Done)** - Major architecture simplification achieved:
+**✅ Major architecture consolidation achieved:**
 
 - [x] **Network-First Architecture** - All games use WebSocket connections (local = localhost)
-- [x] **Component Consolidation** - ~60% reduction in mobile/desktop duplication
+- [x] **Component Consolidation** - ~70% reduction in mobile/desktop duplication
 - [x] **Responsive Design** - Unified components work seamlessly across all devices
-- [x] **Server Enhancement** - Local single-player rooms with AI opponent support
-- [x] **Feature Branch Safety** - Development isolated from production deployment
+- [x] **Mobile Layout Fixes** - Complete UI overhaul with proper controls positioning  
+- [x] **Production Ready** - Railway deployment configuration complete
+- [x] **Environment URLs** - Dev vs production WebSocket configuration
+- [x] **Safe Deployment** - Vercel temporarily disabled during server setup
+- [x] **Pull Request Ready** - Feature branch ready for main branch merge
 
-**Phase 2 (Remaining 15%)**:
-- [ ] Complete remaining component consolidation (GameInfo → MobileWinModal)
-- [ ] Remove obsolete desktop-specific components
-- [ ] Deploy server to Railway with production configuration
-- [ ] Final testing across all platforms and game modes
+**🟡 Final Phase (Remaining 5%)**:
+- [ ] Deploy server to Railway (configuration ready)
+- [ ] Complete final component cleanup tasks
+- [ ] Test full production environment end-to-end
 
 ### Phase 1: Core Game ✅ Complete
 

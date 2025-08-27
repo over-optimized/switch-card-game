@@ -127,6 +127,8 @@ pnpm test:coverage      # Run tests with coverage
 - ✅ **Player Management**: Track connected players per room
 - ✅ **Host Privileges**: Room creator controls game start
 - ✅ **Disconnect Handling**: Cleanup on player disconnect
+- ✅ **AI Opponent Support**: Server-managed AI players for local games
+- ✅ **Network-First Architecture**: All games use WebSocket connections
 
 ### Game State Management
 

@@ -16,7 +16,6 @@ export function HandControls({
   showPlayControls = true, // Default to true for backward compatibility
 }: HandControlsProps) {
   const [isMobile, setIsMobile] = useState(false);
-  const [showSortOptions, setShowSortOptions] = useState(false);
   const { settings, updateSettings } = useUIStore(state => ({
     settings: state.settings,
     updateSettings: state.updateSettings,
@@ -54,10 +53,6 @@ export function HandControls({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const toggleSortOptions = () => {
-    setShowSortOptions(!showSortOptions);
-  };
-
   // Check if current player can serve penalty
   const canServePenalty =
     gameState &&
@@ -72,7 +67,11 @@ export function HandControls({
         <>
           <button
             className={`${styles.sortBtn} ${settings.handSortOrder === 'rank' ? styles.active : ''}`}
-            onClick={() => handleSortChange(settings.handSortOrder === 'rank' ? 'suit' : 'rank')}
+            onClick={() =>
+              handleSortChange(
+                settings.handSortOrder === 'rank' ? 'suit' : 'rank',
+              )
+            }
           >
             {settings.handSortOrder === 'rank' ? '🔢 By Rank' : '♠️ By Suit'}
           </button>
@@ -108,14 +107,14 @@ export function HandControls({
               )}
               {canServePenalty && (
                 <button
-                className={styles.penaltyBtn}
-                onClick={handleServePenalty}
-                title={`Draw ${penaltyState.cards} cards and end turn`}
-              >
-                ⚠️ Penalty ({penaltyState.cards})
-              </button>
-            )}
-          </div>
+                  className={styles.penaltyBtn}
+                  onClick={handleServePenalty}
+                  title={`Draw ${penaltyState.cards} cards and end turn`}
+                >
+                  ⚠️ Penalty ({penaltyState.cards})
+                </button>
+              )}
+            </div>
           )}
         </>
       ) : (

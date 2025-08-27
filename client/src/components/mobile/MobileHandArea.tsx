@@ -17,8 +17,6 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
     cardSelectionOrder,
     dragState,
     selectCard,
-    playSelectedCards,
-    clearSelection,
     startDrag,
     endDrag,
   } = useGameStore(state => ({
