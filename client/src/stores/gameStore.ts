@@ -66,6 +66,7 @@ interface GameStore {
   setupWebSocketGame: (config?: GameSetupConfig) => void;
   connectToLocalServer: () => Promise<boolean>;
   restartGame: () => void;
+  leaveRoom: () => Promise<boolean>;
   updateMessage: (message: string) => void;
 
   // Actions - Card interactions (WebSocket-only)
@@ -330,6 +331,83 @@ export const useGameStore = create<GameStore>()(
         // Restart using WebSocket-first approach
         get().setupWebSocketGame();
       }, 500);
+    },
+
+    leaveRoom: () => {
+      return new Promise<boolean>((resolve) => {
+        const { socket, roomCode, playerId } = get();
+        
+        if (!socket || !roomCode) {
+          console.warn('Cannot leave room: no socket connection or room code');
+          resolve(false);
+          return;
+        }
+
+        logNetwork('leave-room', 'pending', { roomCode, playerId });
+        set({ 
+          isLoading: true,
+          message: 'Leaving room...' 
+        });
+
+        // Set up response handlers
+        const handleLeftRoom = (response: { success: boolean; roomCode?: string; error?: string }) => {
+          socket.off('left-room', handleLeftRoom);
+          
+          if (response.success) {
+            logNetwork('leave-room', 'success', { roomCode: response.roomCode });
+            
+            // Reset game state to menu
+            set({
+              gameState: null,
+              serverGameState: null,
+              isLoading: false,
+              playerId: '',
+              message: 'Left room successfully',
+              roomCode: null,
+              isHost: false,
+              selectedCards: [],
+              selectionMode: 'none',
+              cardSelectionOrder: {},
+              pendingActions: [],
+              optimisticUpdates: [],
+              currentAction: null,
+              dragState: { isDragging: false },
+              recentMoves: [],
+              penaltyState: { type: 'none' },
+              connectedPlayers: {},
+              spectators: [],
+              connectionStatus: 'connected',
+              gameMode: 'menu',
+            });
+            resolve(true);
+          } else {
+            logNetwork('leave-room', 'error', { error: response.error });
+            set({ 
+              isLoading: false,
+              message: response.error || 'Failed to leave room'
+            });
+            resolve(false);
+          }
+        };
+
+        socket.on('left-room', handleLeftRoom);
+
+        // Request to leave room
+        socket.emit('leave-room');
+
+        // Timeout fallback
+        setTimeout(() => {
+          socket.off('left-room', handleLeftRoom);
+          if (get().isLoading) {
+            logNetwork('leave-room', 'timeout', {});
+            set({ 
+              isLoading: false,
+              message: 'Leave room request timed out'
+            });
+            resolve(false);
+          }
+        }, 5000);
+      });
     },
 
     updateMessage: (message: string) => {

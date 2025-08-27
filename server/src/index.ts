@@ -490,7 +490,37 @@ io.on('connection', socket => {
   });
 });
 
-// Cleanup intervals for Railway optimization
+// Resource monitoring and cleanup for Railway optimization
+const logResourceUsage = () => {
+  const memUsage = process.memoryUsage();
+  const cpuUsage = process.cpuUsage();
+  const activeRooms = RoomManager.getAllRooms().length;
+  const activePlayers = playerLastActivity.size;
+  
+  console.log(`📊 Resource Usage:`, {
+    memory: {
+      heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
+      heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
+      rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`,
+    },
+    cpu: {
+      user: `${Math.round(cpuUsage.user / 1000)}ms`,
+      system: `${Math.round(cpuUsage.system / 1000)}ms`,
+    },
+    stats: {
+      activeRooms,
+      activePlayers,
+      connectedSockets: io.sockets.sockets.size,
+    }
+  });
+
+  // Memory threshold warning for Railway trial (150MB heap usage warning)
+  const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
+  if (heapUsedMB > 150) {
+    console.warn(`⚠️ High memory usage: ${Math.round(heapUsedMB)}MB - consider cleanup`);
+  }
+};
+
 setInterval(() => {
   RoomManager.cleanupExpiredRooms();
 }, 60000); // Cleanup expired rooms every minute
@@ -502,7 +532,18 @@ setInterval(
   GAME_CONFIG.INACTIVITY_CHECK_INTERVAL_MINUTES * 60 * 1000,
 ); // Cleanup inactive players every 5 minutes
 
+// Resource monitoring every 10 minutes (less frequent to reduce log noise)
+setInterval(() => {
+  logResourceUsage();
+}, 10 * 60 * 1000);
+
 server.listen(PORT, () => {
   console.log(`🎴 Switch Card Game Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Log initial resource usage
+  setTimeout(() => {
+    console.log('🚀 Server startup complete - initial resource usage:');
+    logResourceUsage();
+  }, 1000);
 });
