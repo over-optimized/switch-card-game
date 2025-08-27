@@ -1,34 +1,27 @@
+import { io } from 'socket.io-client';
+import { GameEngine, GameState, getCardDisplayName, Suit } from 'switch-shared';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import {
-  GameState,
-  GameEngine,
-  DeckManager,
-  createGameState,
-  createPlayer,
-  getCardDisplayName,
-  Suit,
-} from 'switch-shared';
-import {
-  ConnectionStatus,
-  GameMode,
-  DragState,
-  PenaltyState,
-  RecentMove,
-  OptimisticUpdate,
-  PlayerInfo,
-  PendingAction,
-  ActionStatus,
-} from './types';
+import type { GameSetupConfig } from '../components/MenuScreen';
 import {
   debugLogger,
-  logGame,
-  logTurn,
   logCardPlay,
+  logGame,
   logNetwork,
+  logTurn,
   logValidation,
 } from '../utils/debug';
-import type { GameSetupConfig } from '../components/MenuScreen';
+import {
+  ActionStatus,
+  ConnectionStatus,
+  DragState,
+  GameMode,
+  OptimisticUpdate,
+  PenaltyState,
+  PendingAction,
+  PlayerInfo,
+  RecentMove,
+} from './types';
 
 interface GameStore {
   // Core game state
@@ -39,6 +32,7 @@ interface GameStore {
   message: string;
 
   // Network state
+  socket: ReturnType<typeof io> | null;
   connectionStatus: ConnectionStatus;
   roomCode: string | null;
   isHost: boolean;
@@ -68,16 +62,16 @@ interface GameStore {
   optimisticUpdates: OptimisticUpdate[];
   currentAction: PendingAction | null;
 
-  // Actions - Local game management
-  setupLocalGame: (config?: GameSetupConfig) => void;
+  // Actions - Game management (WebSocket-first)
+  setupWebSocketGame: (config?: GameSetupConfig) => void;
+  connectToLocalServer: () => Promise<boolean>;
   restartGame: () => void;
   updateMessage: (message: string) => void;
 
-  // Actions - Card interactions
+  // Actions - Card interactions (WebSocket-only)
   selectCard: (cardId: string) => void;
   clearSelection: () => void;
   playSelectedCards: () => Promise<boolean>;
-  playCardsLocally: (cardIds: string[]) => boolean;
   drawCard: () => Promise<boolean>;
 
   // Actions - Drag and drop
@@ -140,6 +134,7 @@ export const useGameStore = create<GameStore>()(
     message: '',
 
     // Network state
+    socket: null,
     connectionStatus: 'offline',
     roomCode: null,
     isHost: false,
@@ -176,81 +171,164 @@ export const useGameStore = create<GameStore>()(
     optimisticUpdates: [],
     currentAction: null,
 
-    // Actions
-    setupLocalGame: (config?: GameSetupConfig) => {
+    // Actions - WebSocket-first architecture
+    setupWebSocketGame: (config?: GameSetupConfig) => {
+      logGame('Setting up WebSocket game', {
+        config: config?.playerCount || 2,
+      });
+      set({ isLoading: true, message: 'Connecting to game server...' });
+
+      // Connect to local server for all games (localhost:3001)
+      get()
+        .connectToLocalServer()
+        .then(connected => {
+          if (connected) {
+            // Use the new socket event for local games with AI
+            const playerName = config?.players?.[0]?.name || 'You';
+            const aiOpponents = (config?.playerCount || 2) - 1;
+
+            // Create local game with AI opponents via WebSocket
+            const socket = get().socket;
+            if (socket) {
+              logGame('WebSocket connection established, creating local game', {
+                playerName,
+                aiOpponents,
+              });
+              socket.emit('create-local-game', { playerName, aiOpponents });
+            } else {
+              set({
+                isLoading: false,
+                message: 'No socket connection available',
+              });
+            }
+          } else {
+            set({
+              isLoading: false,
+              message: 'Failed to connect to game server. Please try again.',
+            });
+          }
+        });
+    },
+
+    connectToLocalServer: async () => {
       try {
-        logGame('Setting up local game', { config: config?.playerCount || 2 });
+        // Get WebSocket URL from environment variables
+        const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:3001';
+        logNetwork(`Connecting to server at ${wsUrl}`, 'pending');
 
-        // Create players based on config or use default 2-player setup
-        let players;
-        if (config) {
-          players = config.players.map((playerConfig, index) => {
-            const playerId = index === 0 ? 'player-1' : `player-${index + 1}`;
-            return createPlayer(playerId, playerConfig.name);
-          });
-        } else {
-          // Default 2-player setup for backward compatibility
-          players = [
-            createPlayer('player-1', 'You'),
-            createPlayer('player-2', 'Computer'),
-          ];
-        }
-
-        const gameState = createGameState('local-game', players, []);
-        const startedGame = GameEngine.startGame(gameState);
-        const topCard = DeckManager.getTopDiscardCard(startedGame);
-
-        logGame('Local game created', {
-          gameId: startedGame.id,
-          players: players.map(p => ({ id: p.id, name: p.name })),
-          topCard: topCard ? getCardDisplayName(topCard) : 'none',
-          playerHandSize: startedGame.players[0].hand.length,
+        const socket = io(wsUrl, {
+          transports: ['websocket'],
+          withCredentials: true,
         });
 
-        const playerCount = players.length;
-        const message =
-          playerCount === 2
-            ? 'Game started! Select cards to play them.'
-            : `${playerCount}-player game started! Select cards to play them.`;
+        // Store socket instance and set up event handlers
+        set({ socket, connectionStatus: 'connecting' });
 
-        set({
-          isLoading: false,
-          gameState: startedGame,
-          gameMode: startedGame.gameMode,
-          penaltyState: startedGame.penaltyState,
-          message,
-          recentMoves: [
-            {
-              timestamp: new Date(),
-              player: 'Game',
-              action: 'Game started',
-              ...(topCard && {
-                details: `Starting card: ${getCardDisplayName(topCard)}`,
-              }),
-            },
-          ],
-          selectedCards: [],
-          selectionMode: 'none',
-          cardSelectionOrder: {},
-          pendingActions: [],
-          optimisticUpdates: [],
-          currentAction: null,
+        return new Promise<boolean>(resolve => {
+          socket.on('connect', () => {
+            const socketId = socket.id || `temp-${Date.now()}`;
+            set({
+              connectionStatus: 'connected',
+              message: 'Connected to game server',
+              playerId: socketId,
+            });
+            logNetwork('WebSocket connected', 'success', {
+              id: socketId,
+            });
+            resolve(true);
+          });
+
+          socket.on('disconnect', () => {
+            set({
+              connectionStatus: 'offline',
+              message: 'Disconnected from game server',
+            });
+            logNetwork('Disconnected from server', 'error');
+          });
+
+          socket.on('error', error => {
+            logNetwork('Socket error', 'error', error);
+            set({
+              connectionStatus: 'offline',
+              message: 'Connection error',
+            });
+            resolve(false);
+          });
+
+          // Handle local game creation response
+          socket.on('local-game-created', ({ room, player, gameState }) => {
+            logGame('Local game created', { room, player, gameState });
+            set({
+              gameState,
+              serverGameState: gameState,
+              roomCode: room.code,
+              isHost: player.isHost,
+              isLoading: false,
+              message: 'Game started!',
+            });
+          });
+
+          // Handle game events
+          socket.on('card-played', ({ playerId, cardId, gameState }) => {
+            logCardPlay(playerId, [cardId], true, 'Server confirmed card play');
+            set({
+              gameState,
+              serverGameState: gameState,
+              message:
+                playerId === get().playerId
+                  ? 'Card played!'
+                  : `${playerId} played a card`,
+            });
+          });
+
+          socket.on('card-drawn', ({ playerId, gameState }) => {
+            logNetwork(`Card drawn by ${playerId}`, 'success', { gameState });
+            set({
+              gameState,
+              serverGameState: gameState,
+              message:
+                playerId === get().playerId
+                  ? 'Card drawn!'
+                  : `${playerId} drew a card`,
+            });
+          });
+
+          socket.on('game-finished', ({ winner, gameState }) => {
+            logGame('Game finished', { winner, gameState });
+            set({
+              gameState,
+              serverGameState: gameState,
+              message:
+                winner === get().playerId
+                  ? 'You won! 🎉'
+                  : `${winner} won the game!`,
+            });
+          });
+
+          // Connection timeout
+          setTimeout(() => {
+            if (get().connectionStatus !== 'connected') {
+              socket.disconnect();
+              resolve(false);
+            }
+          }, 5000);
         });
       } catch (error) {
-        debugLogger.error('game', 'Failed to setup local game', error);
+        logNetwork('Failed to connect to local server', 'error', error);
         set({
-          isLoading: false,
-          message: `Error starting game: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          socket: null,
+          connectionStatus: 'offline',
+          message: 'Failed to connect to game server',
         });
+        return false;
       }
     },
 
     restartGame: () => {
       set({ isLoading: true });
       setTimeout(() => {
-        // We'll need to get the current game config from the UI store
-        // For now, just restart with the same setup
-        get().setupLocalGame();
+        // Restart using WebSocket-first approach
+        get().setupWebSocketGame();
       }, 500);
     },
 
@@ -262,7 +340,7 @@ export const useGameStore = create<GameStore>()(
       console.log('🎯 SELECTCARD CALLED:', { cardId });
       const { gameState, playerId, selectedCards, cardSelectionOrder } = get();
       console.log('🎯 Current state:', { selectedCards, playerId });
-      
+
       if (!gameState) {
         console.log('🎯 ERROR: No gameState');
         return;
@@ -319,7 +397,7 @@ export const useGameStore = create<GameStore>()(
         const newSelectedCards = [...selectedCards, cardId];
         const selectionOrder = newSelectedCards.length; // 1, 2, 3, etc.
         console.log('🎯 New selection after select:', newSelectedCards);
-        
+
         set({
           selectedCards: newSelectedCards,
           cardSelectionOrder: {
@@ -372,24 +450,36 @@ export const useGameStore = create<GameStore>()(
         cardIds: selectedCards,
       });
 
-      if (connectionStatus === 'connected') {
-        // Network mode - create pending action and apply optimistically
-        const actionId = get().createPendingAction('play-cards', selectedCards);
+      if (connectionStatus !== 'connected') {
+        get().updateMessage('Not connected to game server');
+        return false;
+      }
 
-        // Apply optimistic update for immediate UI feedback
-        get().applyOptimisticUpdate(actionId, selectedCards);
+      // WebSocket-only mode with optimistic updates
+      const actionId = get().createPendingAction('play-cards', selectedCards);
 
-        // TODO: Send to server
-        // For now, simulate network success after delay
+      // Apply optimistic update for immediate UI feedback
+      get().applyOptimisticUpdate(actionId, selectedCards);
+
+      // Send WebSocket message to server
+      const socket = get().socket;
+      if (socket && selectedCards.length === 1) {
+        const cardId = selectedCards[0];
+        logNetwork(`Playing card ${cardId} via WebSocket`, 'pending');
+
+        // Server will respond with card-played event which updates the game state
+        socket.emit('play-card', { cardId });
+
+        // Clear selection after sending
+        get().clearSelection();
+      } else {
+        // Fallback for multi-card plays or missing socket
         setTimeout(() => {
           get().confirmAction(actionId, get().gameState!);
         }, 1000);
-
-        return true;
-      } else {
-        // Local mode
-        return get().playCardsLocally(selectedCards);
       }
+
+      return true;
     },
 
     playCardsLocally: (cardIds: string[]) => {
@@ -521,9 +611,7 @@ export const useGameStore = create<GameStore>()(
           const winner = currentGameState.winner;
           console.log('🏆 GAME FINISHED!', { winner, playerId });
           get().updateMessage(
-            winner?.id === playerId
-              ? 'You won! 🎉'
-              : `${winner?.name} wins!`,
+            winner?.id === playerId ? 'You won! 🎉' : `${winner?.name} wins!`,
           );
           get().addRecentMove(
             'Game',
@@ -559,6 +647,15 @@ export const useGameStore = create<GameStore>()(
       }
 
       try {
+        // Use WebSocket if available
+        const socket = get().socket;
+        if (socket) {
+          logNetwork('Drawing card via WebSocket', 'pending');
+          socket.emit('draw-card');
+          return true;
+        }
+
+        // Fallback to local processing (for backwards compatibility)
         const action = {
           type: 'draw-card' as const,
           playerId,

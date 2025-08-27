@@ -97,18 +97,20 @@ switch-card-game/
 
 ### Key Components
 
-#### Mobile-First Architecture
-- **MobileGameBoard**: Mobile-optimized game layout with bottom sheets
+#### Unified Mobile-First Architecture
+- **GameBoard**: Unified responsive component using mobile-first patterns
+- **MobileGameBoard**: Mobile-optimized game layout with bottom sheets  
 - **MobileWinModal**: Full-screen celebration modal for game completion
 - **MobilePlayerSheet**: Draggable bottom sheet for player hand management
-- **MobileHandArea**: Touch-optimized card interaction system
+- **MobileHandArea**: Unified touch/click-optimized card interaction system
+- **HandControls**: CSS modules-based responsive controls (75%/25% layout)
 
-#### Shared Components
+#### Network-First Game Architecture
 - **Game Engine**: Core game logic with penalty and special card systems
-- **GameContainer**: Main app wrapper with responsive design detection
-- **State Management**: Zustand stores with network-ready architecture
-- **Room Manager**: Handles multiplayer room creation/joining
-- **WebSocket Events**: Real-time communication between players
+- **WebSocket Client**: Environment-based URLs (dev vs production)
+- **State Management**: Zustand stores with optimistic updates
+- **Room Manager**: Handles multiplayer room creation/joining and AI opponents
+- **Server**: Express + Socket.IO with Railway deployment configuration
 - **Type Safety**: Shared TypeScript interfaces across client/server
 
 ## 🧪 Testing
@@ -135,51 +137,83 @@ pnpm test:coverage
 
 ## 🚀 Deployment
 
-### Docker (Recommended)
+### Production Deployment
 
-```bash
-# Build Docker images
-docker build -t switch-client ./client
-docker build -t switch-server ./server
+**Frontend (Vercel)**
+- Deployed at: https://switch-card-game.vercel.app
+- Automatic deployments from main branch
+- Optimized for mobile and desktop
 
-# Run with Docker Compose
-docker-compose up -d
-```
+**Backend (Railway)** 
+- Server deployment ready with Railway configuration
+- See `RAILWAY_DEPLOY.md` for deployment guide
+- Production WebSocket URLs configured
 
-### Manual Deployment
+### Development Deployment
 
 ```bash
 # Production build with optimizations
 pnpm run build:prod
 
-# Start production server
-cd server && pnpm start
+# Start production server locally
+cd server && pnpm start:prod
+```
+
+### Environment Configuration
+
+```bash
+# Development (automatic)
+VITE_WS_URL=http://localhost:3001
+
+# Production (Vercel)  
+VITE_WS_URL=https://your-railway-app.railway.app
 ```
 
 ## 📋 Roadmap
 
-### Phase 1: Core Game ✅
+### 🟢 CRITICAL: Architecture Consolidation (Week 5) - 95% COMPLETE!
+
+**✅ Major architecture consolidation achieved:**
+
+- [x] **Network-First Architecture** - All games use WebSocket connections (local = localhost)
+- [x] **Component Consolidation** - ~70% reduction in mobile/desktop duplication
+- [x] **Responsive Design** - Unified components work seamlessly across all devices
+- [x] **Mobile Layout Fixes** - Complete UI overhaul with proper controls positioning  
+- [x] **Production Ready** - Railway deployment configuration complete
+- [x] **Environment URLs** - Dev vs production WebSocket configuration
+- [x] **Safe Deployment** - Vercel temporarily disabled during server setup
+- [x] **Pull Request Ready** - Feature branch ready for main branch merge
+
+**🟡 Final Phase (Remaining 5%)**:
+- [ ] Deploy server to Railway (configuration ready)
+- [ ] Complete final component cleanup tasks
+- [ ] Test full production environment end-to-end
+
+### Phase 1: Core Game ✅ Complete
 
 - [x] Basic game mechanics (deck, dealing, turns)
 - [x] TypeScript type system
 - [x] Game engine with validation
 - [x] Unit test coverage
+- [x] React architecture migration
+- [x] Mobile-first responsive design
 
-### Phase 2: Multiplayer (In Progress)
+### Phase 2: Multiplayer ✅ Complete
 
 - [x] WebSocket server setup
 - [x] Room-based matchmaking
 - [x] Real-time game state sync
-- [ ] Client UI for multiplayer
+- [x] React client UI for multiplayer
+- [x] Local single-player mode with AI
 
-### Phase 3: Polish
+### Phase 3: Advanced Features 🔴 Deferred
 
 - [ ] Game animations and transitions
-- [ ] Responsive UI design
 - [ ] Player avatars and themes
-- [ ] Game statistics
+- [ ] Game statistics and history
+- [ ] Additional special cards (8s, runs, etc.)
 
-### Phase 4: Enhanced Features
+### Phase 4: Enhanced Features 🔴 Future
 
 - [ ] Optional user registration
 - [ ] Friend lists and invites

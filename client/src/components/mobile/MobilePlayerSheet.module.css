@@ -79,6 +79,7 @@
 }
 
 .dragHandleLabel {
+  display: none; /* Hidden for cleaner UI - can be enabled as user preference later */
   font-size: 0.75em;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.8);
@@ -132,8 +133,14 @@
   flex-wrap: wrap;
 }
 
+/* Secondary Controls (Sort and Hint) */
+.secondaryControls {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .controlButton {
-  flex: 1;
   min-width: 80px;
   padding: 10px;
   border-radius: 8px;
@@ -145,8 +152,16 @@
 }
 
 .playButton {
+  flex: 0 0 calc(75% - 4px); /* 75% width minus gap */
   background: linear-gradient(135deg, #27ae60, #2ecc71);
   color: white;
+}
+
+.clearButton {
+  flex: 0 0 calc(25% - 4px); /* 25% width minus gap */
+  background: rgba(231, 76, 60, 0.2);
+  border: 2px solid #e74c3c;
+  color: #e74c3c;
 }
 
 .playButton:not(:disabled):hover {
@@ -157,12 +172,6 @@
 .playButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.clearButton {
-  background: rgba(231, 76, 60, 0.2);
-  border: 2px solid #e74c3c;
-  color: #e74c3c;
 }
 
 .clearButton:hover {
@@ -180,7 +189,7 @@
   align-content: flex-start;
   overflow-y: auto;
   /* Ensure cards are visible at top of sheet */
-  min-height: 120px;
+  min-height: 70px;
 }
 
 /* Mobile Hand Area Styling */

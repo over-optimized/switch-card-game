@@ -32,6 +32,6 @@
       "switch-shared": ["../shared/dist"]
     }
   },
-  "include": ["src/**/*", "*.config.ts"],
+  "include": ["src/**/*", "*.config.ts", "src/types/global.d.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

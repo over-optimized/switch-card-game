@@ -1,6 +1,6 @@
 # Switch Card Game - Client Application
 
-Frontend application for the Switch multiplayer card game, built with Vite and TypeScript.
+Mobile-first React frontend for the Switch multiplayer card game, built with Vite, TypeScript, and Zustand.
 
 ## 🚀 Quick Start
 
@@ -39,31 +39,47 @@ Client will be available at: http://localhost:3000
 ```
 client/
 ├── src/
-│   └── main.ts          # Main application entry point
+│   ├── components/      # React components
+│   │   ├── mobile/      # Mobile-optimized components
+│   │   ├── game/        # Game-related components
+│   │   └── ui/          # Shared UI components
+│   ├── stores/          # Zustand state management
+│   ├── styles/          # CSS modules and global styles
+│   ├── utils/           # Utility functions
+│   └── main.tsx         # React application entry point
 ├── public/              # Static assets
-├── dist/               # Production build output
-├── index.html          # HTML template
-├── vite.config.ts      # Vite configuration
-├── tsconfig.json       # TypeScript configuration
-└── package.json        # Client dependencies
+├── dist/                # Production build output
+├── index.html           # HTML template
+├── vite.config.ts       # Vite configuration
+├── tsconfig.json        # TypeScript configuration
+└── package.json         # Client dependencies
 ```
 
 ### Key Components
 
-#### Game Interface (`main.ts`)
+#### Mobile-First Game Components
 
-- **Game Board**: Visual representation of cards and game state
-- **Card Interaction**: Click-to-play mechanics with visual feedback
-- **Turn Management**: Player turn indicators and game flow
-- **AI Opponent**: Computer player for single-player games
-- **Game Status**: Real-time status messages and win conditions
+- **GameBoard**: Unified responsive game container using mobile-first patterns
+- **MobileGameBoard**: Core game layout with fixed header/footer design
+- **MobilePlayerSheet**: Draggable bottom sheet for player hand management
+- **MobileHandArea**: Touch-optimized card interaction with selection feedback
+- **MobileOpponentArea**: Responsive opponent display for 2-4 players
+- **MobileWinModal**: Full-screen celebration modal for game completion
+
+#### State Management (Zustand)
+
+- **GameStore**: Core game state with network-first architecture
+- **UIStore**: Interface state, mobile layout detection, modal management
+- **WebSocket Integration**: Real-time multiplayer with optimistic updates
+- **Persistent Settings**: Game preferences and user interface options
 
 #### UI Features
 
-- **Responsive Design**: Works on desktop and mobile devices
-- **Visual Feedback**: Card hover effects, playability indicators
-- **Game Controls**: Start/restart game, draw cards, play cards
-- **Status Display**: Current player, card counts, game messages
+- **Mobile-First Design**: Optimized for touch with desktop breakpoint support
+- **Bottom Sheet Interface**: Expandable player hand area (0-300px)
+- **Touch Interactions**: Card selection, drag gestures, tap-to-play
+- **Visual Feedback**: Card selection states, playability indicators, animations
+- **Responsive Layout**: CSS modules with 75%/25% control distribution
 
 ## ⚙️ Development Commands
 
@@ -82,19 +98,22 @@ pnpm test:coverage      # Run tests with coverage
 
 ## 🎮 Current Features
 
-### Single Player Game
+### Network-First Game Architecture
 
-- ✅ **Basic Switch Rules**: Match suit or rank, draw if can't play
-- ✅ **Interactive UI**: Click cards to play, visual feedback system
-- ✅ **AI Opponent**: Computer player with random valid moves
-- ✅ **Game Management**: Win detection, restart functionality
-- ✅ **Visual Polish**: Card animations, status indicators
+- ✅ **Unified Network Architecture**: All games use WebSocket connections (local = localhost)
+- ✅ **Mobile-Optimized Interface**: Touch-first design with desktop compatibility
+- ✅ **Real-time Multiplayer**: Live game state sync with optimistic updates
+- ✅ **AI Opponent Integration**: Computer players managed by server
+- ✅ **Room-Based Games**: Create/join rooms with 6-character codes
+- ✅ **Cross-Platform**: Responsive design works on mobile and desktop
 
-### Multiplayer (In Development)
+### Game Features
 
-- 🔄 **Room System**: Create and join game rooms with codes
-- 🔄 **Real-time Sync**: Live game state updates via WebSocket
-- 🔄 **Multiple Players**: Support for 2-4 players per game
+- ✅ **Switch Card Rules**: Match suit/rank, draw if can't play, win detection
+- ✅ **Visual Feedback**: Card selection, hover effects, playability indicators
+- ✅ **Mobile Gestures**: Bottom sheet expansion, touch-to-play mechanics
+- ✅ **Game Management**: Start/restart, room creation, player management
+- ✅ **Environment Aware**: Development (localhost) vs production (Railway) URLs
 
 ## 🔧 Configuration
 
@@ -108,42 +127,58 @@ pnpm test:coverage      # Run tests with coverage
 ### Development Server
 
 - **Port**: 3000 (configurable via VITE_PORT)
-- **API Proxy**: Configured to proxy /api to server (port 3001)
-- **Hot Reload**: Automatic reload on file changes
-- **Source Maps**: Available in development mode
+- **WebSocket Connection**: Connects to server at port 3001 (configurable via VITE_WS_URL)
+- **Hot Module Replacement**: React Fast Refresh for instant component updates
+- **Source Maps**: Available in development mode for debugging
+- **Environment Variables**: Automatic loading of .env.development/.env.production
 
 ## 🎯 Game Implementation Details
 
 ### Game State Management
 
 ```typescript
-// Game state is managed by shared GameEngine
+// Zustand store with network-first architecture
+import { useGameStore } from '../stores/gameStore';
 import { GameEngine, GameState } from 'switch-shared';
 
-const gameEngine = new GameEngine();
-const gameState = gameEngine.getGameState();
+// WebSocket connection with environment-based URLs
+const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:3001';
+const socket = io(wsUrl, {
+  transports: ['websocket'],
+  withCredentials: true,
+});
+
+// Zustand store integration
+const { gameState, playCard, drawCard } = useGameStore();
 ```
 
-### Card Rendering
+### Card Rendering & Interactions
 
-- Cards rendered as HTML elements with CSS styling
-- Visual feedback for playable vs unplayable cards
-- Hover effects and smooth transitions
-- Mobile-touch friendly interactions
+- **React Components**: Card components with TypeScript props and state
+- **CSS Modules**: Scoped styling with responsive design patterns
+- **Mobile Touch**: Optimized tap targets and gesture recognition
+- **Selection State**: Visual feedback for selected/playable/unplayable cards
+- **Smooth Animations**: CSS transitions for card movements and state changes
+- **Accessibility**: Proper ARIA labels and keyboard navigation support
 
-### UI State vs Game State
+### State Architecture
 
-- **UI State**: Visual elements, animations, user interactions
-- **Game State**: Authoritative game logic from shared package
-- **Separation**: UI never modifies game rules, only displays state
+- **Game Store (Zustand)**: Network-synchronized game state with optimistic updates
+- **UI Store (Zustand)**: Interface state, mobile detection, modal management
+- **Shared Logic**: All game rules imported from switch-shared package
+- **Network Layer**: WebSocket events for real-time multiplayer synchronization
+- **Persistence**: Game settings and UI preferences stored locally
+- **Separation**: UI components never modify game rules, only trigger actions
 
 ## 🧪 Testing
 
 ### Test Strategy
 
-- **Unit Tests**: Focus on UI logic and user interactions
-- **Integration Tests**: Test game state integration
-- **Coverage**: Maintain reasonable coverage on client logic
+- **Component Tests**: React components with React Testing Library
+- **Store Tests**: Zustand store logic and state management
+- **Integration Tests**: WebSocket connection and game state synchronization
+- **Mobile Testing**: Touch interactions and responsive layout behavior
+- **Coverage**: Focus on critical UI logic and store management
 
 ```bash
 # Run tests
@@ -173,8 +208,17 @@ pnpm preview
 
 ### Environment Configuration
 
-- **Development**: http://localhost:3000 → http://localhost:3001 (API)
-- **Production**: Configure API_URL environment variable for server endpoint
+```bash
+# Development (.env.development)
+VITE_WS_URL=http://localhost:3001
+
+# Production (.env.production)
+VITE_WS_URL=https://switch-card-game-server.railway.app
+```
+
+- **Development**: Frontend (3000) connects to local server (3001)
+- **Production**: Frontend (Vercel) connects to Railway-deployed server
+- **Automatic**: Vite automatically selects environment based on build mode
 
 ## 🔍 Troubleshooting
 
@@ -209,17 +253,21 @@ pnpm preview
 
 ### UI Development
 
-- Keep UI responsive and accessible
-- Provide clear visual feedback for user actions
-- Handle loading and error states gracefully
-- Test on multiple screen sizes
+- **Mobile-First Approach**: Design for mobile, enhance for desktop
+- **Touch Optimization**: Proper tap targets (44px+), gesture support
+- **Responsive Design**: CSS modules with breakpoint-based layouts
+- **Accessibility**: ARIA labels, keyboard navigation, screen reader support
+- **Visual Feedback**: Clear selection states, loading indicators, error handling
+- **Performance**: React.memo for expensive components, lazy loading
 
 ### Game Integration
 
-- Import ALL game logic from shared package
-- Never duplicate game rules in client code
-- Use shared types for all game-related interfaces
-- Validate user input but rely on shared validation
+- **Import Strategy**: ALL game logic from switch-shared package
+- **Type Safety**: Use shared TypeScript interfaces for consistency
+- **Network-First**: All games use WebSocket connections for state management
+- **Optimistic Updates**: UI updates immediately, rolls back on server rejection
+- **No Logic Duplication**: Never implement game rules in client code
+- **Shared Validation**: Client validation for UX, server validation for authority
 
 ---
 

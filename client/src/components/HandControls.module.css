@@ -1,0 +1,237 @@
+/* Hand Controls Component Styles */
+.handControls {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Mobile Layout */
+.mobileTopControls {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.sortControls {
+  flex: 0 0 calc(75% - 4px);
+  position: relative;
+  width: calc(75% - 4px);
+}
+
+.sortBtn {
+  flex: 0 0 calc(75% - 6px);
+  padding: 8px;
+  font-size: 0.9em;
+  height: 44px;
+  background: rgba(59, 130, 246, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sortBtn:hover {
+  background: rgba(59, 130, 246, 0.9);
+  transform: scale(1.02);
+}
+
+.sortBtn.active {
+  background: rgba(59, 130, 246, 1);
+  border-color: rgba(59, 130, 246, 0.8);
+}
+
+.sortDropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  border-radius: 6px;
+  z-index: 1000;
+  margin-top: 4px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.sortOption {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease;
+}
+
+.sortOption:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.sortOption.active {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.sortOption:last-child {
+  border-bottom: none;
+  border-radius: 0 0 6px 6px;
+}
+
+.hintControls {
+  flex: 0 0 calc(25% - 4px);
+  width: calc(25% - 4px);
+}
+
+.hintBtn {
+  flex: 0 0 calc(25% - 6px);
+  padding: 8px;
+  font-size: 0.9em;
+  height: 44px;
+  background: rgba(108, 117, 125, 0.8);
+  border: 1px solid rgba(108, 117, 125, 0.6);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hintBtn:hover {
+  background: rgba(108, 117, 125, 0.9);
+  transform: scale(1.02);
+}
+
+.hintBtn.active {
+  background: rgba(255, 193, 7, 0.8);
+  border-color: rgba(255, 193, 7, 0.6);
+}
+
+.hintBtn.active:hover {
+  background: rgba(255, 193, 7, 0.9);
+}
+
+/* Desktop Layout */
+.desktopLayout {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.desktopSortControls {
+  display: flex;
+  gap: 8px;
+}
+
+.desktopSortBtn {
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.8);
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.2s ease;
+}
+
+.desktopSortBtn:hover {
+  background: rgba(59, 130, 246, 0.9);
+}
+
+.desktopSortBtn.active {
+  background: rgba(59, 130, 246, 1);
+}
+
+.desktopHintControls {
+  display: flex;
+}
+
+.desktopHintBtn {
+  padding: 6px 12px;
+  background: rgba(108, 117, 125, 0.8);
+  border: 1px solid rgba(108, 117, 125, 0.6);
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.2s ease;
+}
+
+.desktopHintBtn:hover {
+  background: rgba(108, 117, 125, 0.9);
+}
+
+.desktopHintBtn.active {
+  background: rgba(255, 193, 7, 0.8);
+  border-color: rgba(255, 193, 7, 0.6);
+}
+
+.desktopHintBtn.active:hover {
+  background: rgba(255, 193, 7, 0.9);
+}
+
+/* Action Controls (Play/Clear buttons) */
+.actionControls {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.playBtn {
+  flex: 1;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.playBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #229954, #27ae60);
+  transform: scale(1.02);
+}
+
+.playBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.playBtn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clearBtn {
+  padding: 8px 16px;
+  background: rgba(231, 76, 60, 0.2);
+  border: 2px solid #e74c3c;
+  border-radius: 6px;
+  color: #e74c3c;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clearBtn:hover {
+  background: rgba(231, 76, 60, 0.3);
+  transform: scale(1.02);
+}
+
+.penaltyBtn {
+  padding: 8px 16px;
+  background: rgba(255, 193, 7, 0.2);
+  border: 2px solid #ffc107;
+  border-radius: 6px;
+  color: #ffc107;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.penaltyBtn:hover {
+  background: rgba(255, 193, 7, 0.3);
+  transform: scale(1.02);
+}

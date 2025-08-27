@@ -31,7 +31,7 @@ export function HandShelf() {
         setHandShelfPosition(0);
       }
     }
-  }, [isMobile, handShelf.isEnabled, setHandShelfPosition]);
+  }, [isMobile, handShelf.isEnabled, handShelf.position, setHandShelfPosition]);
 
   // Mobile detection and shelf enablement
   useEffect(() => {
@@ -48,7 +48,7 @@ export function HandShelf() {
 
   // Layout constants for consistent spacing
   const LAYOUT_CONSTANTS = {
-    OPPONENT_AREA_HEIGHT: 120, // Mobile opponent container (fixed height)
+    OPPONENT_AREA_HEIGHT: 70, // Mobile opponent container (fixed height) - reduced for better space utilization
     DECK_AREA_HEIGHT: 179, // Deck area container (fixed height)
     SHELF_CONTROL_HEIGHT: 40, // Drag handle height (fixed)
     ELEMENT_GAP: 20, // Gap between all elements
@@ -61,7 +61,7 @@ export function HandShelf() {
     const viewportHeight = window.innerHeight;
     const {
       OPPONENT_AREA_HEIGHT,
-      DECK_AREA_HEIGHT, 
+      DECK_AREA_HEIGHT,
       SHELF_CONTROL_HEIGHT,
       ELEMENT_GAP,
       MIN_HAND_HEIGHT,
@@ -69,30 +69,36 @@ export function HandShelf() {
     } = LAYOUT_CONSTANTS;
 
     // Calculate total space needed for fixed elements and gaps
-    const fixedElementsHeight = OPPONENT_AREA_HEIGHT + DECK_AREA_HEIGHT + SHELF_CONTROL_HEIGHT;
+    const fixedElementsHeight =
+      OPPONENT_AREA_HEIGHT + DECK_AREA_HEIGHT + SHELF_CONTROL_HEIGHT;
     const totalGapsHeight = ELEMENT_GAP * 3; // opponent→deck, deck→shelf, shelf→hand
-    const availableForHand = viewportHeight - fixedElementsHeight - totalGapsHeight;
-    
+    const availableForHand =
+      viewportHeight - fixedElementsHeight - totalGapsHeight;
+
     // Calculate maximum possible shelf position
-    const maxHandExpansion = Math.min(availableForHand - MIN_HAND_HEIGHT, MAX_HAND_HEIGHT - MIN_HAND_HEIGHT);
+    const maxHandExpansion = Math.min(
+      availableForHand - MIN_HAND_HEIGHT,
+      MAX_HAND_HEIGHT - MIN_HAND_HEIGHT,
+    );
     const maxShelfPosition = Math.max(0, maxHandExpansion);
-    
+
     // Calculate current hand height based on shelf position
     const expansionFactor = Math.min(shelfPosition / maxShelfPosition, 1) || 0;
-    const handAreaHeight = MIN_HAND_HEIGHT + (maxHandExpansion * expansionFactor);
-    
+    const handAreaHeight = MIN_HAND_HEIGHT + maxHandExpansion * expansionFactor;
+
     // Dynamic positioning based on shelf expansion
-    
+
     // Calculate shelf control position from bottom
     const shelfControlBottom = handAreaHeight + ELEMENT_GAP;
-    
+
     // Calculate deck position: Should be above shelf control with proper gap
-    const shelfControlTop = viewportHeight - shelfControlBottom - SHELF_CONTROL_HEIGHT;
+    const shelfControlTop =
+      viewportHeight - shelfControlBottom - SHELF_CONTROL_HEIGHT;
     const deckAreaTop = Math.max(
       OPPONENT_AREA_HEIGHT + ELEMENT_GAP, // Never closer than 140px from top
-      shelfControlTop - DECK_AREA_HEIGHT - ELEMENT_GAP // Or 20px above shelf control
+      shelfControlTop - DECK_AREA_HEIGHT - ELEMENT_GAP, // Or 20px above shelf control
     );
-    
+
     return {
       constraints: {
         minPosition: 0,
@@ -196,7 +202,7 @@ export function HandShelf() {
   };
 
   return (
-    <div 
+    <div
       className={`hand-shelf-container ${isDragging ? 'dragging' : ''}`}
       style={shelfContainerStyles}
     >
@@ -214,8 +220,8 @@ export function HandShelf() {
           <div className="grip-line" />
         </div>
         <div className="drag-handle-label">
-          {handShelf.position > 0 
-            ? `Expanded ${Math.round((handShelf.position / currentLayout.constraints.maxPosition) * 100)}%` 
+          {handShelf.position > 0
+            ? `Expanded ${Math.round((handShelf.position / currentLayout.constraints.maxPosition) * 100)}%`
             : 'Default'}
         </div>
       </div>

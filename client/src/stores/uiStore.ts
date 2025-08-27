@@ -61,7 +61,7 @@ const defaultSettings: GameSettings = {
   showCardHints: true, // Default on to help new players
 
   // Mobile preferences
-  handShelfPosition: 0, // Default to bottom position
+  handShelfPosition: 300, // Default to 100% expanded position
 
   // Accessibility
   highContrast: false,
@@ -69,7 +69,7 @@ const defaultSettings: GameSettings = {
 };
 
 const defaultHandShelf: HandShelfState = {
-  position: 0, // Start at default bottom position
+  position: 300, // Start at 100% expanded position
   isDragging: false,
   isEnabled: false, // Will be enabled automatically on mobile devices
 };

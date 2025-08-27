@@ -1,0 +1,17 @@
+[build]
+# Build the shared package first, then the server
+builder = "nixpacks"
+
+[deploy]
+# Start the server from the server directory
+startCommand = "pnpm --filter switch-server run start:prod"
+
+[env]
+# Environment variables for Railway
+NODE_ENV = "production"
+CLIENT_URL = "https://switch-card-game.vercel.app"
+
+# Build configuration to ensure proper monorepo handling
+[build.buildCommand]
+# Install dependencies and build shared and server packages
+command = "pnpm install --frozen-lockfile && pnpm --filter switch-shared run build:prod && pnpm --filter switch-server run build:prod"

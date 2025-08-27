@@ -6,6 +6,7 @@ export interface Player {
   hand: Card[];
   isConnected: boolean;
   isHost?: boolean;
+  isAI?: boolean;
 }
 
 export interface PlayerStats {

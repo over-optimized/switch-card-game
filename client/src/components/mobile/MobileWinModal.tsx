@@ -7,7 +7,10 @@ interface MobileWinModalProps {
   onBackToMenu?: () => void;
 }
 
-export function MobileWinModal({ gameState, onBackToMenu }: MobileWinModalProps) {
+export function MobileWinModal({
+  gameState,
+  onBackToMenu,
+}: MobileWinModalProps) {
   const { playerId, restartGame } = useGameStore(state => ({
     playerId: state.playerId,
     restartGame: state.restartGame,
@@ -45,10 +48,9 @@ export function MobileWinModal({ gameState, onBackToMenu }: MobileWinModalProps)
             {isPlayerWin ? 'You Won!' : 'Game Over'}
           </h1>
           <p className={styles.winSubtitle}>
-            {isPlayerWin 
-              ? 'Congratulations on your victory!' 
-              : `${winnerName} wins this round!`
-            }
+            {isPlayerWin
+              ? 'Congratulations on your victory!'
+              : `${winnerName} wins this round!`}
           </p>
         </div>
 
@@ -68,15 +70,15 @@ export function MobileWinModal({ gameState, onBackToMenu }: MobileWinModalProps)
 
         {/* Action Buttons */}
         <div className={styles.actionButtons}>
-          <button 
+          <button
             className={`${styles.actionButton} ${styles.primaryButton}`}
             onClick={handleNewGame}
           >
             🎴 New Game
           </button>
-          
+
           {onBackToMenu && (
-            <button 
+            <button
               className={`${styles.actionButton} ${styles.secondaryButton}`}
               onClick={handleBackToMenu}
             >
