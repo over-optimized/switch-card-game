@@ -27,10 +27,19 @@ This project uses an optimized CI/CD pipeline with dual-deployment strategy:
 - **Shared changes** trigger both deployments (necessary)
 
 ### Smart Build Ignoring
-Vercel will automatically skip builds when changes are server-only:
-- Commit messages containing `server:`
-- Commit messages containing `feat: implement Railway`
-- Changes only affecting `server/`, `railway.toml`, or `docs/*.md`
+Vercel will automatically skip builds when changes are server/infrastructure-only:
+
+**Skip Triggers (Commit Messages):**
+- Contains `server:` - Server-only changes
+- Contains `Railway` - Railway deployment changes  
+- Contains `CI/CD` - CI/CD pipeline changes
+- Contains `GitHub Actions` - Workflow changes
+
+**Skip Triggers (File Changes):**
+- Only files in: `server/`, `railway.toml`, `.github/`, `docs/`
+- AND no files in: `client/`, `shared/`, `vercel.json`
+
+**Note:** Skipped builds may show as "failed" in Vercel dashboard - this is expected behavior for intentionally ignored deployments.
 
 ## Setup Instructions
 
@@ -116,20 +125,35 @@ git push origin main
 
 ## Troubleshooting
 
-### Vercel Build Not Skipped
-- Check commit message format (should contain `server:` for server-only)
-- Verify `vercel.json` ignoreCommand syntax
-- Test locally: `bash -c 'echo "$commit_message" | grep server'`
+### Vercel "Failed" Deployments for Skipped Builds
+**Expected Behavior:** Infrastructure changes (CI/CD, server, docs) will show as "failed" in Vercel dashboard.
+
+**Why This Happens:**
+1. Vercel detects git push and starts deployment process
+2. `ignoreCommand` evaluates and detects server-only changes  
+3. Build is intentionally cancelled (exit code 1)
+4. Vercel logs this as "failed" but it's actually working correctly
+
+**How to Verify It's Working:**
+- Check deployment logs for: `🚫 Skipping Vercel build - server/infra only changes`
+- No actual build errors in the logs
+- Production site remains unchanged (expected)
+
+### Vercel Build Not Skipped When Expected
+- Check commit message patterns: `server:`, `Railway`, `CI/CD`, `GitHub Actions`
+- Verify file changes: only `server/`, `.github/`, `docs/`, `railway.toml`
+- If `client/`, `shared/`, or `vercel.json` changed, build will proceed (correct)
 
 ### Railway Not Auto-Deploying
 - Verify GitHub integration in Railway dashboard
 - Check Railway project is connected to correct repository/branch
 - Ensure `railway.toml` configuration is valid
 
-### Build Failures
-- Check build logs in respective service dashboards
+### Actual Build Failures
+- Check build logs for compilation errors
 - Verify dependency versions and build commands
 - Ensure shared package builds before dependent packages
+- Run `pnpm ci` locally to catch issues before push
 
 ## Production URLs
 
