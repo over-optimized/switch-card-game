@@ -1,7 +1,0 @@
-# Temporarily disable Vercel deployments while setting up Railway server
-# Remove this file once Railway server is deployed and production URLs are updated
-
-# Ignore all source files to prevent deployment
-client/
-shared/
-server/
