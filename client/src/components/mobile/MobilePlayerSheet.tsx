@@ -1,5 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { useUIStore } from '../../stores/uiStore';
 import { MobileHandArea } from './MobileHandArea';
 import styles from './MobilePlayerSheet.module.css';
 import type { Player } from '../../../../shared/src/types/player';
@@ -12,17 +13,31 @@ export function MobilePlayerSheet() {
   const playSelectedCards = useGameStore(state => state.playSelectedCards);
   const clearSelection = useGameStore(state => state.clearSelection);
 
-  // Bottom sheet positioning state
-  const [sheetPosition, setSheetPosition] = useState(0); // 0 = default, positive = pulled up
-  const [isDragging, setIsDragging] = useState(false);
+  // Use global handShelf state instead of local state
+  const {
+    handShelf,
+    setHandShelfPosition,
+    setHandShelfDragging,
+    enableHandShelf,
+  } = useUIStore(state => ({
+    handShelf: state.handShelf,
+    setHandShelfPosition: state.setHandShelfPosition,
+    setHandShelfDragging: state.setHandShelfDragging,
+    enableHandShelf: state.enableHandShelf,
+  }));
 
-  // Drag handling refs
+  // Local drag handling refs (still needed for touch events)
   const startY = useRef<number>(0);
   const startPosition = useRef<number>(0);
 
   // Sheet constraints
   const MIN_POSITION = 0; // Default position
   const MAX_POSITION = 300; // Maximum pull up (adjust based on content needs)
+
+  // Enable handShelf for mobile on component mount
+  useEffect(() => {
+    enableHandShelf(true);
+  }, [enableHandShelf]);
 
   const currentPlayer = players.find(
     (player: Player) => player.id === playerId,
@@ -35,12 +50,12 @@ export function MobilePlayerSheet() {
     e.preventDefault();
     const touch = e.touches[0];
     startY.current = touch.clientY;
-    startPosition.current = sheetPosition;
-    setIsDragging(true);
+    startPosition.current = handShelf.position;
+    setHandShelfDragging(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return;
+    if (!handShelf.isDragging) return;
 
     e.preventDefault();
     const touch = e.touches[0];
@@ -53,28 +68,29 @@ export function MobilePlayerSheet() {
       MAX_POSITION,
     );
 
-    setSheetPosition(constrainedPosition);
+    setHandShelfPosition(constrainedPosition);
   };
 
   const handleTouchEnd = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
+    if (!handShelf.isDragging) return;
+    setHandShelfDragging(false);
 
     // Snap to positions
     const snapPoints = [0, 150, 300]; // Default, mid, max
     const closest = snapPoints.reduce((prev, curr) => {
-      return Math.abs(curr - sheetPosition) < Math.abs(prev - sheetPosition)
+      return Math.abs(curr - handShelf.position) <
+        Math.abs(prev - handShelf.position)
         ? curr
         : prev;
     });
 
-    setSheetPosition(closest);
+    setHandShelfPosition(closest);
   };
 
   // Handle double tap to toggle between default and mid position
   const handleDoubleTab = () => {
-    const targetPosition = sheetPosition > 0 ? 0 : 150;
-    setSheetPosition(targetPosition);
+    const targetPosition = handShelf.position > 0 ? 0 : 150;
+    setHandShelfPosition(targetPosition);
 
     // Haptic feedback if available
     if (
@@ -87,22 +103,24 @@ export function MobilePlayerSheet() {
   };
 
   // Calculate expansion percentage for label
-  const expansionPercentage = Math.round((sheetPosition / MAX_POSITION) * 100);
+  const expansionPercentage = Math.round(
+    (handShelf.position / MAX_POSITION) * 100,
+  );
 
   if (!currentPlayer) return null;
 
   return (
     <div
-      className={`${styles.playerSheet} ${isDragging ? styles.dragging : ''}`}
+      className={`${styles.playerSheet} ${handShelf.isDragging ? styles.dragging : ''}`}
       style={
         {
-          '--sheet-expansion': `${sheetPosition}px`,
+          '--sheet-expansion': `${handShelf.position}px`,
         } as React.CSSProperties
       }
     >
       {/* Drag Handle */}
       <div
-        className={`${styles.dragHandle} ${isDragging ? styles.dragging : ''}`}
+        className={`${styles.dragHandle} ${handShelf.isDragging ? styles.dragging : ''}`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -114,7 +132,9 @@ export function MobilePlayerSheet() {
           <div className={styles.gripLine} />
         </div>
         <div className={styles.dragHandleLabel}>
-          {sheetPosition > 0 ? `Expanded ${expansionPercentage}%` : 'Default'}
+          {handShelf.position > 0
+            ? `Expanded ${expansionPercentage}%`
+            : 'Default'}
         </div>
       </div>
 

@@ -222,7 +222,7 @@ export const useGameStore = create<GameStore>()(
         // Store socket instance and set up event handlers
         set({ socket, connectionStatus: 'connecting' });
 
-        return new Promise<boolean>((resolve) => {
+        return new Promise<boolean>(resolve => {
           socket.on('connect', () => {
             const socketId = socket.id || `temp-${Date.now()}`;
             set({
@@ -244,7 +244,7 @@ export const useGameStore = create<GameStore>()(
             logNetwork('Disconnected from server', 'error');
           });
 
-          socket.on('error', (error) => {
+          socket.on('error', error => {
             logNetwork('Socket error', 'error', error);
             set({
               connectionStatus: 'offline',
@@ -269,19 +269,25 @@ export const useGameStore = create<GameStore>()(
           // Handle game events
           socket.on('card-played', ({ playerId, cardId, gameState }) => {
             logCardPlay(playerId, [cardId], true, 'Server confirmed card play');
-            set({ 
-              gameState, 
+            set({
+              gameState,
               serverGameState: gameState,
-              message: playerId === get().playerId ? 'Card played!' : `${playerId} played a card`
+              message:
+                playerId === get().playerId
+                  ? 'Card played!'
+                  : `${playerId} played a card`,
             });
           });
 
           socket.on('card-drawn', ({ playerId, gameState }) => {
             logNetwork(`Card drawn by ${playerId}`, 'success', { gameState });
-            set({ 
-              gameState, 
+            set({
+              gameState,
               serverGameState: gameState,
-              message: playerId === get().playerId ? 'Card drawn!' : `${playerId} drew a card`
+              message:
+                playerId === get().playerId
+                  ? 'Card drawn!'
+                  : `${playerId} drew a card`,
             });
           });
 
@@ -290,7 +296,10 @@ export const useGameStore = create<GameStore>()(
             set({
               gameState,
               serverGameState: gameState,
-              message: winner === get().playerId ? 'You won! 🎉' : `${winner} won the game!`,
+              message:
+                winner === get().playerId
+                  ? 'You won! 🎉'
+                  : `${winner} won the game!`,
             });
           });
 
@@ -455,10 +464,10 @@ export const useGameStore = create<GameStore>()(
       if (socket && selectedCards.length === 1) {
         const cardId = selectedCards[0];
         logNetwork(`Playing card ${cardId} via WebSocket`, 'pending');
-        
+
         // Server will respond with card-played event which updates the game state
         socket.emit('play-card', { cardId });
-        
+
         // Clear selection after sending
         get().clearSelection();
       } else {
