@@ -95,17 +95,55 @@ Claude MUST keep these files updated when making changes:
 - **Test Location**: Keep tests next to implementation files
 - **Critical Functions**: 100% coverage on game rule validation
 
-### Git Workflow Requirements
+### Git Workflow Requirements (UPDATED - NO MORE MAIN BRANCH DEVELOPMENT)
 
 ```bash
-# Feature development flow
-git checkout -b feature/card-special-effects
+# Feature development flow - ALWAYS use feature branches
+git checkout -b feature/architecture-consolidation
 # ... make changes ...
 pnpm ci                # Must pass before commit
-git commit -m "feat: implement 2s pick-up-two card effect"
-git push origin feature/card-special-effects
-# Create PR for review
+git commit -m "feat: implement network-first architecture"
+
+# Documentation update (REQUIRED after feature completion)
+# Update TODO.md, FEATURES.md, README.md, docs/switch_game_rules.md as needed
+git add .
+git commit -m "docs: update documentation after architecture consolidation"
+
+git push origin feature/architecture-consolidation
+# Create PR for review - NEVER merge directly to main
 ```
+
+### MANDATORY Post-Feature Workflow
+
+**After completing ANY feature, Claude MUST follow this exact sequence:**
+
+1. **Feature Implementation Commit**
+   ```bash
+   pnpm ci  # Quality gates must pass
+   git commit -m "feat: [feature description]"
+   ```
+
+2. **Documentation Update** (MANDATORY)
+   - Update TODO.md: Move completed items, update status sections
+   - Update FEATURES.md: Change status indicators (🔴 → 🟡 → 🟢)
+   - Update README.md: Update roadmap, commands, architecture if needed
+   - Update docs/switch_game_rules.md: If game mechanics changed
+
+3. **Documentation Commit**
+   ```bash
+   git add .
+   git commit -m "docs: update project documentation after [feature name]"
+   ```
+
+4. **Create Pull Request**
+   ```bash
+   git push origin feature/[branch-name]
+   # Create PR via GitHub - NEVER merge to main without review
+   ```
+
+**🚨 CRITICAL RULE: NO MORE DIRECT DEVELOPMENT ON MAIN BRANCH**
+
+All development must happen on feature branches with PRs for review.
 
 ### Error Prevention
 
@@ -118,10 +156,10 @@ git push origin feature/card-special-effects
 
 #### Client Package (`client/`)
 
-- **Framework**: Vite + vanilla TypeScript (no React/Vue/etc)
-- **UI State**: Keep UI state separate from game state
+- **Framework**: React 18 + TypeScript with Vite
+- **State Management**: Zustand stores for game and UI state
 - **Game Logic**: Import ALL game logic from shared package
-- **Styling**: Embedded CSS in main.ts for simplicity
+- **Styling**: CSS Modules with responsive mobile-first design
 
 #### Server Package (`server/`)
 
@@ -148,10 +186,10 @@ git push origin feature/card-special-effects
 
 Based on current TODO.md status:
 
-- **Current Phase**: Week 2 - Special Card Implementation (2s cards)
-- **Focus**: Perfect single-player experience before networking
-- **Priority**: Game mechanics > UI polish > Networking
-- **Testing**: Test each special card thoroughly before adding next
+- **Current Phase**: Week 5 - 🚨 CRITICAL Architecture Consolidation
+- **Focus**: Network-first architecture and mobile-first desktop consolidation
+- **Priority**: Architecture simplification > New features
+- **Testing**: Test unified components across all platforms and game modes
 
 ### Code Quality Metrics
 
@@ -175,14 +213,16 @@ If quality gates fail:
 ## Project-Specific Reminders for Claude
 
 - **Always run `pnpm build:shared`** after changing types or game engine
-- **Update all three documentation files** when completing features
+- **MANDATORY: Follow post-feature workflow** - Feature commit → Documentation update → Final commit → PR
+- **NO MORE MAIN BRANCH DEVELOPMENT** - Always use feature branches with PRs
+- **Update ALL documentation files** - TODO.md, FEATURES.md, README.md, switch_game_rules.md
 - **Keep game logic in shared package** - never duplicate in client/server
-- **Test special cards thoroughly** before marking features complete
-- **Focus on single-player polish** before networking complexity
+- **Architecture consolidation priority** - Complete before any new features
 - **Use exact port numbers**: client 3000, server 3001
 - **Follow monorepo structure** - respect package boundaries
 - **Reference game rules**: Always consult `docs/switch_game_rules.md` when implementing card mechanics
 - **Validate rule implementation**: Ensure code matches documented game rules exactly
+- **Quality gates before every commit** - pnpm ci must pass
 
 This configuration ensures high code quality, prevents regressions, and maintains accurate documentation throughout development.
 

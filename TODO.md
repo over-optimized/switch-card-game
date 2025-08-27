@@ -345,34 +345,47 @@ The current architecture has grown complex with mobile/desktop duplication and l
   - [ ] Display turn changes and game events
   - [ ] Show game winner and reset options
 
-## 📅 Phase 4 (Week 5-6) - Player vs Computer
+## ✅ COMPLETED - Phase 4 - Player vs Computer (Partial)
 
-### AI Implementation
+### ✅ Basic AI Implementation - COMPLETE
 
-- [ ] **Basic AI player**
-  - [ ] Random valid card selection
-  - [ ] Follow game rules correctly
-  - [ ] Reasonable play timing
+- [x] **Basic AI player** ✅
+  - [x] Valid card selection with game rule compliance
+  - [x] Smart penalty handling (2s, Aces, Jacks)
+  - [x] Reasonable play timing with delays
+  - [x] Strategic suit selection for Aces based on hand composition
+  - [x] Tactical use of skip cards (Jacks) and penalty avoidance
 
-- [ ] **AI difficulty levels**
-  - [ ] Easy: Random plays
-  - [ ] Medium: Basic strategy (color/number matching)
-  - [ ] Hard: Advanced strategy and card counting
+- [x] **AI difficulty UI** ✅
+  - [x] Easy/Medium/Hard dropdown in MenuScreen.tsx
+  - [x] Player configuration with AI difficulty selection
+  - [x] UI state management for AI players
+
+### 🔴 AI Implementation - INCOMPLETE
+
+- [ ] **AI difficulty logic implementation** 
+  - [ ] Easy: Random valid plays (currently not differentiated)
+  - [ ] Medium: Current smart behavior (already works well)
+  - [ ] Hard: Advanced strategy with card counting and probability
+  - [ ] Connect MenuScreen AI difficulty setting to actual game logic
 
 - [ ] **Mixed PvP/PvC games**
-  - [ ] Allow human and AI players in same game
-  - [ ] AI player indicators in UI
-  - [ ] Balanced gameplay experience
+  - [ ] Allow human and AI players in same game (currently single human + AI only)
+  - [ ] AI player indicators in multiplayer UI
+  - [ ] Balanced gameplay experience across difficulty levels
 
-## 📅 Phase 5 (Week 6-7) - Deployment & Production
+## ✅ COMPLETED - Phase 5 - Frontend Deployment (Vercel)
 
-### Deployment Strategy: Vercel + Railway
+### ✅ Vercel Deployment - COMPLETE
 
-- [ ] **Frontend deployment (Vercel)**
-  - [ ] Configure Vite build for production
-  - [ ] Set up environment variables for API endpoints
-  - [ ] Deploy static client with automatic Git deployments
-  - [ ] Configure custom domain (optional)
+- [x] **Frontend deployment (Vercel)** ✅
+  - [x] Configure Vite build for production with vercel.json
+  - [x] Set up workspace-aware build command using pnpm filters
+  - [x] Deploy static client with SPA routing support
+  - [x] Configure asset caching headers for performance
+  - [x] Automatic Git deployments configured
+
+### 🔴 Backend Deployment - INCOMPLETE (Railway)
 
 - [ ] **Backend deployment (Railway)**
   - [ ] Create Railway project and connect GitHub repo
