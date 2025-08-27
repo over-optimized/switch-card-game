@@ -12,5 +12,7 @@ export const GAME_CONFIG = {
   MAX_PLAYERS: 4,
   INITIAL_HAND_SIZE: 7,
   ROOM_CODE_LENGTH: 6,
-  ROOM_EXPIRY_HOURS: 24,
+  ROOM_EXPIRY_HOURS: 2, // Optimized for Railway trial - reduce resource usage
+  INACTIVITY_TIMEOUT_MINUTES: 30, // Auto-disconnect inactive players after 30 minutes
+  INACTIVITY_CHECK_INTERVAL_MINUTES: 5, // Check for inactive players every 5 minutes
 } as const;

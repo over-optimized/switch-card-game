@@ -16,6 +16,45 @@ import {
   SocketData,
 } from 'switch-shared';
 
+// Inactivity tracking for Railway optimization
+const playerLastActivity = new Map<string, Date>();
+
+// Update player activity timestamp
+const updatePlayerActivity = (playerId: string) => {
+  playerLastActivity.set(playerId, new Date());
+};
+
+// Check for and disconnect inactive players
+const cleanupInactivePlayers = () => {
+  const now = new Date();
+  const timeoutMs = GAME_CONFIG.INACTIVITY_TIMEOUT_MINUTES * 60 * 1000;
+
+  for (const [playerId, lastActivity] of playerLastActivity.entries()) {
+    const inactiveTime = now.getTime() - lastActivity.getTime();
+
+    if (inactiveTime > timeoutMs) {
+      console.log(
+        `Disconnecting inactive player: ${playerId} (inactive for ${Math.floor(
+          inactiveTime / 60000,
+        )} minutes)`,
+      );
+
+      // Find and disconnect the socket
+      const socket = io.sockets.sockets.get(playerId);
+      if (socket) {
+        socket.emit('error', {
+          message: 'Disconnected due to inactivity',
+          code: 'INACTIVITY_TIMEOUT',
+        });
+        socket.disconnect(true);
+      }
+
+      // Clean up tracking
+      playerLastActivity.delete(playerId);
+    }
+  }
+};
+
 const app = express();
 const server = createServer(app);
 
@@ -141,11 +180,15 @@ app.get('/api/rooms', (_req, res) => {
 io.on('connection', socket => {
   console.log(`Player connected: ${socket.id}`);
 
+  // Track initial connection activity
+  updatePlayerActivity(socket.id);
+
   // Create local single-player room with AI opponents
   socket.on('create-local-game', ({ playerName, aiOpponents = 1 }) => {
     console.log(
       `Creating local game: ${playerName} with ${aiOpponents} AI opponent(s)`,
     );
+    updatePlayerActivity(socket.id);
     try {
       // Create room with max players = human + AI
       const maxPlayers = aiOpponents + 1;
@@ -202,6 +245,7 @@ io.on('connection', socket => {
   socket.on(
     'create-room',
     ({ playerName, maxPlayers = GAME_CONFIG.MAX_PLAYERS }) => {
+      updatePlayerActivity(socket.id);
       try {
         const room = RoomManager.createRoom(socket.id, playerName, maxPlayers);
         const host = room.players.find(p => p.isHost)!;
@@ -224,6 +268,7 @@ io.on('connection', socket => {
   );
 
   socket.on('join-room', ({ roomCode, playerName }) => {
+    updatePlayerActivity(socket.id);
     try {
       const room = RoomManager.joinRoom(roomCode, socket.id, playerName);
       const player = room.players.find(p => p.id === socket.id)!;
@@ -253,6 +298,7 @@ io.on('connection', socket => {
       return;
     }
 
+    updatePlayerActivity(socket.id);
     try {
       const room = RoomManager.getRoom(roomCode);
 
@@ -296,6 +342,7 @@ io.on('connection', socket => {
       return;
     }
 
+    updatePlayerActivity(socket.id);
     try {
       const room = RoomManager.getRoom(roomCode);
 
@@ -344,6 +391,7 @@ io.on('connection', socket => {
       return;
     }
 
+    updatePlayerActivity(socket.id);
     try {
       const room = RoomManager.getRoom(roomCode);
 
@@ -372,6 +420,53 @@ io.on('connection', socket => {
     }
   });
 
+  // Graceful room leaving
+  socket.on('leave-room', () => {
+    const { roomCode, playerId } = socket.data;
+
+    if (roomCode && playerId) {
+      console.log(`Player ${playerId} leaving room ${roomCode} gracefully`);
+
+      // Clean up activity tracking
+      playerLastActivity.delete(playerId);
+
+      // Immediately remove player (no grace period for manual leave)
+      const updatedRoom = RoomManager.leaveRoom(roomCode, playerId);
+
+      if (updatedRoom) {
+        // Notify remaining players
+        socket.to(roomCode).emit('player-left', {
+          playerId,
+          room: updatedRoom,
+          graceful: true,
+        });
+        socket.to(roomCode).emit('room-updated', { room: updatedRoom });
+
+        // Confirm to leaving player
+        socket.emit('left-room', {
+          success: true,
+          roomCode,
+        });
+
+        // Clear socket room membership
+        socket.leave(roomCode);
+        socket.data = {};
+
+        console.log(`Player ${playerId} successfully left room ${roomCode}`);
+      } else {
+        socket.emit('left-room', {
+          success: false,
+          error: 'Room not found or already empty',
+        });
+      }
+    } else {
+      socket.emit('left-room', {
+        success: false,
+        error: 'Not in a room',
+      });
+    }
+  });
+
   socket.on('disconnect', () => {
     const { roomCode, playerId } = socket.data;
 
@@ -385,6 +480,9 @@ io.on('connection', socket => {
           io.to(roomCode).emit('player-left', { playerId, room: updatedRoom });
           io.to(roomCode).emit('room-updated', { room: updatedRoom });
         }
+
+        // Clean up activity tracking after grace period
+        playerLastActivity.delete(playerId);
       }, 30000); // 30 second grace period for reconnection
     }
 
@@ -392,9 +490,17 @@ io.on('connection', socket => {
   });
 });
 
+// Cleanup intervals for Railway optimization
 setInterval(() => {
   RoomManager.cleanupExpiredRooms();
-}, 60000); // Cleanup every minute
+}, 60000); // Cleanup expired rooms every minute
+
+setInterval(
+  () => {
+    cleanupInactivePlayers();
+  },
+  GAME_CONFIG.INACTIVITY_CHECK_INTERVAL_MINUTES * 60 * 1000,
+); // Cleanup inactive players every 5 minutes
 
 server.listen(PORT, () => {
   console.log(`🎴 Switch Card Game Server running on port ${PORT}`);
