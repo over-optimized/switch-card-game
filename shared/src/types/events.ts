@@ -27,8 +27,16 @@ export interface ServerToClientEvents {
   'room-joined': (data: { room: Room; player: Player }) => void;
   'room-updated': (data: { room: Room }) => void;
   'player-joined': (data: { player: Player; room: Room }) => void;
-  'player-left': (data: { playerId: string; room: Room; graceful?: boolean }) => void;
-  'left-room': (data: { success: boolean; roomCode?: string; error?: string }) => void;
+  'player-left': (data: {
+    playerId: string;
+    room: Room;
+    graceful?: boolean;
+  }) => void;
+  'left-room': (data: {
+    success: boolean;
+    roomCode?: string;
+    error?: string;
+  }) => void;
   'game-started': (data: { gameState: GameState }) => void;
   'game-state-updated': (data: { gameState: GameState }) => void;
   'card-played': (data: {

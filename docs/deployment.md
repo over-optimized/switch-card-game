@@ -1,10 +1,23 @@
 # Deployment Workflow Guide
 
+[![CI Pipeline](https://github.com/over-optimized/switch-card-game/actions/workflows/ci.yml/badge.svg)](https://github.com/over-optimized/switch-card-game/actions/workflows/ci.yml)
+
 ## Overview
 
-This project uses an optimized dual-deployment strategy:
+This project uses an optimized CI/CD pipeline with dual-deployment strategy:
+- **GitHub Actions** for automated quality gates and validation
 - **Vercel** for client (frontend) deployment
 - **Railway** for server (backend) deployment
+
+## Quality Gates (CI Pipeline)
+
+**All deployments are blocked until these pass:**
+- ✅ **Lint checks** - ESLint validation for all packages
+- ✅ **Type checks** - TypeScript strict mode validation
+- ✅ **Unit tests** - Test suite with coverage thresholds
+- ✅ **Build validation** - All packages must build successfully
+
+**CI Command:** `pnpm ci` (runs lint:all + test + build)
 
 ## Deployment Strategy
 

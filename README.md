@@ -1,5 +1,7 @@
 # Switch Card Game
 
+[![CI Pipeline](https://github.com/over-optimized/switch-card-game/actions/workflows/ci.yml/badge.svg)](https://github.com/over-optimized/switch-card-game/actions/workflows/ci.yml)
+
 A mobile-first multiplayer card game built with React and TypeScript. Play Switch with 2-4 players online with friends using shareable room codes, optimized for both mobile and desktop play.
 
 ## 🚀 Quick Start
