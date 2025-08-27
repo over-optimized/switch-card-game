@@ -3,6 +3,7 @@
   "outputDirectory": "dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "framework": null,
+  "ignoreCommand": "bash -c 'if [[ \"$VERCEL_GIT_COMMIT_MESSAGE\" == *\"server:\"* ]] || [[ \"$VERCEL_GIT_COMMIT_MESSAGE\" == *\"feat: implement Railway\"* ]] || git diff HEAD^ HEAD --name-only | grep -E \"^(server/|railway\\.toml|docs/.*\\.md)$\" > /dev/null; then echo \"🚫 Server-only changes detected - skipping Vercel build\"; exit 1; else echo \"✅ Client changes detected - proceeding with Vercel build\"; exit 0; fi'",
   "rewrites": [
     {
       "source": "/(.*)",
