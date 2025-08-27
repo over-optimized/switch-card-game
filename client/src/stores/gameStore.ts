@@ -1,14 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import {
-  GameState,
-  GameEngine,
-  DeckManager,
-  createGameState,
-  createPlayer,
-  getCardDisplayName,
-  Suit,
-} from 'switch-shared';
+import { GameState, GameEngine, getCardDisplayName, Suit } from 'switch-shared';
 import {
   ConnectionStatus,
   GameMode,
@@ -178,43 +170,47 @@ export const useGameStore = create<GameStore>()(
 
     // Actions - WebSocket-first architecture
     setupWebSocketGame: (config?: GameSetupConfig) => {
-      logGame('Setting up WebSocket game', { config: config?.playerCount || 2 });
+      logGame('Setting up WebSocket game', {
+        config: config?.playerCount || 2,
+      });
       set({ isLoading: true, message: 'Connecting to game server...' });
 
       // Connect to local server for all games (localhost:3001)
-      get().connectToLocalServer().then((connected) => {
-        if (connected) {
-          // Use the new socket event for local games with AI
-          const playerName = config?.players?.[0]?.name || 'You';
-          const aiOpponents = (config?.playerCount || 2) - 1;
-          
-          // TODO: This will be implemented when we add socket connection
-          logGame('WebSocket connection established, creating local game', {
-            playerName,
-            aiOpponents,
-          });
-        } else {
-          set({
-            isLoading: false,
-            message: 'Failed to connect to game server. Please try again.',
-          });
-        }
-      });
+      get()
+        .connectToLocalServer()
+        .then(connected => {
+          if (connected) {
+            // Use the new socket event for local games with AI
+            const playerName = config?.players?.[0]?.name || 'You';
+            const aiOpponents = (config?.playerCount || 2) - 1;
+
+            // TODO: This will be implemented when we add socket connection
+            logGame('WebSocket connection established, creating local game', {
+              playerName,
+              aiOpponents,
+            });
+          } else {
+            set({
+              isLoading: false,
+              message: 'Failed to connect to game server. Please try again.',
+            });
+          }
+        });
     },
 
     connectToLocalServer: async () => {
       try {
         logNetwork('Connecting to local server at localhost:3001');
-        
+
         // TODO: Implement actual WebSocket connection
         // For now, simulate connection
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         set({
           connectionStatus: 'connected',
           message: 'Connected to local game server',
         });
-        
+
         logNetwork('Connected to local server');
         return true;
       } catch (error) {
@@ -243,7 +239,7 @@ export const useGameStore = create<GameStore>()(
       console.log('🎯 SELECTCARD CALLED:', { cardId });
       const { gameState, playerId, selectedCards, cardSelectionOrder } = get();
       console.log('🎯 Current state:', { selectedCards, playerId });
-      
+
       if (!gameState) {
         console.log('🎯 ERROR: No gameState');
         return;
@@ -300,7 +296,7 @@ export const useGameStore = create<GameStore>()(
         const newSelectedCards = [...selectedCards, cardId];
         const selectionOrder = newSelectedCards.length; // 1, 2, 3, etc.
         console.log('🎯 New selection after select:', newSelectedCards);
-        
+
         set({
           selectedCards: newSelectedCards,
           cardSelectionOrder: {
@@ -364,7 +360,7 @@ export const useGameStore = create<GameStore>()(
       // Apply optimistic update for immediate UI feedback
       get().applyOptimisticUpdate(actionId, selectedCards);
 
-      // TODO: Send WebSocket message to server 
+      // TODO: Send WebSocket message to server
       // For now, simulate network success after delay
       setTimeout(() => {
         get().confirmAction(actionId, get().gameState!);
@@ -502,9 +498,7 @@ export const useGameStore = create<GameStore>()(
           const winner = currentGameState.winner;
           console.log('🏆 GAME FINISHED!', { winner, playerId });
           get().updateMessage(
-            winner?.id === playerId
-              ? 'You won! 🎉'
-              : `${winner?.name} wins!`,
+            winner?.id === playerId ? 'You won! 🎉' : `${winner?.name} wins!`,
           );
           get().addRecentMove(
             'Game',

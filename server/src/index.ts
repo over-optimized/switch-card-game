@@ -18,18 +18,18 @@ import {
 
 const app = express();
 const server = createServer(app);
-const io = new Server<
-  ClientToServerEvents,
+const io = new Server() < ClientToServerEvents,
   ServerToClientEvents,
   InterServerEvents,
-  SocketData
-(server, {
-  cors: {
-    origin: corsOrigins,
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
-});
+  SocketData;
+(server,
+  {
+    cors: {
+      origin: corsOrigins,
+      methods: ['GET', 'POST'],
+      credentials: true,
+    },
+  });
 
 // Environment detection
 const isProduction = process.env.RAILWAY_ENVIRONMENT_NAME === 'production';
@@ -41,7 +41,8 @@ const handleAITurns = async (roomCode: string) => {
   const room = RoomManager.getRoom(roomCode);
   if (!room?.gameState || room.gameState.phase !== 'playing') return;
 
-  const currentPlayer = room.gameState.players[room.gameState.currentPlayerIndex];
+  const currentPlayer =
+    room.gameState.players[room.gameState.currentPlayerIndex];
   if (!currentPlayer.isAI) return;
 
   // Simple AI logic: try to play valid cards, otherwise draw
@@ -58,7 +59,11 @@ const handleAITurns = async (roomCode: string) => {
     if (validCards.length > 0) {
       // AI plays first valid card
       const cardToPlay = validCards[0];
-      const updatedGame = GameEngine.playCard(room.gameState, currentPlayer.id, cardToPlay.id);
+      const updatedGame = GameEngine.playCard(
+        room.gameState,
+        currentPlayer.id,
+        cardToPlay.id,
+      );
       room.gameState = updatedGame;
 
       io.to(roomCode).emit('card-played', {
@@ -88,9 +93,9 @@ const handleAITurns = async (roomCode: string) => {
       const updatedGame = GameEngine.processAction(room.gameState, drawAction);
       room.gameState = updatedGame;
 
-      io.to(roomCode).emit('card-drawn', { 
-        playerId: currentPlayer.id, 
-        gameState: updatedGame 
+      io.to(roomCode).emit('card-drawn', {
+        playerId: currentPlayer.id,
+        gameState: updatedGame,
       });
 
       // Continue with next turn after drawing
@@ -102,16 +107,18 @@ const handleAITurns = async (roomCode: string) => {
 };
 
 // CORS configuration for dual-mode operation
-const corsOrigins = isProduction 
+const corsOrigins = isProduction
   ? [process.env.CLIENT_URL || 'https://switch-card-game.vercel.app']
   : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
 app.use(helmet());
-app.use(cors({
-  origin: corsOrigins,
-  methods: ['GET', 'POST'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: corsOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true,
+  }),
+);
 app.use(morgan('combined'));
 app.use(express.json());
 
@@ -140,51 +147,62 @@ io.on('connection', socket => {
   console.log(`Player connected: ${socket.id}`);
 
   // Create local single-player room with AI opponents
-  socket.on('create-local-game', ({ playerName, aiOpponents = 1, difficulty = 'medium' }) => {
-    try {
-      // Create room with max players = human + AI
-      const maxPlayers = aiOpponents + 1;
-      const room = RoomManager.createRoom(socket.id, playerName, maxPlayers);
-      
-      // Add AI players to the room
-      for (let i = 0; i < aiOpponents; i++) {
-        const aiPlayer = createPlayer(`ai-${i + 1}`, `Computer ${i + 1}`, false);
-        aiPlayer.isAI = true;
-        room.players.push(aiPlayer);
+  socket.on(
+    'create-local-game',
+    ({ playerName, aiOpponents = 1, difficulty = 'medium' }) => {
+      try {
+        // Create room with max players = human + AI
+        const maxPlayers = aiOpponents + 1;
+        const room = RoomManager.createRoom(socket.id, playerName, maxPlayers);
+
+        // Add AI players to the room
+        for (let i = 0; i < aiOpponents; i++) {
+          const aiPlayer = createPlayer(
+            `ai-${i + 1}`,
+            `Computer ${i + 1}`,
+            false,
+          );
+          aiPlayer.isAI = true;
+          room.players.push(aiPlayer);
+        }
+
+        const host = room.players.find(p => p.isHost)!;
+
+        socket.data.playerId = socket.id;
+        socket.data.roomCode = room.code;
+        socket.data.isLocalGame = true;
+
+        socket.join(room.code);
+
+        // Immediately start the local game
+        const gameState = createGameState(room.code, room.players, []);
+        const startedGame = GameEngine.startGame(gameState);
+
+        room.gameState = startedGame;
+        room.status = 'playing';
+
+        socket.emit('local-game-created', {
+          room,
+          player: host,
+          gameState: startedGame,
+        });
+
+        console.log(
+          `Local game created: ${room.code} by ${playerName} with ${aiOpponents} AI opponent(s)`,
+        );
+
+        // Handle AI turns after a short delay
+        setTimeout(() => handleAITurns(room.code), 1000);
+      } catch (error) {
+        socket.emit('error', {
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Failed to create local game',
+        });
       }
-      
-      const host = room.players.find(p => p.isHost)!;
-
-      socket.data.playerId = socket.id;
-      socket.data.roomCode = room.code;
-      socket.data.isLocalGame = true;
-
-      socket.join(room.code);
-
-      // Immediately start the local game
-      const gameState = createGameState(room.code, room.players, []);
-      const startedGame = GameEngine.startGame(gameState);
-      
-      room.gameState = startedGame;
-      room.status = 'playing';
-
-      socket.emit('local-game-created', { 
-        room, 
-        player: host, 
-        gameState: startedGame 
-      });
-
-      console.log(`Local game created: ${room.code} by ${playerName} with ${aiOpponents} AI opponent(s)`);
-
-      // Handle AI turns after a short delay
-      setTimeout(() => handleAITurns(room.code), 1000);
-    } catch (error) {
-      socket.emit('error', {
-        message:
-          error instanceof Error ? error.message : 'Failed to create local game',
-      });
-    }
-  });
+    },
+  );
 
   socket.on(
     'create-room',

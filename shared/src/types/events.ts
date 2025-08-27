@@ -3,10 +3,10 @@ import { Player } from './player.js';
 
 export interface ClientToServerEvents {
   'create-room': (data: { playerName: string; maxPlayers?: number }) => void;
-  'create-local-game': (data: { 
-    playerName: string; 
-    aiOpponents?: number; 
-    difficulty?: 'easy' | 'medium' | 'hard' 
+  'create-local-game': (data: {
+    playerName: string;
+    aiOpponents?: number;
+    difficulty?: 'easy' | 'medium' | 'hard';
   }) => void;
   'join-room': (data: { roomCode: string; playerName: string }) => void;
   'leave-room': () => void;
@@ -19,10 +19,10 @@ export interface ClientToServerEvents {
 
 export interface ServerToClientEvents {
   'room-created': (data: { room: Room; player: Player }) => void;
-  'local-game-created': (data: { 
-    room: Room; 
-    player: Player; 
-    gameState: GameState 
+  'local-game-created': (data: {
+    room: Room;
+    player: Player;
+    gameState: GameState;
   }) => void;
   'room-joined': (data: { room: Room; player: Player }) => void;
   'room-updated': (data: { room: Room }) => void;

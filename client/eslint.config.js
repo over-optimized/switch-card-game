@@ -26,8 +26,12 @@ export default [
         console: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        navigator: 'readonly',
         HTMLElement: 'readonly',
+        HTMLDivElement: 'readonly',
         DragEvent: 'readonly',
+        global: 'readonly',
         // React globals  
         React: 'readonly',
         JSX: 'readonly',

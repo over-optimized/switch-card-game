@@ -35,7 +35,7 @@ export function GameBoard({ onBackToMenu }: GameBoardProps) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Calculate comprehensive layout dimensions for dynamic styling  
+  // Calculate comprehensive layout dimensions for dynamic styling
   const gameBoardStyles = React.useMemo(() => {
     if (!isMobile || !handShelf.isEnabled) return {};
 
@@ -52,7 +52,7 @@ export function GameBoard({ onBackToMenu }: GameBoardProps) {
       const viewportHeight = window.innerHeight;
       const {
         OPPONENT_AREA_HEIGHT,
-        DECK_AREA_HEIGHT, 
+        DECK_AREA_HEIGHT,
         SHELF_CONTROL_HEIGHT,
         ELEMENT_GAP,
         MIN_HAND_HEIGHT,
@@ -60,30 +60,38 @@ export function GameBoard({ onBackToMenu }: GameBoardProps) {
       } = LAYOUT_CONSTANTS;
 
       // Calculate total space needed for fixed elements and gaps
-      const fixedElementsHeight = OPPONENT_AREA_HEIGHT + DECK_AREA_HEIGHT + SHELF_CONTROL_HEIGHT;
+      const fixedElementsHeight =
+        OPPONENT_AREA_HEIGHT + DECK_AREA_HEIGHT + SHELF_CONTROL_HEIGHT;
       const totalGapsHeight = ELEMENT_GAP * 3; // opponent→deck, deck→shelf, shelf→hand
-      const availableForHand = viewportHeight - fixedElementsHeight - totalGapsHeight;
-      
+      const availableForHand =
+        viewportHeight - fixedElementsHeight - totalGapsHeight;
+
       // Calculate maximum possible shelf position
-      const maxHandExpansion = Math.min(availableForHand - MIN_HAND_HEIGHT, MAX_HAND_HEIGHT - MIN_HAND_HEIGHT);
+      const maxHandExpansion = Math.min(
+        availableForHand - MIN_HAND_HEIGHT,
+        MAX_HAND_HEIGHT - MIN_HAND_HEIGHT,
+      );
       const maxShelfPosition = Math.max(0, maxHandExpansion);
-      
+
       // Calculate current hand height based on shelf position
-      const expansionFactor = Math.min(shelfPosition / maxShelfPosition, 1) || 0;
-      const handAreaHeight = MIN_HAND_HEIGHT + (maxHandExpansion * expansionFactor);
-      
+      const expansionFactor =
+        Math.min(shelfPosition / maxShelfPosition, 1) || 0;
+      const handAreaHeight =
+        MIN_HAND_HEIGHT + maxHandExpansion * expansionFactor;
+
       // Dynamic positioning based on shelf expansion
-      
+
       // Calculate shelf control position from bottom
       const shelfControlBottom = handAreaHeight + ELEMENT_GAP;
-      
+
       // Calculate deck position: Should be above shelf control with proper gap
-      const shelfControlTop = viewportHeight - shelfControlBottom - SHELF_CONTROL_HEIGHT;
+      const shelfControlTop =
+        viewportHeight - shelfControlBottom - SHELF_CONTROL_HEIGHT;
       const deckAreaTop = Math.max(
         OPPONENT_AREA_HEIGHT + ELEMENT_GAP, // Never closer than 140px from top
-        shelfControlTop - DECK_AREA_HEIGHT - ELEMENT_GAP // Or 20px above shelf control
+        shelfControlTop - DECK_AREA_HEIGHT - ELEMENT_GAP, // Or 20px above shelf control
       );
-      
+
       return {
         handAreaHeight,
         deckAreaTop,
@@ -147,8 +155,9 @@ export function GameBoard({ onBackToMenu }: GameBoardProps) {
     isMobile ? 'mobile' : '',
     isMobile && handShelf.isEnabled ? 'with-shelf' : '',
     isMobile && handShelf.isDragging ? 'dragging' : '',
-  ].filter(Boolean).join(' ');
-
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div className={gameBoardClasses} style={gameBoardStyles}>

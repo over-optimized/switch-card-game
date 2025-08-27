@@ -11,7 +11,6 @@ interface ResponsiveHandAreaProps {
 
 export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
   const [isDesktop, setIsDesktop] = useState(false);
-  const [touchStartTime, setTouchStartTime] = useState(0);
 
   const {
     gameState,
@@ -37,13 +36,9 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
     endDrag: state.endDrag,
   }));
 
-  const {
-    handSortOrder,
-    showCardHints,
-    handShelf,
-  } = useUIStore(state => ({
-    handSortOrder: state.handSortOrder,
-    showCardHints: state.showCardHints,
+  const { handSortOrder, showCardHints, handShelf } = useUIStore(state => ({
+    handSortOrder: state.settings.handSortOrder,
+    showCardHints: state.settings.showCardHints,
     handShelf: state.handShelf,
   }));
 
@@ -63,16 +58,15 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
   // Calculate playable cards for hints
   const playableCards = useMemo(() => {
     if (!gameState || !currentPlayer) return [];
-    
+
     return currentPlayer.hand.filter(card => {
       try {
-        GameEngine.validateCardPlay(gameState, playerId!, card.id);
-        return true;
+        return GameEngine.isValidPlay(gameState, card);
       } catch {
         return false;
       }
     });
-  }, [gameState, currentPlayer, playerId]);
+  }, [gameState, currentPlayer]);
 
   // Enhanced hand sorting with all options
   const sortedHand = useMemo(() => {
@@ -83,27 +77,59 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
       case 'rank':
         return cards.sort((a, b) => {
           const rankOrder: Record<string, number> = {
-            A: 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
-            '8': 8, '9': 9, '10': 10, J: 11, Q: 12, K: 13,
+            A: 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+            '7': 7,
+            '8': 8,
+            '9': 9,
+            '10': 10,
+            J: 11,
+            Q: 12,
+            K: 13,
           };
           const suitOrder: Record<string, number> = {
-            spades: 1, hearts: 2, diamonds: 3, clubs: 4,
+            spades: 1,
+            hearts: 2,
+            diamonds: 3,
+            clubs: 4,
           };
           const rankDiff = rankOrder[a.rank] - rankOrder[b.rank];
-          return rankDiff !== 0 ? rankDiff : suitOrder[a.suit] - suitOrder[b.suit];
+          return rankDiff !== 0
+            ? rankDiff
+            : suitOrder[a.suit] - suitOrder[b.suit];
         });
 
       case 'suit':
         return cards.sort((a, b) => {
           const suitOrder: Record<string, number> = {
-            spades: 1, hearts: 2, diamonds: 3, clubs: 4,
+            spades: 1,
+            hearts: 2,
+            diamonds: 3,
+            clubs: 4,
           };
           const rankOrder: Record<string, number> = {
-            A: 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
-            '8': 8, '9': 9, '10': 10, J: 11, Q: 12, K: 13,
+            A: 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+            '7': 7,
+            '8': 8,
+            '9': 9,
+            '10': 10,
+            J: 11,
+            Q: 12,
+            K: 13,
           };
           const suitDiff = suitOrder[a.suit] - suitOrder[b.suit];
-          return suitDiff !== 0 ? suitDiff : rankOrder[a.rank] - rankOrder[b.rank];
+          return suitDiff !== 0
+            ? suitDiff
+            : rankOrder[a.rank] - rankOrder[b.rank];
         });
 
       default:
@@ -114,21 +140,21 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
   // CSS classes for responsive layout
   const handAreaClasses = useMemo(() => {
     const classes = ['responsive-hand-area'];
-    
+
     if (className) classes.push(className);
     if (isDesktop) classes.push('desktop-mode');
     else classes.push('mobile-mode');
-    
+
     if (!isDesktop && handShelf.isEnabled) {
       classes.push('with-shelf');
       if (handShelf.isDragging) classes.push('dragging');
     }
-    
+
     return classes.join(' ');
   }, [className, isDesktop, handShelf.isEnabled, handShelf.isDragging]);
 
   if (!gameState || !currentPlayer) return null;
-  
+
   const isGameFinished = gameState.phase === 'finished';
 
   // Enhanced card interaction handlers
@@ -136,27 +162,12 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
     selectCard(cardId);
   };
 
-  const handleCardTouchStart = (e: React.TouchEvent, cardId: string) => {
-    if (isDesktop) return;
-    setTouchStartTime(Date.now());
-    e.preventDefault(); // Prevent default touch behavior
-  };
-
-  const handleCardTouchEnd = (e: React.TouchEvent, cardId: string) => {
-    if (isDesktop) return;
-    const touchDuration = Date.now() - touchStartTime;
-    
-    if (touchDuration < 300) { // Quick tap
-      handleCardClick(cardId);
-    }
-  };
-
   // Desktop drag and drop handlers
   const handleCardDragStart = (e: React.DragEvent, cardId: string) => {
     if (!isDesktop) return;
-    
+
     let cardsToDrag: string[] = [];
-    
+
     if (selectedCards.includes(cardId)) {
       cardsToDrag = [...selectedCards];
     } else {
@@ -170,17 +181,27 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
   return (
     <div className={handAreaClasses}>
       {/* Hand Controls - responsive positioning */}
-      <HandControls />
-      
+      <HandControls
+        selectedCount={selectedCards.length}
+        onPlaySelected={playSelectedCards}
+        onClearSelection={clearSelection}
+      />
+
       {/* Hand Shelf for mobile bottom sheet */}
       {!isDesktop && handShelf.isEnabled && <HandShelf />}
 
-      <div className={`hand ${isDesktop ? 'desktop-layout' : 'mobile-horizontal'}`}>
+      <div
+        className={`hand ${isDesktop ? 'desktop-layout' : 'mobile-horizontal'}`}
+      >
         {sortedHand.map(card => {
-          const isPlayable = showCardHints && playableCards.some(pc => pc.id === card.id);
+          const isPlayable =
+            showCardHints && playableCards.some(pc => pc.id === card.id);
           const isSelected = selectedCards.includes(card.id);
-          const isDragging = dragState.isDragging && dragState.draggedCards.includes(card.id);
-          const selectionOrder = isSelected ? cardSelectionOrder[card.id] : undefined;
+          const isDragging =
+            dragState.isDragging && dragState.draggedCards.includes(card.id);
+          const selectionOrder = isSelected
+            ? cardSelectionOrder[card.id]
+            : undefined;
 
           return (
             <Card
@@ -192,10 +213,13 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
               selectionOrder={selectionOrder}
               disabled={isGameFinished}
               onClick={isDesktop ? () => handleCardClick(card.id) : undefined}
-              onTouchStart={!isDesktop ? (e) => handleCardTouchStart(e, card.id) : undefined}
-              onTouchEnd={!isDesktop ? (e) => handleCardTouchEnd(e, card.id) : undefined}
-              draggable={isDesktop && !isGameFinished}
-              onDragStart={isDesktop ? (e) => handleCardDragStart(e, card.id) : undefined}
+              onTouchStart={!isDesktop ? () => {} : undefined}
+              onTouchEnd={
+                !isDesktop ? () => handleCardClick(card.id) : undefined
+              }
+              onDragStart={
+                isDesktop ? e => handleCardDragStart(e, card.id) : undefined
+              }
               onDragEnd={isDesktop ? endDrag : undefined}
             />
           );
