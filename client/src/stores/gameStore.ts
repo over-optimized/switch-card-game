@@ -68,16 +68,16 @@ interface GameStore {
   optimisticUpdates: OptimisticUpdate[];
   currentAction: PendingAction | null;
 
-  // Actions - Local game management
-  setupLocalGame: (config?: GameSetupConfig) => void;
+  // Actions - Game management (WebSocket-first)
+  setupWebSocketGame: (config?: GameSetupConfig) => void;
+  connectToLocalServer: () => Promise<boolean>;
   restartGame: () => void;
   updateMessage: (message: string) => void;
 
-  // Actions - Card interactions
+  // Actions - Card interactions (WebSocket-only)
   selectCard: (cardId: string) => void;
   clearSelection: () => void;
   playSelectedCards: () => Promise<boolean>;
-  playCardsLocally: (cardIds: string[]) => boolean;
   drawCard: () => Promise<boolean>;
 
   // Actions - Drag and drop
@@ -176,81 +176,62 @@ export const useGameStore = create<GameStore>()(
     optimisticUpdates: [],
     currentAction: null,
 
-    // Actions
-    setupLocalGame: (config?: GameSetupConfig) => {
-      try {
-        logGame('Setting up local game', { config: config?.playerCount || 2 });
+    // Actions - WebSocket-first architecture
+    setupWebSocketGame: (config?: GameSetupConfig) => {
+      logGame('Setting up WebSocket game', { config: config?.playerCount || 2 });
+      set({ isLoading: true, message: 'Connecting to game server...' });
 
-        // Create players based on config or use default 2-player setup
-        let players;
-        if (config) {
-          players = config.players.map((playerConfig, index) => {
-            const playerId = index === 0 ? 'player-1' : `player-${index + 1}`;
-            return createPlayer(playerId, playerConfig.name);
+      // Connect to local server for all games (localhost:3001)
+      get().connectToLocalServer().then((connected) => {
+        if (connected) {
+          // Use the new socket event for local games with AI
+          const playerName = config?.players?.[0]?.name || 'You';
+          const aiOpponents = (config?.playerCount || 2) - 1;
+          
+          // TODO: This will be implemented when we add socket connection
+          logGame('WebSocket connection established, creating local game', {
+            playerName,
+            aiOpponents,
           });
         } else {
-          // Default 2-player setup for backward compatibility
-          players = [
-            createPlayer('player-1', 'You'),
-            createPlayer('player-2', 'Computer'),
-          ];
+          set({
+            isLoading: false,
+            message: 'Failed to connect to game server. Please try again.',
+          });
         }
+      });
+    },
 
-        const gameState = createGameState('local-game', players, []);
-        const startedGame = GameEngine.startGame(gameState);
-        const topCard = DeckManager.getTopDiscardCard(startedGame);
-
-        logGame('Local game created', {
-          gameId: startedGame.id,
-          players: players.map(p => ({ id: p.id, name: p.name })),
-          topCard: topCard ? getCardDisplayName(topCard) : 'none',
-          playerHandSize: startedGame.players[0].hand.length,
-        });
-
-        const playerCount = players.length;
-        const message =
-          playerCount === 2
-            ? 'Game started! Select cards to play them.'
-            : `${playerCount}-player game started! Select cards to play them.`;
-
+    connectToLocalServer: async () => {
+      try {
+        logNetwork('Connecting to local server at localhost:3001');
+        
+        // TODO: Implement actual WebSocket connection
+        // For now, simulate connection
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         set({
-          isLoading: false,
-          gameState: startedGame,
-          gameMode: startedGame.gameMode,
-          penaltyState: startedGame.penaltyState,
-          message,
-          recentMoves: [
-            {
-              timestamp: new Date(),
-              player: 'Game',
-              action: 'Game started',
-              ...(topCard && {
-                details: `Starting card: ${getCardDisplayName(topCard)}`,
-              }),
-            },
-          ],
-          selectedCards: [],
-          selectionMode: 'none',
-          cardSelectionOrder: {},
-          pendingActions: [],
-          optimisticUpdates: [],
-          currentAction: null,
+          connectionStatus: 'connected',
+          message: 'Connected to local game server',
         });
+        
+        logNetwork('Connected to local server');
+        return true;
       } catch (error) {
-        debugLogger.error('game', 'Failed to setup local game', error);
+        logNetwork('Failed to connect to local server', error);
         set({
-          isLoading: false,
-          message: `Error starting game: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          connectionStatus: 'disconnected',
+          message: 'Failed to connect to game server',
         });
+        return false;
       }
     },
 
     restartGame: () => {
       set({ isLoading: true });
       setTimeout(() => {
-        // We'll need to get the current game config from the UI store
-        // For now, just restart with the same setup
-        get().setupLocalGame();
+        // Restart using WebSocket-first approach
+        get().setupWebSocketGame();
       }, 500);
     },
 
@@ -372,24 +353,24 @@ export const useGameStore = create<GameStore>()(
         cardIds: selectedCards,
       });
 
-      if (connectionStatus === 'connected') {
-        // Network mode - create pending action and apply optimistically
-        const actionId = get().createPendingAction('play-cards', selectedCards);
-
-        // Apply optimistic update for immediate UI feedback
-        get().applyOptimisticUpdate(actionId, selectedCards);
-
-        // TODO: Send to server
-        // For now, simulate network success after delay
-        setTimeout(() => {
-          get().confirmAction(actionId, get().gameState!);
-        }, 1000);
-
-        return true;
-      } else {
-        // Local mode
-        return get().playCardsLocally(selectedCards);
+      if (connectionStatus !== 'connected') {
+        get().updateMessage('Not connected to game server');
+        return false;
       }
+
+      // WebSocket-only mode with optimistic updates
+      const actionId = get().createPendingAction('play-cards', selectedCards);
+
+      // Apply optimistic update for immediate UI feedback
+      get().applyOptimisticUpdate(actionId, selectedCards);
+
+      // TODO: Send WebSocket message to server 
+      // For now, simulate network success after delay
+      setTimeout(() => {
+        get().confirmAction(actionId, get().gameState!);
+      }, 1000);
+
+      return true;
     },
 
     playCardsLocally: (cardIds: string[]) => {

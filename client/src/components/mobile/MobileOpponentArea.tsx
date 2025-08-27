@@ -1,15 +1,34 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useGameStore } from '../../stores';
 import type { Player } from '../../../../shared/src/types/player';
 import styles from './MobileOpponentArea.module.css';
 
-interface MobileOpponentAreaProps {
-  opponents: Player[];
+interface ResponsiveOpponentAreaProps {
+  opponents?: Player[];
 }
 
-export function MobileOpponentArea({ opponents }: MobileOpponentAreaProps) {
+export function MobileOpponentArea({ opponents: propOpponents }: ResponsiveOpponentAreaProps) {
   const [currentOpponentIndex, setCurrentOpponentIndex] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
   const startX = useRef<number>(0);
   const minSwipeDistance = 50;
+
+  const gameState = useGameStore(state => state.gameState);
+  const playerId = useGameStore(state => state.playerId);
+
+  // Responsive breakpoint detection
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth > 768);
+    };
+
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
+  // Get opponents from props or game state
+  const opponents = propOpponents || (gameState?.players.filter(p => p.id !== playerId) || []);
 
   if (opponents.length === 0) {
     return (
@@ -60,13 +79,45 @@ export function MobileOpponentArea({ opponents }: MobileOpponentAreaProps) {
     }
   };
 
+  // Desktop: Show all opponents positioned around the board
+  // Mobile: Show current opponent with swipe navigation
+  if (isDesktop && opponents.length > 1) {
+    return (
+      <div className={`${styles.opponentContainer} desktop-layout`}>
+        {opponents.map((opponent, index) => {
+          const position = index === 0 ? 'top' : index === 1 ? 'left' : 'right';
+          const isCurrentTurn = gameState?.players[gameState.currentPlayerIndex]?.id === opponent.id;
+          
+          return (
+            <div key={opponent.id} className={`opponent-area opponent-${position} ${isCurrentTurn ? 'current-turn' : ''}`}>
+              <div className="opponent-info">
+                <h4 className="opponent-name">{opponent.name}</h4>
+                <span className="card-count">{opponent.hand.length} cards</span>
+              </div>
+              <div className={`opponent-hand opponent-hand-${position}`}>
+                {Array(opponent.hand.length)
+                  .fill(0)
+                  .map((_, cardIndex) => (
+                    <div key={cardIndex} className={`card-back small ${position}`}>
+                      🂠
+                    </div>
+                  ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Mobile layout or single opponent
   const currentOpponent = opponents[currentOpponentIndex];
 
   return (
     <div 
-      className={styles.opponentContainer}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      className={`${styles.opponentContainer} ${isDesktop ? 'desktop-single' : 'mobile-layout'}`}
+      onTouchStart={!isDesktop ? handleTouchStart : undefined}
+      onTouchEnd={!isDesktop ? handleTouchEnd : undefined}
     >
       <div className={styles.opponentWrapper}>
         <div className={styles.multipleOpponents}>
@@ -74,14 +125,16 @@ export function MobileOpponentArea({ opponents }: MobileOpponentAreaProps) {
             <div className={styles.opponentName}>{currentOpponent.name}</div>
             <div className={styles.cardCount}>({currentOpponent.hand.length} cards)</div>
             
-            <div className={styles.swipeIndicator}>
-              {opponents.map((_, index) => (
-                <div
-                  key={index}
-                  className={`${styles.swipeDot} ${index === currentOpponentIndex ? styles.active : ''}`}
-                />
-              ))}
-            </div>
+            {!isDesktop && opponents.length > 1 && (
+              <div className={styles.swipeIndicator}>
+                {opponents.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`${styles.swipeDot} ${index === currentOpponentIndex ? styles.active : ''}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

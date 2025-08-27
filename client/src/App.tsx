@@ -12,7 +12,7 @@ export function App() {
     }),
   );
 
-  const setupLocalGame = useGameStore(state => state.setupLocalGame);
+  const setupWebSocketGame = useGameStore(state => state.setupWebSocketGame);
 
   // Add/remove game-active class based on current screen for mobile overflow control
   useEffect(() => {
@@ -30,7 +30,7 @@ export function App() {
 
   const handleStartGame = (config: GameSetupConfig) => {
     setGameSetup(config);
-    setupLocalGame(config);
+    setupWebSocketGame(config);
     setCurrentScreen('game');
   };
 

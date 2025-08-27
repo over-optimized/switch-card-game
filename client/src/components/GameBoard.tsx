@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DeckArea } from './DeckArea';
-import { MultiOpponentArea } from './MultiOpponentArea';
 import { MobileOpponentArea } from './MobileOpponentArea';
-import { PlayerHandArea } from './PlayerHandArea';
+import { MobileHandArea } from './mobile/MobileHandArea';
 import { PenaltyIndicator } from './PenaltyIndicator';
 import { SkipIndicator } from './SkipIndicator';
 import { SuitSelector } from './SuitSelector';
@@ -153,17 +152,13 @@ export function GameBoard({ onBackToMenu }: GameBoardProps) {
 
   return (
     <div className={gameBoardClasses} style={gameBoardStyles}>
-      {isMobile && opponents.length > 0 ? (
-        <MobileOpponentArea opponents={opponents} />
-      ) : (
-        <MultiOpponentArea />
-      )}
+      <MobileOpponentArea opponents={opponents} />
       <div className="center-area">
         <DeckArea />
       </div>
       {!isMobile && (
         <div className="player-area">
-          <PlayerHandArea />
+          <MobileHandArea />
         </div>
       )}
       <PenaltyIndicator penaltyState={penaltyState} />
