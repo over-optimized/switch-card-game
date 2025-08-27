@@ -48,7 +48,7 @@ export function HandShelf() {
 
   // Layout constants for consistent spacing
   const LAYOUT_CONSTANTS = {
-    OPPONENT_AREA_HEIGHT: 120, // Mobile opponent container (fixed height)
+    OPPONENT_AREA_HEIGHT: 70, // Mobile opponent container (fixed height) - reduced for better space utilization
     DECK_AREA_HEIGHT: 179, // Deck area container (fixed height)
     SHELF_CONTROL_HEIGHT: 40, // Drag handle height (fixed)
     ELEMENT_GAP: 20, // Gap between all elements

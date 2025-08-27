@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useGameStore, useUIStore } from '../stores';
+import styles from './HandControls.module.css';
 
 interface HandControlsProps {
   selectedCount: number;
   onPlaySelected: () => void;
   onClearSelection: () => void;
+  showPlayControls?: boolean; // Optional prop to control Play/Clear button visibility
 }
 
 export function HandControls({
   selectedCount,
   onPlaySelected,
   onClearSelection,
+  showPlayControls = true, // Default to true for backward compatibility
 }: HandControlsProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
@@ -63,91 +66,49 @@ export function HandControls({
     gameState.players[gameState.currentPlayerIndex]?.id === playerId;
 
   return (
-    <div className="hand-controls">
+    <div className={styles.handControls}>
       {isMobile ? (
-        // Mobile Layout
+        // Mobile Layout - direct buttons without wrapper divs
         <>
-          <div className="mobile-top-controls">
-            <div className="sort-controls">
-              <button
-                className={`sort-btn ${showSortOptions ? 'active' : ''}`}
-                onClick={toggleSortOptions}
-              >
-                📊{' '}
-                {settings.handSortOrder === 'rank'
-                  ? 'Rank'
-                  : settings.handSortOrder === 'suit'
-                    ? 'Suit'
-                    : 'Dealt'}{' '}
-                {showSortOptions ? '▲' : '▼'}
-              </button>
-              {showSortOptions && (
-                <div className="sort-dropdown">
-                  <button
-                    className={`sort-option ${settings.handSortOrder === 'rank' ? 'active' : ''}`}
-                    onClick={() => {
-                      handleSortChange('rank');
-                      setShowSortOptions(false);
-                    }}
-                  >
-                    🔢 By Rank
-                  </button>
-                  <button
-                    className={`sort-option ${settings.handSortOrder === 'suit' ? 'active' : ''}`}
-                    onClick={() => {
-                      handleSortChange('suit');
-                      setShowSortOptions(false);
-                    }}
-                  >
-                    ♠️ By Suit
-                  </button>
-                  <button
-                    className={`sort-option ${settings.handSortOrder === 'dealt' ? 'active' : ''}`}
-                    onClick={() => {
-                      handleSortChange('dealt');
-                      setShowSortOptions(false);
-                    }}
-                  >
-                    🃏 As Dealt
-                  </button>
-                </div>
-              )}
-            </div>
+          <button
+            className={`${styles.sortBtn} ${settings.handSortOrder === 'rank' ? styles.active : ''}`}
+            onClick={() => handleSortChange(settings.handSortOrder === 'rank' ? 'suit' : 'rank')}
+          >
+            {settings.handSortOrder === 'rank' ? '🔢 By Rank' : '♠️ By Suit'}
+          </button>
 
-            <div className="hint-controls">
+          <button
+            className={`${styles.hintBtn} ${settings.showCardHints ? styles.active : ''}`}
+            onClick={handleHintsToggle}
+            title={
+              settings.showCardHints
+                ? 'Hide card hints'
+                : 'Show valid cards with green border'
+            }
+          >
+            💡 {settings.showCardHints ? 'On' : 'Off'}
+          </button>
+
+          {showPlayControls && (
+            <div className={styles.actionControls}>
               <button
-                className={`hint-btn ${settings.showCardHints ? 'active' : ''}`}
-                onClick={handleHintsToggle}
+                className={`${styles.playBtn} ${selectedCount === 0 ? styles.disabled : ''}`}
+                disabled={selectedCount === 0}
+                onClick={onPlaySelected}
                 title={
-                  settings.showCardHints
-                    ? 'Hide card hints'
-                    : 'Show valid cards with green border'
+                  selectedCount > 1 ? 'Last selected card will be on top' : ''
                 }
               >
-                💡 {settings.showCardHints ? 'On' : 'Off'}
+                🎯 Play ({selectedCount})
               </button>
-            </div>
-          </div>
-
-          <div className="action-controls">
-            <button
-              className={`play-btn ${selectedCount === 0 ? 'disabled' : ''}`}
-              disabled={selectedCount === 0}
-              onClick={onPlaySelected}
-              title={
-                selectedCount > 1 ? 'Last selected card will be on top' : ''
-              }
-            >
-              🎯 Play ({selectedCount})
-            </button>
-            {selectedCount > 0 && (
-              <button className="clear-btn" onClick={onClearSelection}>
-                ✖️ Clear
-              </button>
-            )}
-            {canServePenalty && (
-              <button
-                className="penalty-btn"
+              {selectedCount > 0 && (
+                <button className={styles.clearBtn} onClick={onClearSelection}>
+                  ✖️ Clear
+                </button>
+              )}
+              {canServePenalty && (
+                <button
+                className={styles.penaltyBtn}
                 onClick={handleServePenalty}
                 title={`Draw ${penaltyState.cards} cards and end turn`}
               >
@@ -155,34 +116,35 @@ export function HandControls({
               </button>
             )}
           </div>
+          )}
         </>
       ) : (
         // Desktop Layout
-        <>
-          <div className="sort-controls">
+        <div className={styles.desktopLayout}>
+          <div className={styles.desktopSortControls}>
             <button
-              className={`sort-btn ${settings.handSortOrder === 'rank' ? 'active' : ''}`}
+              className={`${styles.desktopSortBtn} ${settings.handSortOrder === 'rank' ? styles.active : ''}`}
               onClick={() => handleSortChange('rank')}
             >
-              By Rank
+              🔢 By Rank
             </button>
             <button
-              className={`sort-btn ${settings.handSortOrder === 'suit' ? 'active' : ''}`}
+              className={`${styles.desktopSortBtn} ${settings.handSortOrder === 'suit' ? styles.active : ''}`}
               onClick={() => handleSortChange('suit')}
             >
-              By Suit
+              ♠️ By Suit
             </button>
             <button
-              className={`sort-btn ${settings.handSortOrder === 'dealt' ? 'active' : ''}`}
+              className={`${styles.desktopSortBtn} ${settings.handSortOrder === 'dealt' ? styles.active : ''}`}
               onClick={() => handleSortChange('dealt')}
             >
-              As Dealt
+              🃏 As Dealt
             </button>
           </div>
 
-          <div className="hint-controls">
+          <div className={styles.desktopHintControls}>
             <button
-              className={`hint-btn ${settings.showCardHints ? 'active' : ''}`}
+              className={`${styles.desktopHintBtn} ${settings.showCardHints ? styles.active : ''}`}
               onClick={handleHintsToggle}
               title={
                 settings.showCardHints
@@ -190,38 +152,10 @@ export function HandControls({
                   : 'Show valid cards with green border'
               }
             >
-              💡 Hints {settings.showCardHints ? 'On' : 'Off'}
+              💡 {settings.showCardHints ? 'On' : 'Off'}
             </button>
           </div>
-
-          <div className="action-controls">
-            <button
-              className={`play-btn ${selectedCount === 0 ? 'disabled' : ''}`}
-              disabled={selectedCount === 0}
-              onClick={onPlaySelected}
-              title={
-                selectedCount > 1 ? 'Last selected card will be on top' : ''
-              }
-            >
-              Play Selected ({selectedCount})
-            </button>
-            <button
-              className={`clear-btn ${selectedCount === 0 ? 'hidden' : ''}`}
-              onClick={onClearSelection}
-            >
-              Clear Selection
-            </button>
-            {canServePenalty && (
-              <button
-                className="penalty-btn"
-                onClick={handleServePenalty}
-                title={`Draw ${penaltyState.cards} cards and end turn`}
-              >
-                Serve Penalty ({penaltyState.cards} cards)
-              </button>
-            )}
-          </div>
-        </>
+        </div>
       )}
     </div>
   );

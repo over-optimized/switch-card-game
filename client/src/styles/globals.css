@@ -1144,7 +1144,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 120px;
+    height: 70px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -2415,7 +2415,7 @@ body {
   /* Fixed height deck area with dynamic positioning */
   .game-board.mobile.with-shelf .center-area {
     position: absolute !important;
-    top: var(--deck-top, 140px) !important; /* 120px opponent + 20px gap */
+    top: var(--deck-top, 90px) !important; /* 70px opponent + 20px gap */
     left: 0;
     right: 0;
     height: 179px; /* Fixed height - matches actual deck content */

@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useUIStore } from '../../stores/uiStore';
 import { MobileHandArea } from './MobileHandArea';
+import { HandControls } from '../HandControls';
 import styles from './MobilePlayerSheet.module.css';
 import type { Player } from '../../../../shared/src/types/player';
 
@@ -180,6 +181,16 @@ export function MobilePlayerSheet() {
         {/* Player Hand */}
         <div className={styles.handCards}>
           <MobileHandArea />
+        </div>
+
+        {/* Sort and Hint Controls - positioned below cards but outside scroll area */}
+        <div className={styles.secondaryControls}>
+          <HandControls
+            selectedCount={selectedCards.length}
+            onPlaySelected={playSelectedCards}
+            onClearSelection={clearSelection}
+            showPlayControls={false}
+          />
         </div>
       </div>
     </div>

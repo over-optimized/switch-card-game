@@ -2,8 +2,6 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useGameStore, useUIStore } from '../../stores';
 import { GameEngine } from 'switch-shared';
 import { Card } from '../Card';
-import { HandControls } from '../HandControls';
-import { HandShelf } from '../HandShelf';
 
 interface ResponsiveHandAreaProps {
   className?: string;
@@ -180,15 +178,9 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
 
   return (
     <div className={handAreaClasses}>
-      {/* Hand Controls - responsive positioning */}
-      <HandControls
-        selectedCount={selectedCards.length}
-        onPlaySelected={playSelectedCards}
-        onClearSelection={clearSelection}
-      />
+      {/* Sort and Hint Controls - moved below cards for better UX */}
 
-      {/* Hand Shelf for mobile bottom sheet */}
-      {!isDesktop && handShelf.isEnabled && <HandShelf />}
+      {/* Hand Shelf handled by MobilePlayerSheet - removed duplicate */}
 
       <div
         className={`hand ${isDesktop ? 'desktop-layout' : 'mobile-horizontal'}`}
@@ -225,6 +217,8 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
           );
         })}
       </div>
+
+      {/* Sort and Hint Controls moved to MobilePlayerSheet for proper positioning */}
     </div>
   );
 }
