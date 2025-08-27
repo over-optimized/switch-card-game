@@ -1,4 +1,3 @@
-import React from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import type { GameState } from '../../../../shared/src/types/game';
 import styles from './MobileWinModal.module.css';

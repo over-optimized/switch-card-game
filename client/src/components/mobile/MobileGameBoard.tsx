@@ -33,7 +33,7 @@ export function MobileGameBoard({ onBackToMenu }: MobileGameBoardProps) {
     <div className={styles.mobileGameBoard} data-theme={theme}>
       {/* Fixed Game Header */}
       <header className={styles.gameHeader}>
-        <button 
+        <button
           className={styles.backButton}
           onClick={onBackToMenu || (() => {})}
           aria-label="Back to menu"
@@ -60,7 +60,7 @@ export function MobileGameBoard({ onBackToMenu }: MobileGameBoardProps) {
 
       {/* Game Indicators and Modals */}
       <PenaltyIndicator penaltyState={penaltyState} />
-      <SkipIndicator gameState={gameState} />
+      {gameState && <SkipIndicator gameState={gameState} />}
       <SuitSelector
         isOpen={suitSelectionOpen}
         onSuitSelect={selectSuit}
@@ -68,7 +68,12 @@ export function MobileGameBoard({ onBackToMenu }: MobileGameBoardProps) {
       />
 
       {/* Win Modal - Shows on game completion */}
-      <MobileWinModal gameState={gameState} onBackToMenu={onBackToMenu} />
+      {gameState && (
+        <MobileWinModal
+          gameState={gameState}
+          {...(onBackToMenu && { onBackToMenu })}
+        />
+      )}
     </div>
   );
 }
