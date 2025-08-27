@@ -1,0 +1,29 @@
+# Ignore client build files and node_modules (not needed for server deployment)
+client/dist/
+client/node_modules/
+
+# Ignore documentation
+docs/
+*.md
+!server/README.md
+
+# Ignore test files
+**/*.test.ts
+**/coverage/
+vitest.config.ts
+
+# Ignore development files
+.env.local
+.env.development
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore git files
+.git/
+.gitignore
+
+# Keep only what's needed: shared (built), server (built), root package files

@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "pnpm"]
+nixLibs = []
+
+[phases.install]
+cmds = [
+  "pnpm install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = [
+  "pnpm --filter switch-shared run build:prod",
+  "pnpm --filter switch-server run build:prod"
+]
+
+[start]
+cmd = "pnpm --filter switch-server run start:prod"

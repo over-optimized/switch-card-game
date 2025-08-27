@@ -212,9 +212,11 @@ export const useGameStore = create<GameStore>()(
 
     connectToLocalServer: async () => {
       try {
-        logNetwork('Connecting to local server at localhost:3001', 'pending');
+        // Get WebSocket URL from environment variables
+        const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:3001';
+        logNetwork(`Connecting to server at ${wsUrl}`, 'pending');
 
-        const socket = io('http://localhost:3001', {
+        const socket = io(wsUrl, {
           transports: ['websocket'],
           withCredentials: true,
         });
