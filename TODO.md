@@ -183,23 +183,53 @@
   - [x] Blue gradient theme to distinguish from penalty indicator
   - [x] Animated skip icon with bounce effect
 
-## 🎯 Current Focus (Week 5) - Architecture Review & Next Special Card
+## 🚨 CRITICAL PRIORITY (Week 5) - Architecture Consolidation
 
-### High Priority - Component Architecture Review
+**⚠️ STOP - Complete This Before Any New Features ⚠️**
 
-- [ ] **Desktop vs Mobile Component Analysis**
-  - [ ] Catalog all mobile vs desktop vs shared components
-  - [ ] Identify functionality overlap and duplication issues
-  - [ ] Map component dependencies and state management patterns
-  - [ ] Plan consolidation strategy for shared functionality
+The current architecture has grown complex with mobile/desktop duplication and local/network code paths. This technical debt must be resolved before adding more features to prevent exponential complexity growth.
 
-- [ ] **Component Consolidation Planning**
-  - [ ] Extract shared functionality from MobileHandArea vs PlayerHandArea
-  - [ ] Consolidate opponent display logic (MobileOpponentArea vs MultiOpponentArea)
-  - [ ] Standardize mobile detection patterns across components
-  - [ ] Plan desktop redesign without mobile-first constraints
+### Critical Priority - Architecture Simplification Strategy
 
-### High Priority Options for Next Special Card
+- [ ] **Network-First Architecture Implementation**
+  - [ ] Eliminate local/network code path duplication in game store
+  - [ ] Convert local games to localhost WebSocket connections
+  - [ ] Remove `playCardsLocally` and local game branches from stores
+  - [ ] Unify all games under optimistic update + rollback system
+  - [ ] Implement lightweight local WebSocket server for "local" games
+  - [ ] Test performance and reliability of network-first approach
+
+- [ ] **Mobile-First Desktop Consolidation**
+  - [ ] Replace `PlayerHandArea` with responsive `MobileHandArea`
+  - [ ] Replace `MultiOpponentArea` with responsive `MobileOpponentArea`  
+  - [ ] Replace desktop `GameInfo` with `MobileWinModal` for all platforms
+  - [ ] Convert `GameBoard` to use mobile bottom sheet patterns with desktop scaling
+  - [ ] Enhance mobile components with desktop-friendly sizing and interactions
+  - [ ] Remove desktop-specific components entirely
+
+- [ ] **Component Architecture Cleanup**
+  - [ ] Map all [Mobile/Desktop] × [Local/Network] component combinations
+  - [ ] Document duplication impact and maintenance burden
+  - [ ] Create migration plan for gradual component consolidation
+  - [ ] Implement feature flags for safe rollback during migration
+  - [ ] Test unified components across all platforms and game modes
+
+### Success Metrics (Must Achieve Before Proceeding)
+
+- [ ] **Code Reduction**: Eliminate 40-50% of component duplication
+- [ ] **Single Game Mode**: All games use network architecture (local = localhost)
+- [ ] **Unified UX**: Mobile patterns work consistently on desktop
+- [ ] **Simplified Testing**: Single test matrix instead of 4 combinations
+- [ ] **Performance**: No regression in mobile performance
+- [ ] **Maintainability**: Single codebase for all platforms and game modes
+
+---
+
+## 🔄 DEFERRED UNTIL ARCHITECTURE COMPLETE - Next Special Card Options
+
+**⛔ DO NOT START THESE UNTIL ARCHITECTURE CONSOLIDATION IS COMPLETE ⛔**
+
+### Future Special Card Options (Deferred)
 
 - [ ] **8s (Reverse Direction)** - Changes turn order direction
   - [ ] Add direction change logic to advanceTurn system
@@ -509,7 +539,7 @@
 - Options: 8s (direction change), 7s (mirror), or Runs (sequential)
 - Continue refining trick card architecture and UI patterns
 
-### 📈 **Development Velocity (Updated for Mobile-First Architecture):**
+### 📈 **Development Velocity (Updated for Architecture Consolidation Priority):**
 
 - **Week 1**: Core foundation ✅ (Completed)
 - **Week 2**: React migration foundation ✅ (Completed)
@@ -517,14 +547,17 @@
 - **Week 3-4**: Mobile-first architecture ✅ (Completed - Commits: 4acab70, 9028a11, 1708d2c)
 - **Week 4**: Second special card (Aces) ✅ (Completed - Commit: 43cae5f)
 - **Week 4**: Third special card (Jacks) ✅ (Completed - Commit: TBD)
-- **Week 5**: Architecture review + Fourth special card 🎯 (Current focus)
-- **Week 6**: Advanced features (remaining trick cards, networking)  
-- **Week 7+**: Polish, multiplayer, deployment
+- **Week 5**: 🚨 **CRITICAL Architecture consolidation** 🎯 (Current focus - MUST complete before new features)
+- **Week 6**: Fourth special card (8s, 7s, or Runs) - after architecture complete
+- **Week 7**: Advanced features (remaining trick cards, networking)  
+- **Week 8+**: Polish, multiplayer, deployment
 
-### 🏗️ **Architecture Strategy:**
-- **React + Zustand foundation** enables complex state management for trick cards
-- **Network-ready architecture** from day one accelerates PvP implementation
-- **Component-based UI** makes feature additions and testing much easier
+### 🏗️ **Architecture Strategy (Updated for Consolidation):**
+- **Network-First Architecture**: Eliminate local/network complexity by treating all games as network games
+- **Mobile-First Desktop**: Proven mobile UX patterns extended to desktop with responsive scaling
+- **Unified Component System**: Single responsive components replace mobile/desktop duplication
+- **Simplified State Management**: One code path for all platforms and game modes
+- **Technical Debt Resolution**: Critical consolidation before feature expansion
 
 ---
 
