@@ -1,26 +1,27 @@
+import { io } from 'socket.io-client';
+import { GameEngine, GameState, getCardDisplayName, Suit } from 'switch-shared';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { GameState, GameEngine, getCardDisplayName, Suit } from 'switch-shared';
-import {
-  ConnectionStatus,
-  GameMode,
-  DragState,
-  PenaltyState,
-  RecentMove,
-  OptimisticUpdate,
-  PlayerInfo,
-  PendingAction,
-  ActionStatus,
-} from './types';
+import type { GameSetupConfig } from '../components/MenuScreen';
 import {
   debugLogger,
-  logGame,
-  logTurn,
   logCardPlay,
+  logGame,
   logNetwork,
+  logTurn,
   logValidation,
 } from '../utils/debug';
-import type { GameSetupConfig } from '../components/MenuScreen';
+import {
+  ActionStatus,
+  ConnectionStatus,
+  DragState,
+  GameMode,
+  OptimisticUpdate,
+  PenaltyState,
+  PendingAction,
+  PlayerInfo,
+  RecentMove,
+} from './types';
 
 interface GameStore {
   // Core game state
@@ -31,6 +32,7 @@ interface GameStore {
   message: string;
 
   // Network state
+  socket: ReturnType<typeof io> | null;
   connectionStatus: ConnectionStatus;
   roomCode: string | null;
   isHost: boolean;
@@ -132,6 +134,7 @@ export const useGameStore = create<GameStore>()(
     message: '',
 
     // Network state
+    socket: null,
     connectionStatus: 'offline',
     roomCode: null,
     isHost: false,
@@ -184,11 +187,20 @@ export const useGameStore = create<GameStore>()(
             const playerName = config?.players?.[0]?.name || 'You';
             const aiOpponents = (config?.playerCount || 2) - 1;
 
-            // TODO: This will be implemented when we add socket connection
-            logGame('WebSocket connection established, creating local game', {
-              playerName,
-              aiOpponents,
-            });
+            // Create local game with AI opponents via WebSocket
+            const socket = get().socket;
+            if (socket) {
+              logGame('WebSocket connection established, creating local game', {
+                playerName,
+                aiOpponents,
+              });
+              socket.emit('create-local-game', { playerName, aiOpponents });
+            } else {
+              set({
+                isLoading: false,
+                message: 'No socket connection available',
+              });
+            }
           } else {
             set({
               isLoading: false,
@@ -200,23 +212,101 @@ export const useGameStore = create<GameStore>()(
 
     connectToLocalServer: async () => {
       try {
-        logNetwork('Connecting to local server at localhost:3001');
+        logNetwork('Connecting to local server at localhost:3001', 'pending');
 
-        // TODO: Implement actual WebSocket connection
-        // For now, simulate connection
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        set({
-          connectionStatus: 'connected',
-          message: 'Connected to local game server',
+        const socket = io('http://localhost:3001', {
+          transports: ['websocket'],
+          withCredentials: true,
         });
 
-        logNetwork('Connected to local server');
-        return true;
+        // Store socket instance and set up event handlers
+        set({ socket, connectionStatus: 'connecting' });
+
+        return new Promise<boolean>((resolve) => {
+          socket.on('connect', () => {
+            const socketId = socket.id || `temp-${Date.now()}`;
+            set({
+              connectionStatus: 'connected',
+              message: 'Connected to game server',
+              playerId: socketId,
+            });
+            logNetwork('WebSocket connected', 'success', {
+              id: socketId,
+            });
+            resolve(true);
+          });
+
+          socket.on('disconnect', () => {
+            set({
+              connectionStatus: 'offline',
+              message: 'Disconnected from game server',
+            });
+            logNetwork('Disconnected from server', 'error');
+          });
+
+          socket.on('error', (error) => {
+            logNetwork('Socket error', 'error', error);
+            set({
+              connectionStatus: 'offline',
+              message: 'Connection error',
+            });
+            resolve(false);
+          });
+
+          // Handle local game creation response
+          socket.on('local-game-created', ({ room, player, gameState }) => {
+            logGame('Local game created', { room, player, gameState });
+            set({
+              gameState,
+              serverGameState: gameState,
+              roomCode: room.code,
+              isHost: player.isHost,
+              isLoading: false,
+              message: 'Game started!',
+            });
+          });
+
+          // Handle game events
+          socket.on('card-played', ({ playerId, cardId, gameState }) => {
+            logCardPlay(playerId, [cardId], true, 'Server confirmed card play');
+            set({ 
+              gameState, 
+              serverGameState: gameState,
+              message: playerId === get().playerId ? 'Card played!' : `${playerId} played a card`
+            });
+          });
+
+          socket.on('card-drawn', ({ playerId, gameState }) => {
+            logNetwork(`Card drawn by ${playerId}`, 'success', { gameState });
+            set({ 
+              gameState, 
+              serverGameState: gameState,
+              message: playerId === get().playerId ? 'Card drawn!' : `${playerId} drew a card`
+            });
+          });
+
+          socket.on('game-finished', ({ winner, gameState }) => {
+            logGame('Game finished', { winner, gameState });
+            set({
+              gameState,
+              serverGameState: gameState,
+              message: winner === get().playerId ? 'You won! 🎉' : `${winner} won the game!`,
+            });
+          });
+
+          // Connection timeout
+          setTimeout(() => {
+            if (get().connectionStatus !== 'connected') {
+              socket.disconnect();
+              resolve(false);
+            }
+          }, 5000);
+        });
       } catch (error) {
-        logNetwork('Failed to connect to local server', error);
+        logNetwork('Failed to connect to local server', 'error', error);
         set({
-          connectionStatus: 'disconnected',
+          socket: null,
+          connectionStatus: 'offline',
           message: 'Failed to connect to game server',
         });
         return false;
@@ -360,11 +450,23 @@ export const useGameStore = create<GameStore>()(
       // Apply optimistic update for immediate UI feedback
       get().applyOptimisticUpdate(actionId, selectedCards);
 
-      // TODO: Send WebSocket message to server
-      // For now, simulate network success after delay
-      setTimeout(() => {
-        get().confirmAction(actionId, get().gameState!);
-      }, 1000);
+      // Send WebSocket message to server
+      const socket = get().socket;
+      if (socket && selectedCards.length === 1) {
+        const cardId = selectedCards[0];
+        logNetwork(`Playing card ${cardId} via WebSocket`, 'pending');
+        
+        // Server will respond with card-played event which updates the game state
+        socket.emit('play-card', { cardId });
+        
+        // Clear selection after sending
+        get().clearSelection();
+      } else {
+        // Fallback for multi-card plays or missing socket
+        setTimeout(() => {
+          get().confirmAction(actionId, get().gameState!);
+        }, 1000);
+      }
 
       return true;
     },
@@ -534,6 +636,15 @@ export const useGameStore = create<GameStore>()(
       }
 
       try {
+        // Use WebSocket if available
+        const socket = get().socket;
+        if (socket) {
+          logNetwork('Drawing card via WebSocket', 'pending');
+          socket.emit('draw-card');
+          return true;
+        }
+
+        // Fallback to local processing (for backwards compatibility)
         const action = {
           type: 'draw-card' as const,
           playerId,

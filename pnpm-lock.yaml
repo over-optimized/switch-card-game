@@ -42,7 +42,7 @@ importers:
         specifier: ^18.2.0
         version: 18.3.1(react@18.3.1)
       socket.io-client:
-        specifier: ^4.7.4
+        specifier: ^4.8.1
         version: 4.8.1
       switch-shared:
         specifier: workspace:*

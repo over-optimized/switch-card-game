@@ -1,40 +1,45 @@
-import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
 import cors from 'cors';
+import express from 'express';
 import helmet from 'helmet';
+import { createServer } from 'http';
 import morgan from 'morgan';
+import { Server } from 'socket.io';
 import {
   ClientToServerEvents,
-  ServerToClientEvents,
-  InterServerEvents,
-  SocketData,
-  RoomManager,
-  GameEngine,
   createGameState,
   createPlayer,
   GAME_CONFIG,
+  GameEngine,
+  InterServerEvents,
+  RoomManager,
+  ServerToClientEvents,
+  SocketData,
 } from 'switch-shared';
 
 const app = express();
 const server = createServer(app);
-const io = new Server() < ClientToServerEvents,
-  ServerToClientEvents,
-  InterServerEvents,
-  SocketData;
-(server,
-  {
-    cors: {
-      origin: corsOrigins,
-      methods: ['GET', 'POST'],
-      credentials: true,
-    },
-  });
 
 // Environment detection
 const isProduction = process.env.RAILWAY_ENVIRONMENT_NAME === 'production';
-const isLocal = !isProduction && process.env.NODE_ENV === 'development';
 const PORT = process.env.PORT || 3001;
+
+// CORS configuration for dual-mode operation
+const corsOrigins = isProduction
+  ? [process.env.CLIENT_URL || 'https://switch-card-game.vercel.app']
+  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+
+const io = new Server<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>(server, {
+  cors: {
+    origin: corsOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+});
 
 // AI Turn Management
 const handleAITurns = async (roomCode: string) => {
@@ -48,12 +53,7 @@ const handleAITurns = async (roomCode: string) => {
   // Simple AI logic: try to play valid cards, otherwise draw
   try {
     const validCards = currentPlayer.hand.filter(card => {
-      try {
-        GameEngine.playCard(room.gameState!, currentPlayer.id, card.id);
-        return true;
-      } catch {
-        return false;
-      }
+      return GameEngine.isValidPlay(room.gameState!, card);
     });
 
     if (validCards.length > 0) {
@@ -106,11 +106,6 @@ const handleAITurns = async (roomCode: string) => {
   }
 };
 
-// CORS configuration for dual-mode operation
-const corsOrigins = isProduction
-  ? [process.env.CLIENT_URL || 'https://switch-card-game.vercel.app']
-  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
-
 app.use(helmet());
 app.use(
   cors({
@@ -147,62 +142,62 @@ io.on('connection', socket => {
   console.log(`Player connected: ${socket.id}`);
 
   // Create local single-player room with AI opponents
-  socket.on(
-    'create-local-game',
-    ({ playerName, aiOpponents = 1, difficulty = 'medium' }) => {
-      try {
-        // Create room with max players = human + AI
-        const maxPlayers = aiOpponents + 1;
-        const room = RoomManager.createRoom(socket.id, playerName, maxPlayers);
+  socket.on('create-local-game', ({ playerName, aiOpponents = 1 }) => {
+    console.log(
+      `Creating local game: ${playerName} with ${aiOpponents} AI opponent(s)`,
+    );
+    try {
+      // Create room with max players = human + AI
+      const maxPlayers = aiOpponents + 1;
+      const room = RoomManager.createRoom(socket.id, playerName, maxPlayers);
 
-        // Add AI players to the room
-        for (let i = 0; i < aiOpponents; i++) {
-          const aiPlayer = createPlayer(
-            `ai-${i + 1}`,
-            `Computer ${i + 1}`,
-            false,
-          );
-          aiPlayer.isAI = true;
-          room.players.push(aiPlayer);
-        }
-
-        const host = room.players.find(p => p.isHost)!;
-
-        socket.data.playerId = socket.id;
-        socket.data.roomCode = room.code;
-        socket.data.isLocalGame = true;
-
-        socket.join(room.code);
-
-        // Immediately start the local game
-        const gameState = createGameState(room.code, room.players, []);
-        const startedGame = GameEngine.startGame(gameState);
-
-        room.gameState = startedGame;
-        room.status = 'playing';
-
-        socket.emit('local-game-created', {
-          room,
-          player: host,
-          gameState: startedGame,
-        });
-
-        console.log(
-          `Local game created: ${room.code} by ${playerName} with ${aiOpponents} AI opponent(s)`,
+      // Add AI players to the room
+      for (let i = 0; i < aiOpponents; i++) {
+        const aiPlayer = createPlayer(
+          `ai-${i + 1}`,
+          `Computer ${i + 1}`,
+          false,
         );
-
-        // Handle AI turns after a short delay
-        setTimeout(() => handleAITurns(room.code), 1000);
-      } catch (error) {
-        socket.emit('error', {
-          message:
-            error instanceof Error
-              ? error.message
-              : 'Failed to create local game',
-        });
+        aiPlayer.isAI = true;
+        room.players.push(aiPlayer);
       }
-    },
-  );
+
+      const host = room.players.find(p => p.isHost)!;
+
+      socket.data.playerId = socket.id;
+      socket.data.roomCode = room.code;
+      socket.data.isLocalGame = true;
+
+      socket.join(room.code);
+
+      // Immediately start the local game
+      const gameState = createGameState(room.code, room.players, []);
+      const startedGame = GameEngine.startGame(gameState);
+
+      room.gameState = startedGame;
+      room.status = 'playing';
+
+      socket.emit('local-game-created', {
+        room,
+        player: host,
+        gameState: startedGame,
+      });
+
+      console.log(
+        `Local game created: ${room.code} by ${playerName} with ${aiOpponents} AI opponent(s)`,
+      );
+
+      // Handle AI turns after a short delay
+      setTimeout(() => handleAITurns(room.code), 1000);
+    } catch (error) {
+      socket.emit('error', {
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to create local game',
+      });
+    }
+  });
 
   socket.on(
     'create-room',
