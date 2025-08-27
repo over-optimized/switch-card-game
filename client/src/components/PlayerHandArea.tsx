@@ -165,11 +165,16 @@ export function PlayerHandArea() {
   const handleCardTouchEnd = (cardId: string) => {
     if (isMobile) {
       const touchDuration = Date.now() - touchStartTime;
-      console.log('🟢 PLAYER HAND AREA - Touch end (mobile):', { cardId, touchDuration });
+      console.log('🟢 PLAYER HAND AREA - Touch end (mobile):', {
+        cardId,
+        touchDuration,
+      });
 
       // Long press for multi-select (500ms+)
       if (touchDuration >= 500) {
-        console.log('🟢 PLAYER HAND AREA - Long press detected, selecting card');
+        console.log(
+          '🟢 PLAYER HAND AREA - Long press detected, selecting card',
+        );
         selectCard(cardId);
         // Add haptic feedback if available
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {

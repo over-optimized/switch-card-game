@@ -94,9 +94,11 @@ export function MobilePlayerSheet() {
   return (
     <div
       className={`${styles.playerSheet} ${isDragging ? styles.dragging : ''}`}
-      style={{ 
-        '--sheet-expansion': `${sheetPosition}px`
-      } as React.CSSProperties}
+      style={
+        {
+          '--sheet-expansion': `${sheetPosition}px`,
+        } as React.CSSProperties
+      }
     >
       {/* Drag Handle */}
       <div
@@ -134,7 +136,10 @@ export function MobilePlayerSheet() {
             className={`${styles.controlButton} ${styles.playButton}`}
             disabled={!isPlayerTurn || selectedCards.length === 0}
             onClick={() => {
-              console.log('🎮 MOBILE PLAY BUTTON CLICKED:', selectedCards.length);
+              console.log(
+                '🎮 MOBILE PLAY BUTTON CLICKED:',
+                selectedCards.length,
+              );
               playSelectedCards();
             }}
           >
