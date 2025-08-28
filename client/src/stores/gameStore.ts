@@ -334,9 +334,9 @@ export const useGameStore = create<GameStore>()(
     },
 
     leaveRoom: () => {
-      return new Promise<boolean>((resolve) => {
+      return new Promise<boolean>(resolve => {
         const { socket, roomCode, playerId } = get();
-        
+
         if (!socket || !roomCode) {
           console.warn('Cannot leave room: no socket connection or room code');
           resolve(false);
@@ -344,18 +344,24 @@ export const useGameStore = create<GameStore>()(
         }
 
         logNetwork('leave-room', 'pending', { roomCode, playerId });
-        set({ 
+        set({
           isLoading: true,
-          message: 'Leaving room...' 
+          message: 'Leaving room...',
         });
 
         // Set up response handlers
-        const handleLeftRoom = (response: { success: boolean; roomCode?: string; error?: string }) => {
+        const handleLeftRoom = (response: {
+          success: boolean;
+          roomCode?: string;
+          error?: string;
+        }) => {
           socket.off('left-room', handleLeftRoom);
-          
+
           if (response.success) {
-            logNetwork('leave-room', 'success', { roomCode: response.roomCode });
-            
+            logNetwork('leave-room', 'success', {
+              roomCode: response.roomCode,
+            });
+
             // Reset game state to menu
             set({
               gameState: null,
@@ -382,9 +388,9 @@ export const useGameStore = create<GameStore>()(
             resolve(true);
           } else {
             logNetwork('leave-room', 'error', { error: response.error });
-            set({ 
+            set({
               isLoading: false,
-              message: response.error || 'Failed to leave room'
+              message: response.error || 'Failed to leave room',
             });
             resolve(false);
           }
@@ -400,9 +406,9 @@ export const useGameStore = create<GameStore>()(
           socket.off('left-room', handleLeftRoom);
           if (get().isLoading) {
             logNetwork('leave-room', 'error', { reason: 'timeout' });
-            set({ 
+            set({
               isLoading: false,
-              message: 'Leave room request timed out'
+              message: 'Leave room request timed out',
             });
             resolve(false);
           }

@@ -496,7 +496,7 @@ const logResourceUsage = () => {
   const cpuUsage = process.cpuUsage();
   const activeRooms = RoomManager.getAllRooms().length;
   const activePlayers = playerLastActivity.size;
-  
+
   console.log(`📊 Resource Usage:`, {
     memory: {
       heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
@@ -511,13 +511,15 @@ const logResourceUsage = () => {
       activeRooms,
       activePlayers,
       connectedSockets: io.sockets.sockets.size,
-    }
+    },
   });
 
   // Memory threshold warning for Railway trial (150MB heap usage warning)
   const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
   if (heapUsedMB > 150) {
-    console.warn(`⚠️ High memory usage: ${Math.round(heapUsedMB)}MB - consider cleanup`);
+    console.warn(
+      `⚠️ High memory usage: ${Math.round(heapUsedMB)}MB - consider cleanup`,
+    );
   }
 };
 
@@ -533,14 +535,17 @@ setInterval(
 ); // Cleanup inactive players every 5 minutes
 
 // Resource monitoring every 10 minutes (less frequent to reduce log noise)
-setInterval(() => {
-  logResourceUsage();
-}, 10 * 60 * 1000);
+setInterval(
+  () => {
+    logResourceUsage();
+  },
+  10 * 60 * 1000,
+);
 
 server.listen(PORT, () => {
   console.log(`🎴 Switch Card Game Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  
+
   // Log initial resource usage
   setTimeout(() => {
     console.log('🚀 Server startup complete - initial resource usage:');

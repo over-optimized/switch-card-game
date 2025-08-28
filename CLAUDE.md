@@ -17,11 +17,18 @@ Switch Card Game is a multiplayer HTML5 card game with real-time networking capa
 Before ANY commit, these commands MUST pass:
 
 ```bash
-# Full CI pipeline (lint + test + build)
-pnpm ci                # Root: runs shared package lint, test, and full build
-pnpm lint              # Lint shared package (core game logic)
-pnpm test:coverage     # Run tests with coverage thresholds
-pnpm build             # Build all packages (shared, client, server)
+# UNIFIED CI Pipeline (matches GitHub Actions exactly)
+pnpm run ci            # Complete CI: lint + test + build (identical to remote CI)
+
+# Individual CI components (for debugging)
+pnpm ci:lint           # Lint all packages: shared (strict) + server (strict) + client (warnings allowed)
+pnpm ci:test           # Run shared package tests with coverage
+pnpm ci:build          # Production build: shared -> server -> client
+
+# Legacy commands (deprecated - use pnpm run ci instead)
+pnpm lint              # Lint shared package only (incomplete coverage)
+pnpm test:coverage     # Run shared tests only
+pnpm build             # Development build (use ci:build for CI consistency)
 ```
 
 ### Project-Specific Commands

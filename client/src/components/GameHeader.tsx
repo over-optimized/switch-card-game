@@ -23,10 +23,9 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-
   const handleLeaveRoom = async () => {
     if (isLeaving) return;
-    
+
     setIsLeaving(true);
     try {
       const success = await leaveRoom();
@@ -40,10 +39,11 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
     }
   };
 
-  const showLeaveButton = roomCode && connectionStatus === 'connected' && !isLeaving;
+  const showLeaveButton =
+    roomCode && connectionStatus === 'connected' && !isLeaving;
 
   return (
-    <header 
+    <header
       className={`game-header ${isMobile ? 'mobile' : ''}`}
       style={{
         display: 'flex',
@@ -61,7 +61,7 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
       }}
     >
       {/* Controls Section */}
-      <div 
+      <div
         className="header-controls"
         style={{
           display: 'flex',
@@ -118,9 +118,9 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
           </button>
         ) : null}
       </div>
-      
+
       {/* Title Section */}
-      <div 
+      <div
         className="header-content"
         style={{
           textAlign: 'center',
@@ -128,23 +128,25 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
           minWidth: 0, // Allow shrinking
         }}
       >
-        <h1 style={{ 
-          margin: 0, 
-          fontSize: isMobile ? '16px' : '20px',
-          fontWeight: 'bold',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: isMobile ? '16px' : '20px',
+            fontWeight: 'bold',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
           {isMobile ? 'Switch' : '🎴 Switch'}
         </h1>
       </div>
 
       {/* Room Info Section */}
       {roomCode && (
-        <div 
+        <div
           className="room-info"
-          style={{ 
+          style={{
             fontSize: isMobile ? '10px' : '11px',
             opacity: 0.7,
             textAlign: 'right',
