@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useGameStore } from '../../stores';
+import { useResponsive } from '../../hooks';
 import type { Player } from '../../../../shared/src/types/player';
 import styles from './MobileOpponentArea.module.css';
 
@@ -11,23 +12,12 @@ export function MobileOpponentArea({
   opponents: propOpponents,
 }: ResponsiveOpponentAreaProps) {
   const [currentOpponentIndex, setCurrentOpponentIndex] = useState(0);
-  const [isDesktop, setIsDesktop] = useState(false);
   const startX = useRef<number>(0);
   const minSwipeDistance = 50;
 
+  const { isDesktop } = useResponsive();
   const gameState = useGameStore(state => state.gameState);
   const playerId = useGameStore(state => state.playerId);
-
-  // Responsive breakpoint detection
-  useEffect(() => {
-    const checkDesktop = () => {
-      setIsDesktop(window.innerWidth > 768);
-    };
-
-    checkDesktop();
-    window.addEventListener('resize', checkDesktop);
-    return () => window.removeEventListener('resize', checkDesktop);
-  }, []);
 
   // Get opponents from props or game state
   const opponents =

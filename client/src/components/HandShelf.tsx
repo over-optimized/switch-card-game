@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useUIStore } from '../stores';
+import { useIsMobile } from '../hooks';
 
 export function HandShelf() {
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startPosition, setStartPosition] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+
+  const isMobile = useIsMobile();
 
   const dragRef = useRef<HTMLDivElement>(null);
 
@@ -33,18 +35,10 @@ export function HandShelf() {
     }
   }, [isMobile, handShelf.isEnabled, handShelf.position, setHandShelfPosition]);
 
-  // Mobile detection and shelf enablement
+  // Enable hand shelf based on mobile detection
   useEffect(() => {
-    const checkMobile = () => {
-      const isMobileDevice = window.innerWidth <= 480;
-      setIsMobile(isMobileDevice);
-      enableHandShelf(isMobileDevice);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, [enableHandShelf]);
+    enableHandShelf(isMobile);
+  }, [isMobile, enableHandShelf]);
 
   // Layout constants for consistent spacing
   const LAYOUT_CONSTANTS = {

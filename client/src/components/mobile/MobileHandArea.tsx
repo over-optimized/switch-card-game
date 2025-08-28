@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useGameStore, useUIStore } from '../../stores';
+import { useResponsive } from '../../hooks';
 import { GameEngine } from 'switch-shared';
 import { Card } from '../Card';
 
@@ -8,7 +9,7 @@ interface ResponsiveHandAreaProps {
 }
 
 export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
-  const [isDesktop, setIsDesktop] = useState(false);
+  const { isDesktop } = useResponsive();
 
   const {
     gameState,
@@ -37,17 +38,6 @@ export function MobileHandArea({ className }: ResponsiveHandAreaProps) {
     showCardHints: state.settings.showCardHints,
     handShelf: state.handShelf,
   }));
-
-  // Responsive breakpoint detection
-  useEffect(() => {
-    const checkDesktop = () => {
-      setIsDesktop(window.innerWidth > 768);
-    };
-
-    checkDesktop();
-    window.addEventListener('resize', checkDesktop);
-    return () => window.removeEventListener('resize', checkDesktop);
-  }, []);
 
   const currentPlayer = gameState?.players.find(p => p.id === playerId);
 

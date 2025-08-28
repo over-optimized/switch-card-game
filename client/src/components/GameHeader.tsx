@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
 import { useGameStore, useUIStore } from '../stores';
+import { useIsMobile } from '../hooks';
 
 interface GameHeaderProps {
   onBackToMenu?: (() => void) | undefined;
 }
 
 export function GameHeader({ onBackToMenu }: GameHeaderProps) {
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
 
   const { roomCode, connectionStatus } = useGameStore(state => ({
     roomCode: state.roomCode,
@@ -17,17 +17,6 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
     toggleInGameMenu: state.toggleInGameMenu,
     toggleRoomInfo: state.toggleRoomInfo,
   }));
-
-  // Detect mobile screen size
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 480);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Note: handleLeaveRoom is now handled by the InGameMenu component
 
