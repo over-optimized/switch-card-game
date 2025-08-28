@@ -1,3 +1,4 @@
+import { Suit } from './card.js';
 import { GameState, Room } from './game.js';
 import { Player } from './player.js';
 
@@ -11,7 +12,7 @@ export interface ClientToServerEvents {
   'join-room': (data: { roomCode: string; playerName: string }) => void;
   'leave-room': () => void;
   'start-game': () => void;
-  'play-card': (data: { cardId: string }) => void;
+  'play-card': (data: { cardId: string; chosenSuit?: Suit }) => void;
   'play-cards': (data: { cardIds: string[] }) => void;
   'draw-card': () => void;
   'player-ready': () => void;

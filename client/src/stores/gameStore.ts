@@ -283,7 +283,12 @@ export const useGameStore = create<GameStore>()(
           });
 
           socket.on('cards-played', ({ playerId, cardIds, gameState }) => {
-            logCardPlay(playerId, cardIds, true, `Server confirmed ${cardIds.length} cards played`);
+            logCardPlay(
+              playerId,
+              cardIds,
+              true,
+              `Server confirmed ${cardIds.length} cards played`,
+            );
             set({
               gameState,
               serverGameState: gameState,
@@ -557,6 +562,22 @@ export const useGameStore = create<GameStore>()(
       // Apply optimistic update for immediate UI feedback
       get().applyOptimisticUpdate(actionId, selectedCards);
 
+      // Check for Ace plays that need suit selection BEFORE sending to server
+      if (selectedCards.length === 1) {
+        const cardId = selectedCards[0];
+        const player = gameState.players.find(p => p.id === playerId);
+        const card = player?.hand.find(c => c.id === cardId);
+
+        if (card?.rank === 'A') {
+          logNetwork(
+            `Ace detected - opening suit selection for ${card.rank}${card.suit}`,
+            'pending',
+          );
+          get().openSuitSelection(cardId);
+          return true; // Don't send to server yet - wait for suit selection
+        }
+      }
+
       // Send WebSocket message to server
       const socket = get().socket;
       if (socket) {
@@ -565,7 +586,11 @@ export const useGameStore = create<GameStore>()(
           logNetwork(`Playing single card ${cardId} via WebSocket`, 'pending');
           socket.emit('play-card', { cardId });
         } else {
-          logNetwork(`Playing ${selectedCards.length} cards via WebSocket`, 'pending', { cardIds: selectedCards });
+          logNetwork(
+            `Playing ${selectedCards.length} cards via WebSocket`,
+            'pending',
+            { cardIds: selectedCards },
+          );
           socket.emit('play-cards', { cardIds: selectedCards });
         }
 
@@ -1172,47 +1197,33 @@ export const useGameStore = create<GameStore>()(
     },
 
     selectSuit: async (suit: Suit) => {
-      const { gameState, playerId, pendingAceCardId } = get();
-      if (!gameState || !pendingAceCardId) return false;
+      const { pendingAceCardId, socket } = get();
+      if (!pendingAceCardId || !socket) return false;
 
       try {
-        const action = {
-          type: 'play-card' as const,
-          playerId,
+        logNetwork(`Playing Ace with chosen suit: ${suit}`, 'pending');
+
+        // Send Ace play to server with chosen suit
+        socket.emit('play-card', {
           cardId: pendingAceCardId,
           chosenSuit: suit,
-          timestamp: new Date(),
-        };
+        });
 
-        const updatedGameState = GameEngine.processAction(gameState, action);
+        // Close suit selection - server will respond with game state update
+        get().closeSuitSelection();
 
+        // Clear any selected cards since we just played
         set({
-          gameState: updatedGameState,
-          gameMode: updatedGameState.gameMode,
-          penaltyState: updatedGameState.penaltyState,
-          suitSelectionOpen: false,
-          pendingAceCardId: null,
           selectedCards: [],
           selectionMode: 'none',
           cardSelectionOrder: {},
-          message: `Ace played! Suit changed to ${suit}`,
+          message: `Playing Ace with ${suit} suit...`,
         });
-
-        get().addRecentMove('You', 'played Ace', `Changed suit to ${suit}`);
-
-        // Handle AI turn
-        if (updatedGameState.phase !== 'finished') {
-          const nextPlayer =
-            updatedGameState.players[updatedGameState.currentPlayerIndex];
-          if (nextPlayer.id !== get().playerId) {
-            setTimeout(() => get().executeComputerTurn(), 1500);
-          }
-        }
 
         return true;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : 'Invalid Ace play';
+          error instanceof Error ? error.message : 'Failed to play Ace';
         get().updateMessage(errorMessage);
         get().closeSuitSelection();
         return false;
