@@ -16,3 +16,7 @@ export { Card } from './Card';
 export { HandControls } from './HandControls';
 export { LoadingScreen } from './LoadingScreen';
 export { ErrorScreen } from './ErrorScreen';
+
+// Menu components
+export { InGameMenu } from './InGameMenu';
+export { RoomInfoPanel } from './RoomInfoPanel';

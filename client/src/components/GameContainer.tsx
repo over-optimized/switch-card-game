@@ -5,6 +5,8 @@ import { GameBoard } from './GameBoard';
 import { GameInfo } from './GameInfo';
 import { LoadingScreen } from './LoadingScreen';
 import { ErrorScreen } from './ErrorScreen';
+import { InGameMenu } from './InGameMenu';
+import { RoomInfoPanel } from './RoomInfoPanel';
 
 interface GameContainerProps {
   onBackToMenu?: () => void;
@@ -42,6 +44,10 @@ export function GameContainer({ onBackToMenu }: GameContainerProps) {
       <GameHeader onBackToMenu={onBackToMenu} />
       <GameBoard onBackToMenu={onBackToMenu} />
       {!isMobile && <GameInfo />}
+
+      {/* In-game menu components */}
+      <InGameMenu onBackToMenu={onBackToMenu} />
+      <RoomInfoPanel />
     </div>
   );
 }
