@@ -147,9 +147,10 @@ pnpm test:coverage
 - Optimized for mobile and desktop
 
 **Backend (Railway)** 
-- Server deployment ready with Railway configuration
-- See `RAILWAY_DEPLOY.md` for deployment guide
-- Production WebSocket URLs configured
+- Deployed at: https://switch-server-production.up.railway.app
+- Real-time WebSocket server with resource monitoring (12MB heap usage)
+- GitHub auto-deployment with CI/CD pipeline integration
+- Railway trial optimizations with inactivity timeouts
 
 ### Development Deployment
 

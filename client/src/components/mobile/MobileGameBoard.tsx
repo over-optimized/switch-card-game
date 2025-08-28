@@ -11,7 +11,7 @@ import { SuitSelector } from '../SuitSelector';
 import styles from './MobileGameBoard.module.css';
 
 interface MobileGameBoardProps {
-  onBackToMenu?: (() => void) | undefined;
+  onBackToMenu?: (() => void) | undefined; // Still needed for MobileWinModal
 }
 
 export function MobileGameBoard({ onBackToMenu }: MobileGameBoardProps) {
@@ -31,20 +31,6 @@ export function MobileGameBoard({ onBackToMenu }: MobileGameBoardProps) {
 
   return (
     <div className={styles.mobileGameBoard} data-theme={theme}>
-      {/* Fixed Game Header */}
-      <header className={styles.gameHeader}>
-        <button
-          className={styles.backButton}
-          onClick={onBackToMenu || (() => {})}
-          aria-label="Back to menu"
-        >
-          ←
-        </button>
-        <div className={styles.headerContent}>
-          <h1>Switch</h1>
-        </div>
-      </header>
-
       {/* Fixed Opponent Area */}
       <div className={styles.opponentArea}>
         <MobileOpponentArea opponents={opponents} />

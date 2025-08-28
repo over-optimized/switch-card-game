@@ -371,13 +371,13 @@ export const useGameStore = create<GameStore>()(
               pendingActions: [],
               optimisticUpdates: [],
               currentAction: null,
-              dragState: { isDragging: false },
+              dragState: { isDragging: false, draggedCards: [] },
               recentMoves: [],
-              penaltyState: { type: 'none' },
+              penaltyState: { active: false, cards: 0, type: null },
               connectedPlayers: {},
               spectators: [],
               connectionStatus: 'connected',
-              gameMode: 'menu',
+              gameMode: 'normal' as GameMode,
             });
             resolve(true);
           } else {
@@ -399,7 +399,7 @@ export const useGameStore = create<GameStore>()(
         setTimeout(() => {
           socket.off('left-room', handleLeftRoom);
           if (get().isLoading) {
-            logNetwork('leave-room', 'timeout', {});
+            logNetwork('leave-room', 'error', { reason: 'timeout' });
             set({ 
               isLoading: false,
               message: 'Leave room request timed out'
