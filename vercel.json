@@ -1,9 +1,5 @@
 {
-  "buildCommand": "cd client && pnpm install && pnpm run build:prod",
-  "outputDirectory": "client/dist",
-  "installCommand": "pnpm install --frozen-lockfile && pnpm --filter switch-shared run build:prod",
-  "framework": null,
-  "ignoreCommand": "bash -c 'COMMIT_MSG=\"$VERCEL_GIT_COMMIT_MESSAGE\"; echo \"Commit: $COMMIT_MSG\"; if [[ \"$COMMIT_MSG\" == *\"server:\"* ]]; then echo \"🚫 Skipping Vercel build - server-only commit\"; exit 1; else echo \"✅ Deploying to Vercel - client/shared changes or general commit\"; exit 0; fi'",
+  "builds": [],
   "rewrites": [
     {
       "source": "/(.*)",

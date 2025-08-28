@@ -104,12 +104,52 @@ jobs:
             echo "⏭️ Server deployment not needed"
           fi
 
+  # Vercel deployment - deploy client when needed
+  deploy-client:
+    name: Deploy Client to Vercel
+    runs-on: ubuntu-latest
+    needs: [quality-gates, deployment-check]
+    if: success() && needs.deployment-check.outputs.deploy-client == 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build client for production
+        run: |
+          echo "🏗️ Building client for Vercel deployment..."
+          pnpm --filter switch-shared run build:prod
+          pnpm --filter switch-client run build:prod
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: client
+          vercel-args: '--prod'
+
   # Success notification - all quality gates passed
   quality-gates-passed:
     name: Quality Gates Passed
     runs-on: ubuntu-latest
-    needs: [quality-gates, deployment-check]
-    if: success()
+    needs: [quality-gates, deployment-check, deploy-client]
+    if: always() && needs.quality-gates.result == 'success'
     
     steps:
       - name: Quality gates success
@@ -120,6 +160,7 @@ jobs:
           echo "✅ Unit tests: PASSED"
           echo "✅ Build validation: PASSED"
           echo ""
-          echo "🚀 Deployments can proceed:"
-          echo "   - Client: ${{ needs.deployment-check.outputs.deploy-client }}"
-          echo "   - Server: ${{ needs.deployment-check.outputs.deploy-server }}"
+          echo "🚀 Deployment status:"
+          echo "   - Client deployment needed: ${{ needs.deployment-check.outputs.deploy-client }}"
+          echo "   - Client deployment result: ${{ needs.deploy-client.result || 'skipped' }}"
+          echo "   - Server deployment needed: ${{ needs.deployment-check.outputs.deploy-server }}"
