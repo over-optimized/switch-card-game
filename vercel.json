@@ -1,6 +1,7 @@
 {
-  "ignoreCommand": "exit 1",
+  "buildCommand": "echo 'Build handled by GitHub Actions'",
   "outputDirectory": "dist",
+  "installCommand": "echo 'Dependencies handled by GitHub Actions'",
   "rewrites": [
     {
       "source": "/(.*)",
