@@ -183,6 +183,12 @@ export class GameEngine {
   }
 
   static drawCard(gameState: GameState, playerId: string): GameState {
+    // Check if there's an active penalty - if so, serve the penalty instead of drawing 1 card
+    if (gameState.penaltyState.active) {
+      return GameEngine.servePenalty(gameState, playerId);
+    }
+
+    // Normal draw: 1 card and advance turn
     const updatedGameState = DeckManager.drawCard(gameState, playerId);
     return GameEngine.advanceTurn(updatedGameState);
   }

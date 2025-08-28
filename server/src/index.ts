@@ -129,8 +129,25 @@ const handleAITurns = async (roomCode: string) => {
         timestamp: new Date(),
       };
 
+      // Log penalty state before draw action
+      const hadActivePenalty = room.gameState.penaltyState.active;
+      const penaltyCards = room.gameState.penaltyState.cards;
+
+      if (hadActivePenalty) {
+        console.log(
+          `[AI-PENALTY] AI ${currentPlayer.id} serving penalty: ${penaltyCards} cards (type: ${room.gameState.penaltyState.type})`,
+        );
+      }
+
       const updatedGame = GameEngine.processAction(room.gameState, drawAction);
       room.gameState = updatedGame;
+
+      // Log results
+      if (hadActivePenalty) {
+        console.log(
+          `[AI-PENALTY-RESULT] Penalty cleared: ${!updatedGame.penaltyState.active}, mode: ${updatedGame.gameMode}`,
+        );
+      }
 
       io.to(roomCode).emit('card-drawn', {
         playerId: currentPlayer.id,
@@ -472,6 +489,16 @@ io.on('connection', socket => {
         return;
       }
 
+      // Log penalty state for human players too
+      const hadActivePenalty = room.gameState.penaltyState.active;
+      const penaltyCards = room.gameState.penaltyState.cards;
+
+      if (hadActivePenalty) {
+        console.log(
+          `[HUMAN-PENALTY] Player ${playerId} serving penalty: ${penaltyCards} cards (type: ${room.gameState.penaltyState.type})`,
+        );
+      }
+
       const action = {
         type: 'draw-card' as const,
         playerId,
@@ -480,6 +507,13 @@ io.on('connection', socket => {
 
       const updatedGame = GameEngine.processAction(room.gameState, action);
       room.gameState = updatedGame;
+
+      // Log results for human players
+      if (hadActivePenalty) {
+        console.log(
+          `[HUMAN-PENALTY-RESULT] Penalty cleared: ${!updatedGame.penaltyState.active}, mode: ${updatedGame.gameMode}`,
+        );
+      }
 
       io.to(roomCode).emit('card-drawn', { playerId, gameState: updatedGame });
 
