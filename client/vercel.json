@@ -1,7 +1,8 @@
 {
-  "buildCommand": "echo 'Build handled by GitHub Actions'",
+  "buildCommand": "pnpm --filter switch-shared run build:prod && pnpm --filter switch-client run build:prod",
   "outputDirectory": "dist",
-  "installCommand": "echo 'Dependencies handled by GitHub Actions'",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "ignoreCommand": "bash -c 'COMMIT_MSG=$(git log -1 --pretty=format:%s) && CHANGED_FILES=$(git diff --name-only HEAD^ HEAD) && if echo \"$COMMIT_MSG\" | grep -E \"(server:|Railway|CI/CD|GitHub Actions)\" > /dev/null; then echo \"🚫 Skipping Vercel build - server-only commit\"; exit 1; elif echo \"$CHANGED_FILES\" | grep -vE \"(client/|shared/|vercel\\.json|package\\.json)\" > /dev/null && echo \"$CHANGED_FILES\" | grep -E \"(server/|railway\\.toml|\\.github/|docs/)\" > /dev/null; then echo \"🚫 Skipping Vercel build - server/infra only changes\"; exit 1; else echo \"✅ Proceeding with Vercel build - client/shared changes detected\"; exit 0; fi'",
   "rewrites": [
     {
       "source": "/(.*)",

@@ -83,13 +83,25 @@ jobs:
         run: |
           # Check what changed to determine deployment needs
           CHANGED_FILES=$(git diff --name-only HEAD^ HEAD || echo "")
+          COMMIT_MSG=$(git log -1 --pretty=format:%s)
 
           echo "Changed files: $CHANGED_FILES"
+          echo "Commit message: $COMMIT_MSG"
 
+          # Check for server-only commit patterns (skip client deployment)
+          if echo "$COMMIT_MSG" | grep -E "(server:|Railway|CI/CD|GitHub Actions)" > /dev/null; then
+            echo "🚫 Server-only commit pattern detected in message"
+            echo "client=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Client deployment skipped - server-only commit"
+          # Check for server-only file changes (skip client deployment)  
+          elif echo "$CHANGED_FILES" | grep -vE "(client/|shared/|vercel\.json|package\.json)" > /dev/null && echo "$CHANGED_FILES" | grep -E "(server/|railway\.toml|\.github/|docs/)" > /dev/null; then
+            echo "🚫 Only server/infra files changed"
+            echo "client=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Client deployment skipped - no client/shared changes"
           # Client deployment needed if client/, shared/, or config files changed
-          if echo "$CHANGED_FILES" | grep -E "(client/|shared/|vercel\.json|package\.json)" > /dev/null; then
+          elif echo "$CHANGED_FILES" | grep -E "(client/|shared/|vercel\.json|package\.json)" > /dev/null; then
             echo "client=true" >> $GITHUB_OUTPUT
-            echo "✅ Client deployment needed"
+            echo "✅ Client deployment needed - client/shared files changed"
           else
             echo "client=false" >> $GITHUB_OUTPUT
             echo "⏭️ Client deployment not needed"
@@ -104,54 +116,30 @@ jobs:
             echo "⏭️ Server deployment not needed"
           fi
 
-  # Vercel deployment - deploy client when needed
-  deploy-client:
-    name: Deploy Client to Vercel
+  # Deployment trigger - signal Vercel to deploy via GitHub integration
+  trigger-client-deployment:
+    name: Trigger Client Deployment
     runs-on: ubuntu-latest
     needs: [quality-gates, deployment-check]
     if: success() && needs.deployment-check.outputs.deploy-client == 'true'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build client for production
+      - name: Quality gates passed - ready for deployment
         run: |
-          echo "🏗️ Building client for Vercel deployment..."
-          pnpm --filter switch-shared run build:prod
-          pnpm --filter switch-client run build:prod
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Deploy to Vercel
-        working-directory: client
-        run: |
-          vercel link --token ${{ secrets.VERCEL_TOKEN }} --yes --project switch-card-game
-          vercel deploy --token ${{ secrets.VERCEL_TOKEN }} --prod
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          echo "🎉 Quality gates passed for client deployment!"
+          echo "✅ Lint checks: PASSED"
+          echo "✅ Type checks: PASSED" 
+          echo "✅ Unit tests: PASSED"
+          echo "✅ Build validation: PASSED"
+          echo ""
+          echo "🚀 Vercel will deploy via GitHub integration"
+          echo "   - Client changes detected: ${{ needs.deployment-check.outputs.deploy-client }}"
 
   # Success notification - all quality gates passed
   quality-gates-passed:
     name: Quality Gates Passed
     runs-on: ubuntu-latest
-    needs: [quality-gates, deployment-check, deploy-client]
+    needs: [quality-gates, deployment-check, trigger-client-deployment]
     if: always() && needs.quality-gates.result == 'success'
 
     steps:
@@ -165,5 +153,13 @@ jobs:
           echo ""
           echo "🚀 Deployment status:"
           echo "   - Client deployment needed: ${{ needs.deployment-check.outputs.deploy-client }}"
-          echo "   - Client deployment result: ${{ needs.deploy-client.result || 'skipped' }}"
+          echo "   - Client deployment trigger: ${{ needs.trigger-client-deployment.result || 'skipped' }}"
           echo "   - Server deployment needed: ${{ needs.deployment-check.outputs.deploy-server }}"
+          echo ""
+          echo "📋 Next steps:"
+          if [[ "${{ needs.deployment-check.outputs.deploy-client }}" == "true" ]]; then
+            echo "   - Vercel will deploy client via GitHub integration"
+          fi
+          if [[ "${{ needs.deployment-check.outputs.deploy-server }}" == "true" ]]; then
+            echo "   - Railway will auto-deploy server changes"
+          fi
