@@ -56,7 +56,11 @@ describe('GameEngine', () => {
       card => card.suit === topCard.suit,
     );
     const nonMatchingCard = player.hand.find(
-      card => card.rank !== topCard.rank && card.suit !== topCard.suit,
+      card =>
+        card.rank !== topCard.rank &&
+        card.suit !== topCard.suit &&
+        card.rank !== 'A' && // Aces are universal
+        !(card.rank === '2' && topCard.rank === '2'), // 2s can play on 2s
     );
 
     if (matchingRankCard) {
