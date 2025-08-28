@@ -1,6 +1,6 @@
 {
   "buildCommand": "echo 'Build handled by GitHub Actions'",
-  "outputDirectory": "client/dist",
+  "outputDirectory": "dist",
   "installCommand": "echo 'Dependencies handled by GitHub Actions'",
   "rewrites": [
     {
