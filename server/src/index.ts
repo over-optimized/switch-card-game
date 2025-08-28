@@ -98,12 +98,40 @@ const handleAITurns = async (roomCode: string) => {
     if (validCards.length > 0) {
       // AI plays first valid card
       const cardToPlay = validCards[0];
+      
+      // Log opponent move details
+      console.log(
+        `[OPPONENT-MOVE] AI ${currentPlayer.id} playing ${cardToPlay.rank}${cardToPlay.suit} (${cardToPlay.id})`,
+      );
+      
+      // Log penalty state before AI plays
+      const beforePenalty = room.gameState.penaltyState;
+      if (beforePenalty.active) {
+        console.log(
+          `[PENALTY-BEFORE] Active penalty: ${beforePenalty.cards} cards (type: ${beforePenalty.type}), target: ${beforePenalty.playerId}`,
+        );
+      }
+      
       const updatedGame = GameEngine.playCard(
         room.gameState,
         currentPlayer.id,
         cardToPlay.id,
       );
       room.gameState = updatedGame;
+
+      // Log penalty state after AI plays
+      const afterPenalty = updatedGame.penaltyState;
+      if (beforePenalty.active !== afterPenalty.active || beforePenalty.cards !== afterPenalty.cards) {
+        console.log(
+          `[PENALTY-AFTER] Penalty changed: active=${afterPenalty.active}, cards=${afterPenalty.cards}, type=${afterPenalty.type}, target=${afterPenalty.playerId}`,
+        );
+        
+        if (cardToPlay.rank === '2') {
+          console.log(
+            `[TRICK-CARD-2s] 2${cardToPlay.suit} played - penalty should stack by +2 cards`,
+          );
+        }
+      }
 
       io.to(roomCode).emit('card-played', {
         playerId: currentPlayer.id,
@@ -368,6 +396,24 @@ io.on('connection', socket => {
         return;
       }
 
+      // Find the card being played for detailed logging
+      const player = room.gameState.players.find(p => p.id === playerId);
+      const cardToPlay = player?.hand.find(c => c.id === cardId);
+      
+      if (cardToPlay) {
+        console.log(
+          `[HUMAN-MOVE] Player ${playerId} playing ${cardToPlay.rank}${cardToPlay.suit} (${cardId})`,
+        );
+        
+        // Log penalty state before human plays
+        const beforePenalty = room.gameState.penaltyState;
+        if (beforePenalty.active) {
+          console.log(
+            `[PENALTY-BEFORE] Active penalty: ${beforePenalty.cards} cards (type: ${beforePenalty.type}), target: ${beforePenalty.playerId}`,
+          );
+        }
+      }
+
       const action = {
         type: 'play-card' as const,
         playerId,
@@ -377,6 +423,24 @@ io.on('connection', socket => {
 
       const updatedGame = GameEngine.processAction(room.gameState, action);
       room.gameState = updatedGame;
+      
+      // Log penalty state after human plays
+      if (cardToPlay) {
+        const afterPenalty = updatedGame.penaltyState;
+        const beforePenalty = room.gameState.penaltyState;
+        
+        if (beforePenalty.active !== afterPenalty.active || beforePenalty.cards !== afterPenalty.cards) {
+          console.log(
+            `[PENALTY-AFTER] Penalty changed: active=${afterPenalty.active}, cards=${afterPenalty.cards}, type=${afterPenalty.type}, target=${afterPenalty.playerId}`,
+          );
+          
+          if (cardToPlay.rank === '2') {
+            console.log(
+              `[TRICK-CARD-2s] 2${cardToPlay.suit} played - penalty should activate/stack by +2 cards`,
+            );
+          }
+        }
+      }
 
       io.to(roomCode).emit('card-played', {
         playerId,

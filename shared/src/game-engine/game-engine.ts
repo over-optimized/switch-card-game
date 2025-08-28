@@ -290,6 +290,11 @@ export class GameEngine {
 
     // Activate or increase 2s penalty
     const currentPenalty = gameState.penaltyState;
+
+    // The penalty targets the NEXT player (who will have to resolve it)
+    const nextPlayerIndex = getNextPlayerIndex(gameState);
+    const targetPlayerId = gameState.players[nextPlayerIndex]?.id;
+
     return {
       ...gameState,
       gameMode: 'active-2s',
@@ -297,7 +302,7 @@ export class GameEngine {
         active: true,
         type: '2s',
         cards: currentPenalty.cards + 2, // Each 2 adds 2 cards
-        playerId: gameState.players[gameState.currentPlayerIndex]?.id,
+        playerId: targetPlayerId, // Target the NEXT player, not current player
       },
     };
   }
