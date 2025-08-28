@@ -282,6 +282,18 @@ export const useGameStore = create<GameStore>()(
             });
           });
 
+          socket.on('cards-played', ({ playerId, cardIds, gameState }) => {
+            logCardPlay(playerId, cardIds, true, `Server confirmed ${cardIds.length} cards played`);
+            set({
+              gameState,
+              serverGameState: gameState,
+              message:
+                playerId === get().playerId
+                  ? `${cardIds.length} cards played!`
+                  : `${playerId} played ${cardIds.length} cards`,
+            });
+          });
+
           socket.on('card-drawn', ({ playerId, gameState }) => {
             logNetwork(`Card drawn by ${playerId}`, 'success', { gameState });
             set({
@@ -547,17 +559,21 @@ export const useGameStore = create<GameStore>()(
 
       // Send WebSocket message to server
       const socket = get().socket;
-      if (socket && selectedCards.length === 1) {
-        const cardId = selectedCards[0];
-        logNetwork(`Playing card ${cardId} via WebSocket`, 'pending');
-
-        // Server will respond with card-played event which updates the game state
-        socket.emit('play-card', { cardId });
+      if (socket) {
+        if (selectedCards.length === 1) {
+          const cardId = selectedCards[0];
+          logNetwork(`Playing single card ${cardId} via WebSocket`, 'pending');
+          socket.emit('play-card', { cardId });
+        } else {
+          logNetwork(`Playing ${selectedCards.length} cards via WebSocket`, 'pending', { cardIds: selectedCards });
+          socket.emit('play-cards', { cardIds: selectedCards });
+        }
 
         // Clear selection after sending
         get().clearSelection();
       } else {
-        // Fallback for multi-card plays or missing socket
+        // Fallback for missing socket
+        logNetwork('No socket available, using fallback confirmation', 'error');
         setTimeout(() => {
           get().confirmAction(actionId, get().gameState!);
         }, 1000);

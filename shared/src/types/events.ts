@@ -12,6 +12,7 @@ export interface ClientToServerEvents {
   'leave-room': () => void;
   'start-game': () => void;
   'play-card': (data: { cardId: string }) => void;
+  'play-cards': (data: { cardIds: string[] }) => void;
   'draw-card': () => void;
   'player-ready': () => void;
   'player-unready': () => void;
@@ -42,6 +43,11 @@ export interface ServerToClientEvents {
   'card-played': (data: {
     playerId: string;
     cardId: string;
+    gameState: GameState;
+  }) => void;
+  'cards-played': (data: {
+    playerId: string;
+    cardIds: string[];
     gameState: GameState;
   }) => void;
   'card-drawn': (data: { playerId: string; gameState: GameState }) => void;

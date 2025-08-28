@@ -377,8 +377,80 @@ io.on('connection', socket => {
         setTimeout(() => handleAITurns(roomCode), 1000);
       }
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Invalid card play';
+      console.error(
+        `[PLAY-CARD ERROR] Player ${playerId} in room ${roomCode}:`,
+        errorMessage,
+      );
       socket.emit('error', {
-        message: error instanceof Error ? error.message : 'Invalid card play',
+        message: errorMessage,
+      });
+    }
+  });
+
+  socket.on('play-cards', ({ cardIds }) => {
+    const { roomCode, playerId } = socket.data;
+
+    if (!roomCode || !playerId) {
+      socket.emit('error', { message: 'Not in a room' });
+      return;
+    }
+
+    updatePlayerActivity(socket.id);
+    try {
+      const room = RoomManager.getRoom(roomCode);
+
+      if (!room?.gameState) {
+        socket.emit('error', { message: 'Game not found' });
+        return;
+      }
+
+      console.log(
+        `[PLAY-CARDS] Player ${playerId} attempting to play ${cardIds.length} cards:`,
+        cardIds,
+      );
+
+      const action = {
+        type: 'play-cards' as const,
+        playerId,
+        cardIds,
+        timestamp: new Date(),
+      };
+
+      const updatedGame = GameEngine.processAction(room.gameState, action);
+      room.gameState = updatedGame;
+
+      console.log(
+        `[PLAY-CARDS SUCCESS] Player ${playerId} played cards successfully`,
+      );
+
+      io.to(roomCode).emit('cards-played', {
+        playerId,
+        cardIds,
+        gameState: updatedGame,
+      });
+
+      if (updatedGame.phase === 'finished' && updatedGame.winner) {
+        io.to(roomCode).emit('game-finished', {
+          winner: updatedGame.winner,
+          gameState: updatedGame,
+        });
+      } else {
+        // Check if next turn is AI and trigger AI turn
+        setTimeout(() => handleAITurns(roomCode), 1000);
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Invalid cards play';
+      console.error(
+        `[PLAY-CARDS ERROR] Player ${playerId} in room ${roomCode}:`,
+        errorMessage,
+        'Cards:',
+        cardIds,
+      );
+      socket.emit('error', {
+        message: errorMessage,
       });
     }
   });

@@ -41,9 +41,10 @@ export interface Room {
 }
 
 export interface GameAction {
-  type: 'play-card' | 'draw-card' | 'pass-turn';
+  type: 'play-card' | 'play-cards' | 'draw-card' | 'pass-turn';
   playerId: string;
   cardId?: string | undefined;
+  cardIds?: string[] | undefined;
   chosenSuit?: Suit | undefined;
   timestamp: Date;
 }
