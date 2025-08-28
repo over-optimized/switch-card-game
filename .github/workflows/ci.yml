@@ -141,9 +141,7 @@ jobs:
       - name: Deploy to Vercel
         working-directory: client
         run: |
-          echo "Linking project..."
-          vercel link --token ${{ secrets.VERCEL_TOKEN }} --yes
-          echo "Deploying..."
+          vercel link --token ${{ secrets.VERCEL_TOKEN }} --yes --project switch-card-game
           vercel deploy --token ${{ secrets.VERCEL_TOKEN }} --prod
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
