@@ -14,7 +14,7 @@ jobs:
   quality-gates:
     name: Quality Gates
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,11 +67,11 @@ jobs:
     name: Deployment Readiness
     runs-on: ubuntu-latest
     needs: quality-gates
-    
+
     outputs:
       deploy-client: ${{ steps.changes.outputs.client }}
       deploy-server: ${{ steps.changes.outputs.server }}
-      
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -83,18 +83,18 @@ jobs:
         run: |
           # Check what changed to determine deployment needs
           CHANGED_FILES=$(git diff --name-only HEAD^ HEAD || echo "")
-          
+
           echo "Changed files: $CHANGED_FILES"
-          
+
           # Client deployment needed if client/, shared/, or config files changed
           if echo "$CHANGED_FILES" | grep -E "(client/|shared/|vercel\.json|package\.json)" > /dev/null; then
             echo "client=true" >> $GITHUB_OUTPUT
             echo "✅ Client deployment needed"
           else
-            echo "client=false" >> $GITHUB_OUTPUT  
+            echo "client=false" >> $GITHUB_OUTPUT
             echo "⏭️ Client deployment not needed"
           fi
-          
+
           # Server deployment needed if server/, shared/, railway.toml changed
           if echo "$CHANGED_FILES" | grep -E "(server/|shared/|railway\.toml|package\.json)" > /dev/null; then
             echo "server=true" >> $GITHUB_OUTPUT
@@ -110,7 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [quality-gates, deployment-check]
     if: success() && needs.deployment-check.outputs.deploy-client == 'true'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -140,7 +140,7 @@ jobs:
 
       - name: Deploy to Vercel
         working-directory: client
-        run: vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --cwd .
+        run: vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --yes --cwd dist
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -151,13 +151,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [quality-gates, deployment-check, deploy-client]
     if: always() && needs.quality-gates.result == 'success'
-    
+
     steps:
       - name: Quality gates success
         run: |
           echo "🎉 All quality gates passed!"
           echo "✅ Lint checks: PASSED"
-          echo "✅ Type checks: PASSED" 
+          echo "✅ Type checks: PASSED"
           echo "✅ Unit tests: PASSED"
           echo "✅ Build validation: PASSED"
           echo ""
