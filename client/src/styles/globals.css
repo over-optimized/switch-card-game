@@ -15,6 +15,10 @@ body {
   align-items: center;
 }
 
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
 .app {
   width: 100%;
   max-width: 1200px;
@@ -1521,16 +1525,10 @@ body {
     font-size: 1.3em;
     width: 100%;
     margin-top: 10px;
-    margin-bottom: 20px;
-  }
-
-  .menu-actions {
-    margin-bottom: 30px;
   }
 
   .player-config {
     padding: 20px 15px;
-    margin-bottom: 15px;
   }
 
   .player-name-input {
@@ -1923,7 +1921,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
 }
 
 .menu-container {
@@ -1959,6 +1956,10 @@ body {
 
 .menu-section {
   margin-bottom: 35px;
+}
+
+.menu-section:last-of-type {
+  margin-bottom: 0;
 }
 
 .menu-section h3 {
@@ -2033,8 +2034,8 @@ body {
   background: white;
   border-radius: 50%;
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 3px;
+  left: 3px;
   transform: translate(-50%, -50%) scale(0);
   opacity: 0;
   transition: all 0.3s ease;
@@ -2138,7 +2139,7 @@ body {
   font-size: 1em;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 120px;
+  width: 100%;
 }
 
 .difficulty-select:focus {
@@ -2155,7 +2156,7 @@ body {
 /* Menu Actions */
 .menu-actions {
   text-align: center;
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 .start-game-btn {
@@ -2398,12 +2399,12 @@ body {
   .hand-area.with-shelf {
     height: 100%; /* Fill parent .player-area */
     transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    
+
     /* Visual indication of expanded space */
     border-top: 2px solid rgba(52, 152, 219, 0.3);
-    background: linear-gradient(to top, 
-      rgba(0,0,0,0.95), 
-      rgba(0,0,0,0.9) 70%, 
+    background: linear-gradient(to top,
+      rgba(0,0,0,0.95),
+      rgba(0,0,0,0.9) 70%,
       rgba(52, 152, 219, 0.1));
   }
 

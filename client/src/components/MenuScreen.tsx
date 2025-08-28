@@ -102,7 +102,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
     <div className="menu-screen">
       <div className="menu-container">
         <div className="menu-header">
-          <h1>🃏 Switch Card Game</h1>
+          <h1>🃏 Switch</h1>
           <p>Configure your game and start playing!</p>
         </div>
 
@@ -125,7 +125,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
           </div>
         </div>
 
-        <div className="menu-section">
+        <div className="menu-section mb-0">
           <h3>Player Setup</h3>
           <div className="players-setup">
             {players.map((player, index) => (

@@ -73,7 +73,7 @@
 /* Deck Area - Fixed in middle */
 .deckArea {
   position: fixed;
-  top: 200px; /* Below opponent area */
+  top: 140px; /* Below opponent area */
   left: 0;
   right: 0;
   height: 179px;
