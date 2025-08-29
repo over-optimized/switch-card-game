@@ -240,19 +240,24 @@ export class GameEngine {
     let nextPlayerIndex = getNextPlayerIndex(updatedGameState);
 
     // Handle skipping players when Jacks have been played
-    if (updatedGameState.skipsRemaining > 0) {
-      // Skip one player and decrement the counter
+    // We need to skip players WITHOUT giving them turns
+    while (updatedGameState.skipsRemaining > 0) {
+      // Skip the next player entirely
+      nextPlayerIndex = getNextPlayerIndex(updatedGameState);
       updatedGameState = {
         ...updatedGameState,
         currentPlayerIndex: nextPlayerIndex,
         skipsRemaining: updatedGameState.skipsRemaining - 1,
       };
-
-      // If more skips remain, advance again
+      
+      // Calculate the next player index for potential further skips
       if (updatedGameState.skipsRemaining > 0) {
-        return GameEngine.advanceTurn(updatedGameState);
+        nextPlayerIndex = getNextPlayerIndex(updatedGameState);
       }
-    } else {
+    }
+
+    // If no skips, just advance normally
+    if (gameState.skipsRemaining === 0) {
       updatedGameState = {
         ...updatedGameState,
         currentPlayerIndex: nextPlayerIndex,

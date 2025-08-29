@@ -4,6 +4,11 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { GameSetupConfig } from '../components/MenuScreen';
 import {
+  gameToasts,
+  getCardDisplayString,
+  isTrickCard,
+} from '../utils/toastUtils';
+import {
   debugLogger,
   logCardPlay,
   logGame,
@@ -259,6 +264,10 @@ export const useGameStore = create<GameStore>()(
           // Handle local game creation response
           socket.on('local-game-created', ({ room, player, gameState }) => {
             logGame('Local game created', { room, player, gameState });
+
+            // Show game start notification
+            gameToasts.showGameStart();
+
             set({
               gameState,
               serverGameState: gameState,
@@ -272,6 +281,65 @@ export const useGameStore = create<GameStore>()(
           // Handle game events
           socket.on('card-played', ({ playerId, cardId, gameState }) => {
             logCardPlay(playerId, [cardId], true, 'Server confirmed card play');
+
+            // Show toast for opponent moves
+            if (playerId !== get().playerId) {
+              const oldGameState = get().gameState;
+              const player = gameState.players.find(
+                (p: any) => p.id === playerId,
+              );
+              const cardPlayed =
+                oldGameState?.discardPile[oldGameState.discardPile.length - 1];
+
+              if (player && cardPlayed) {
+                const cardDisplay = getCardDisplayString(
+                  cardPlayed.rank,
+                  cardPlayed.suit,
+                );
+
+                // Check for trick card effects
+                if (isTrickCard(cardPlayed.rank)) {
+                  let effect = '';
+
+                  if (cardPlayed.rank === '2') {
+                    const penalty = gameState.penaltyState;
+                    const oldPenalty = oldGameState.penaltyState;
+
+                    if (penalty.active) {
+                      if (oldPenalty?.active && oldPenalty.cards > 0) {
+                        // Penalty stacking
+                        const addedCards = penalty.cards - oldPenalty.cards;
+                        gameToasts.showPenaltyStacked(
+                          penalty.cards,
+                          addedCards,
+                        );
+                        gameToasts.show2sEffect(addedCards, player.name);
+                      } else {
+                        // New penalty created
+                        gameToasts.showPenaltyCreated(penalty.cards);
+                        gameToasts.show2sEffect(penalty.cards, player.name);
+                      }
+                    }
+                    effect = `+${penalty.cards} penalty cards`;
+                  } else if (cardPlayed.rank === 'A' && gameState.chosenSuit) {
+                    gameToasts.showAceEffect(
+                      gameState.chosenSuit as any,
+                      player.name,
+                    );
+                    effect = `Changed suit to ${gameState.chosenSuit}`;
+                  } else if (cardPlayed.rank === 'J') {
+                    // Jack skips next player - show toast
+                    gameToasts.showJackEffect(1, player.name);
+                    effect = 'Next player skipped';
+                  }
+
+                  gameToasts.showOpponentMove(player.name, cardDisplay, effect);
+                } else {
+                  gameToasts.showOpponentMove(player.name, cardDisplay);
+                }
+              }
+            }
+
             set({
               gameState,
               serverGameState: gameState,
@@ -289,6 +357,22 @@ export const useGameStore = create<GameStore>()(
               true,
               `Server confirmed ${cardIds.length} cards played`,
             );
+
+            // Show toast for opponent multiple card plays
+            if (playerId !== get().playerId) {
+              const player = gameState.players.find(
+                (p: any) => p.id === playerId,
+              );
+              if (player) {
+                const cardCount = cardIds.length;
+                gameToasts.showOpponentMove(
+                  player.name,
+                  `${cardCount} cards of same rank`,
+                  `Multiple card play (${cardCount}x)`,
+                );
+              }
+            }
+
             set({
               gameState,
               serverGameState: gameState,
@@ -301,6 +385,34 @@ export const useGameStore = create<GameStore>()(
 
           socket.on('card-drawn', ({ playerId, gameState }) => {
             logNetwork(`Card drawn by ${playerId}`, 'success', { gameState });
+
+            // Show toast for penalty served notifications
+            if (playerId !== get().playerId) {
+              const oldGameState = get().gameState;
+              const player = gameState.players.find(
+                (p: any) => p.id === playerId,
+              );
+
+              if (player && oldGameState) {
+                const oldPlayerData = oldGameState.players.find(
+                  (p: any) => p.id === playerId,
+                );
+                const cardsDrawn =
+                  player.hand.length - (oldPlayerData?.hand.length || 0);
+
+                // Check if this was a penalty draw (multiple cards)
+                if (
+                  cardsDrawn > 1 ||
+                  (oldGameState.penaltyState?.active && cardsDrawn >= 1)
+                ) {
+                  gameToasts.showPenaltyServed(player.name, cardsDrawn);
+                } else if (cardsDrawn === 1) {
+                  // Regular card draw - show simple notification
+                  gameToasts.showOpponentMove(player.name, 'Drew a card');
+                }
+              }
+            }
+
             set({
               gameState,
               serverGameState: gameState,
@@ -313,13 +425,17 @@ export const useGameStore = create<GameStore>()(
 
           socket.on('game-finished', ({ winner, gameState }) => {
             logGame('Game finished', { winner, gameState });
+
+            // Show game end toast - winner is a Player object, not an ID
+            const isYou = winner.id === get().playerId;
+            const winnerName = winner.name;
+
+            gameToasts.showGameEnd(winnerName, isYou);
+
             set({
               gameState,
               serverGameState: gameState,
-              message:
-                winner === get().playerId
-                  ? 'You won! 🎉'
-                  : `${winner} won the game!`,
+              message: isYou ? 'You won! 🎉' : `${winnerName} won the game!`,
             });
           });
 

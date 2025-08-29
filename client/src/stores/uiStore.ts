@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { GameSettings, HandShelfState } from './types';
 import { GameSetupConfig } from '../components/MenuScreen';
+import { ToastMessage } from '../components/Toast';
 
 interface UIStore {
   // Screen navigation
@@ -35,6 +36,9 @@ interface UIStore {
   // Theme and appearance
   theme: 'light' | 'dark' | 'auto';
 
+  // Toast notifications
+  toasts: ToastMessage[];
+
   // Actions
   setCurrentScreen: (screen: 'menu' | 'game' | 'settings') => void;
   setGameSetup: (config: GameSetupConfig) => void;
@@ -64,6 +68,11 @@ interface UIStore {
   setHandShelfDragging: (isDragging: boolean) => void;
   enableHandShelf: (enabled: boolean) => void;
   resetHandShelfPosition: () => void;
+
+  // Toast notification actions
+  showToast: (toast: Omit<ToastMessage, 'id'>) => void;
+  dismissToast: (id: string) => void;
+  clearAllToasts: () => void;
 }
 
 const defaultSettings: GameSettings = {
@@ -116,6 +125,7 @@ export const useUIStore = create<UIStore>()(
       inGameMenuOpen: false,
       roomInfoOpen: false,
       theme: 'auto',
+      toasts: [],
 
       // Actions
       setCurrentScreen: (screen: 'menu' | 'game' | 'settings') => {
@@ -241,6 +251,35 @@ export const useUIStore = create<UIStore>()(
           handShelf: { ...state.handShelf, position: 0 },
           settings: { ...state.settings, handShelfPosition: 0 },
         }));
+      },
+
+      // Toast notification actions
+      showToast: (toast: Omit<ToastMessage, 'id'>) => {
+        const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const newToast: ToastMessage = { ...toast, id };
+
+        set(state => ({
+          toasts: [...state.toasts, newToast],
+        }));
+
+        // Auto-dismiss high priority toasts after longer duration
+        if (toast.priority === 'high' && !toast.duration) {
+          setTimeout(() => {
+            set(state => ({
+              toasts: state.toasts.filter(t => t.id !== id),
+            }));
+          }, 6000);
+        }
+      },
+
+      dismissToast: (id: string) => {
+        set(state => ({
+          toasts: state.toasts.filter(toast => toast.id !== id),
+        }));
+      },
+
+      clearAllToasts: () => {
+        set({ toasts: [] });
       },
     }),
     {

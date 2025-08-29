@@ -22,79 +22,44 @@
   transition: none;
 }
 
-/* Drag Handle */
+/* Drag Handle - Integrated Tab Style */
 .dragHandle {
   position: absolute;
-  top: -20px;
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.8);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  width: 120px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px 3px 0 0;
   cursor: grab;
   user-select: none;
   touch-action: none;
   transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-  min-width: 80px;
   z-index: 310;
+  /* Visual integration with sheet */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .dragHandle:hover {
-  background: rgba(0, 0, 0, 0.9);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateX(-50%) scale(1.05);
+  background: rgba(255, 255, 255, 0.4);
+  height: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .dragHandle.dragging {
-  background: rgba(52, 152, 219, 0.8);
-  border-color: rgba(52, 152, 219, 0.6);
-  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
-  transform: translateX(-50%) scale(1.1);
+  background: rgba(52, 152, 219, 0.6);
+  height: 8px;
+  box-shadow: inset 0 1px 0 rgba(52, 152, 219, 0.3),
+              0 0 10px rgba(52, 152, 219, 0.3);
   cursor: grabbing;
 }
 
-.dragHandleIcon {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: center;
-}
-
-.gripLine {
-  width: 25px;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.6);
-  border-radius: 2px;
-  transition: background 0.2s ease;
-}
-
-.dragHandle.dragging .gripLine {
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.dragHandleLabel {
-  display: none; /* Hidden for cleaner UI - can be enabled as user preference later */
-  font-size: 0.75em;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: color 0.2s ease;
-}
-
-.dragHandle.dragging .dragHandleLabel {
-  color: rgba(255, 255, 255, 1);
-}
+/* Drag handle icon, grip lines, and label styles removed - using simple integrated tab design */
 
 /* Sheet Content - Floated to Top */
 .sheetContent {
-  padding: 30px 16px 40px 16px; /* Increased top padding to avoid drag handle overlap */
+  padding: 16px 16px 40px 16px; /* Reduced top padding - handle is now integrated */
   height: 100%;
   box-sizing: border-box;
   display: flex;

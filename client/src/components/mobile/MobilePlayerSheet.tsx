@@ -119,25 +119,14 @@ export function MobilePlayerSheet() {
         } as React.CSSProperties
       }
     >
-      {/* Drag Handle */}
+      {/* Integrated Drag Handle Tab */}
       <div
         className={`${styles.dragHandle} ${handShelf.isDragging ? styles.dragging : ''}`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onDoubleClick={handleDoubleTab}
-      >
-        <div className={styles.dragHandleIcon}>
-          <div className={styles.gripLine} />
-          <div className={styles.gripLine} />
-          <div className={styles.gripLine} />
-        </div>
-        <div className={styles.dragHandleLabel}>
-          {handShelf.position > 0
-            ? `Expanded ${expansionPercentage}%`
-            : 'Default'}
-        </div>
-      </div>
+      />
 
       {/* Sheet Content - Floated to Top */}
       <div className={styles.sheetContent}>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useUIStore } from '../stores';
+import styles from './MenuScreen.module.css';
 
 export interface PlayerSetup {
   id: string;
@@ -168,38 +169,44 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
   };
 
   return (
-    <div className="menu-screen">
-      <div className="menu-container">
-        <div className="menu-header">
-          <h1>🃏 Switch</h1>
-          <p>Configure your game and start playing!</p>
+    <div className={styles.menuScreen}>
+      <div className={styles.menuContainer}>
+        <div className={styles.menuHeader}>
+          <div className={styles.headerCardStack}>
+            <div className={styles.stackedCard}>🂡</div>
+            <div className={styles.stackedCard}>🂾</div>
+            <div className={styles.stackedCard}>🃛</div>
+            <div className={styles.stackedCard}>🃏</div>
+          </div>
+          <h1 className={styles.headerTitle}>Switch</h1>
+          <p className={styles.headerDescription}>Configure your game and start playing!</p>
         </div>
 
         {/* Quick Start Section - Always visible with presets */}
-        <div className="menu-section">
+        <div className={styles.menuSection}>
           <div
-            className="section-header"
+            className={styles.sectionHeader}
             onClick={() => toggleMenuSection('quickStart')}
           >
             <h3>⚡ Quick Start</h3>
             <span
-              className={`section-toggle ${menuSections.quickStartExpanded ? 'expanded' : ''}`}
+              className={`${styles.sectionToggle} ${menuSections.quickStartExpanded ? styles.expanded : ''}`}
             >
               {menuSections.quickStartExpanded ? '▼' : '▶'}
             </span>
           </div>
 
           {menuSections.quickStartExpanded && (
-            <div className="section-content">
-              <div className="quick-start-presets">
+            <div className={styles.sectionContent}>
+              <div className={styles.quickStartPresets}>
                 {Object.entries(QUICK_START_PRESETS).map(([key, preset]) => (
                   <button
                     key={key}
-                    className="quick-start-btn"
+                    className={styles.quickStartBtn}
                     onClick={() => handleQuickStart(preset)}
                   >
-                    <div className="preset-label">{preset.label}</div>
-                    <div className="preset-description">
+                    <div className={styles.presetLabel}>{preset.label}</div>
+                    <div className={styles.presetDescription}>
                       {preset.description}
                     </div>
                   </button>
@@ -210,26 +217,26 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
         </div>
 
         {/* Advanced Setup Section - Collapsible */}
-        <div className="menu-section">
+        <div className={styles.menuSection}>
           <div
-            className="section-header"
+            className={styles.sectionHeader}
             onClick={() => toggleMenuSection('playerSetup')}
           >
             <h3>⚙️ Custom Setup</h3>
             <span
-              className={`section-toggle ${menuSections.playerSetupExpanded ? 'expanded' : ''}`}
+              className={`${styles.sectionToggle} ${menuSections.playerSetupExpanded ? styles.expanded : ''}`}
             >
               {menuSections.playerSetupExpanded ? '▼' : '▶'}
             </span>
           </div>
 
           {menuSections.playerSetupExpanded && (
-            <div className="section-content">
-              <div className="player-count-section">
+            <div className={styles.sectionContent}>
+              <div className={styles.playerCountSection}>
                 <h4>Number of Players</h4>
-                <div className="player-count-selector">
+                <div className={styles.playerCountSelector}>
                   {([2, 3, 4] as const).map(count => (
-                    <label key={count} className="player-count-option">
+                    <label key={count} className={styles.playerCountOption}>
                       <input
                         type="radio"
                         name="playerCount"
@@ -237,20 +244,20 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                         checked={playerCount === count}
                         onChange={() => handlePlayerCountChange(count)}
                       />
-                      <span className="radio-custom"></span>
+                      <span className={styles.radioCustom}></span>
                       {count} Players
                     </label>
                   ))}
                 </div>
               </div>
 
-              <div className="player-setup-section">
+              <div className={styles.playerSetupSection}>
                 <h4>Player Configuration</h4>
-                <div className="players-setup">
+                <div className={styles.playersSetup}>
                   {players.map((player, index) => (
-                    <div key={player.id} className="player-config">
-                      <div className="player-info">
-                        <span className="player-number">
+                    <div key={player.id} className={styles.playerConfig}>
+                      <div className={styles.playerInfo}>
+                        <span className={styles.playerNumber}>
                           Player {index + 1}
                         </span>
                         <input
@@ -259,14 +266,14 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                           onChange={e =>
                             handlePlayerNameChange(player.id, e.target.value)
                           }
-                          className="player-name-input"
+                          className={styles.playerNameInput}
                           placeholder="Enter name"
                           maxLength={20}
                         />
                       </div>
 
-                      <div className="player-type">
-                        <label className="type-option">
+                      <div className={styles.playerType}>
+                        <label className={styles.typeOption}>
                           <input
                             type="radio"
                             name={`type-${player.id}`}
@@ -278,7 +285,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                           />
                           👤 Human
                         </label>
-                        <label className="type-option">
+                        <label className={styles.typeOption}>
                           <input
                             type="radio"
                             name={`type-${player.id}`}
@@ -293,7 +300,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                       </div>
 
                       {player.type === 'ai' && (
-                        <div className="ai-difficulty">
+                        <div className={styles.aiDifficulty}>
                           <select
                             value={player.aiDifficulty || 'medium'}
                             onChange={e =>
@@ -302,7 +309,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                                 e.target.value as 'easy' | 'medium' | 'hard',
                               )
                             }
-                            className="difficulty-select"
+                            className={styles.difficultySelect}
                           >
                             <option value="easy">Easy</option>
                             <option value="medium">Medium</option>
@@ -315,8 +322,8 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                 </div>
               </div>
 
-              <div className="menu-actions">
-                <button className="start-game-btn" onClick={handleStartGame}>
+              <div className={styles.menuActions}>
+                <button className={styles.startGameBtn} onClick={handleStartGame}>
                   Start Custom Game
                 </button>
               </div>

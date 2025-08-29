@@ -6,6 +6,7 @@ import { ErrorScreen } from './ErrorScreen';
 import { InGameMenu } from './InGameMenu';
 import { RoomInfoPanel } from './RoomInfoPanel';
 import { MobileWinModal } from './mobile/MobileWinModal';
+import { ToastContainer } from './Toast';
 
 interface GameContainerProps {
   onBackToMenu?: () => void;
@@ -37,6 +38,9 @@ export function GameContainer({ onBackToMenu }: GameContainerProps) {
       {/* In-game menu components */}
       <InGameMenu onBackToMenu={onBackToMenu} />
       <RoomInfoPanel />
+
+      {/* Toast notifications */}
+      <ToastContainer />
     </div>
   );
 }

@@ -112,12 +112,31 @@ const handleAITurns = async (roomCode: string) => {
         );
       }
 
+      // Log Jack effects before and after
+      const beforeSkips = room.gameState.skipsRemaining;
+      const beforeTurn = room.gameState.currentPlayerIndex;
+      if (cardToPlay.rank === 'J') {
+        console.log(
+          `[JACK-EFFECT] AI playing Jack ${cardToPlay.suit} - skipsRemaining: ${beforeSkips}, currentPlayer: ${beforeTurn}`,
+        );
+      }
+
       const updatedGame = GameEngine.playCard(
         room.gameState,
         currentPlayer.id,
         cardToPlay.id,
       );
       room.gameState = updatedGame;
+
+      // Log skip behavior after Jack play
+      const afterSkips = updatedGame.skipsRemaining;
+      const afterTurn = updatedGame.currentPlayerIndex;
+      if (cardToPlay.rank === 'J' || beforeSkips !== afterSkips || beforeTurn !== afterTurn) {
+        const nextPlayer = updatedGame.players[afterTurn];
+        console.log(
+          `[TURN-ADVANCE] After ${cardToPlay.rank}${cardToPlay.suit}: skipsRemaining ${beforeSkips} -> ${afterSkips}, turn ${beforeTurn} -> ${afterTurn} (${nextPlayer?.name || 'Unknown'})`,
+        );
+      }
 
       // Log penalty state after AI plays
       const afterPenalty = updatedGame.penaltyState;
@@ -136,6 +155,9 @@ const handleAITurns = async (roomCode: string) => {
         }
       }
 
+      console.log(
+        `[NETWORK] Broadcasting card-played event for AI ${currentPlayer.name} (${currentPlayer.id}): ${cardToPlay.rank}${cardToPlay.suit}`,
+      );
       io.to(roomCode).emit('card-played', {
         playerId: currentPlayer.id,
         cardId: cardToPlay.id,
@@ -436,8 +458,31 @@ io.on('connection', socket => {
         timestamp: new Date(),
       };
 
+      // Log Jack effects before and after for human players
+      const beforeSkips = room.gameState.skipsRemaining;
+      const beforeTurn = room.gameState.currentPlayerIndex;
+      if (cardToPlay?.rank === 'J') {
+        console.log(
+          `[JACK-EFFECT] Human playing Jack ${cardToPlay.suit} - skipsRemaining: ${beforeSkips}, currentPlayer: ${beforeTurn}`,
+        );
+      }
+
       const updatedGame = GameEngine.processAction(room.gameState, action);
       room.gameState = updatedGame;
+
+      // Log skip behavior after human Jack play
+      const afterSkips = updatedGame.skipsRemaining;
+      const afterTurn = updatedGame.currentPlayerIndex;
+      if (
+        cardToPlay?.rank === 'J' ||
+        beforeSkips !== afterSkips ||
+        beforeTurn !== afterTurn
+      ) {
+        const nextPlayer = updatedGame.players[afterTurn];
+        console.log(
+          `[TURN-ADVANCE] After ${cardToPlay?.rank}${cardToPlay?.suit}: skipsRemaining ${beforeSkips} -> ${afterSkips}, turn ${beforeTurn} -> ${afterTurn} (${nextPlayer?.name || 'Unknown'})`,
+        );
+      }
 
       // Log penalty state after human plays
       if (cardToPlay) {
@@ -460,6 +505,12 @@ io.on('connection', socket => {
         }
       }
 
+      const humanPlayer = room.players.find(p => p.id === playerId);
+      const playedCard =
+        room.gameState.discardPile[room.gameState.discardPile.length - 1];
+      console.log(
+        `[NETWORK] Broadcasting card-played event for human ${humanPlayer?.name || 'Unknown'} (${playerId}): ${playedCard?.rank}${playedCard?.suit}`,
+      );
       io.to(roomCode).emit('card-played', {
         playerId,
         cardId,
@@ -524,6 +575,10 @@ io.on('connection', socket => {
         `[PLAY-CARDS SUCCESS] Player ${playerId} played cards successfully`,
       );
 
+      const multiCardPlayer = room.players.find(p => p.id === playerId);
+      console.log(
+        `[NETWORK] Broadcasting cards-played event for ${multiCardPlayer?.name || 'Unknown'} (${playerId}): ${cardIds.length} cards`,
+      );
       io.to(roomCode).emit('cards-played', {
         playerId,
         cardIds,
