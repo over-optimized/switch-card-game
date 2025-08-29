@@ -8,6 +8,7 @@ import {
   getCardDisplayString,
   isTrickCard,
 } from '../utils/toastUtils';
+import { useUIStore } from './uiStore';
 import {
   debugLogger,
   logCardPlay,
@@ -265,6 +266,9 @@ export const useGameStore = create<GameStore>()(
           socket.on('local-game-created', ({ room, player, gameState }) => {
             logGame('Local game created', { room, player, gameState });
 
+            // Clear any existing toasts from previous games
+            useUIStore.getState().clearAllToasts();
+
             // Show game start notification
             gameToasts.showGameStart();
 
@@ -437,6 +441,11 @@ export const useGameStore = create<GameStore>()(
               serverGameState: gameState,
               message: isYou ? 'You won! 🎉' : `${winnerName} won the game!`,
             });
+
+            // Clear toasts after a delay to let the game end toast show
+            setTimeout(() => {
+              useUIStore.getState().clearToastsOnGameEnd();
+            }, 6000);
           });
 
           // Connection timeout
@@ -459,6 +468,9 @@ export const useGameStore = create<GameStore>()(
     },
 
     restartGame: () => {
+      // Clear any existing toasts from previous game
+      useUIStore.getState().clearAllToasts();
+
       set({ isLoading: true });
       setTimeout(() => {
         // Restart using WebSocket-first approach
