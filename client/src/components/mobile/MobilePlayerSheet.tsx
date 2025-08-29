@@ -31,18 +31,35 @@ export function MobilePlayerSheet() {
   const startY = useRef<number>(0);
   const startPosition = useRef<number>(0);
 
-  // Sheet constraints
-  const MIN_POSITION = 0; // Default position
-  const MAX_POSITION = 300; // Maximum pull up (adjust based on content needs)
+  // Card container ref (keeping for potential future use)
+  const handCardsRef = useRef<HTMLDivElement>(null);
 
-  // Enable handShelf for mobile on component mount
+  // 3-Mode Snap System - Optimized positioning
+  const SNAP_POSITIONS = {
+    CLOSED: 0, // Minimal - just handle visible
+    CARDS: 170, // Cards fully visible with minimal padding (130px cards + 40px padding/controls)
+    EXPANDED: 240, // Cards + secondary controls with minimal gap (170 + 70px for controls area)
+  } as const;
+
+  const MIN_POSITION = SNAP_POSITIONS.CLOSED;
+  const MAX_POSITION = SNAP_POSITIONS.EXPANDED;
+
+  // Enable handShelf for mobile on component mount and set to CARDS mode
   useEffect(() => {
     enableHandShelf(true);
-  }, [enableHandShelf]);
+    // Always set to CARDS mode as default for optimal gameplay
+    // Use setTimeout to ensure state is ready
+    const timer = setTimeout(() => {
+      setHandShelfPosition(SNAP_POSITIONS.CARDS);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [enableHandShelf, setHandShelfPosition, SNAP_POSITIONS.CARDS]);
 
   const currentPlayer = players.find(
     (player: Player) => player.id === playerId,
   );
+
   const isPlayerTurn =
     gameState?.currentPlayerIndex !== undefined &&
     gameState.players[gameState.currentPlayerIndex]?.id === playerId;
@@ -76,8 +93,12 @@ export function MobilePlayerSheet() {
     if (!handShelf.isDragging) return;
     setHandShelfDragging(false);
 
-    // Snap to positions
-    const snapPoints = [0, 150, 300]; // Default, mid, max
+    // Snap to closest of 3 defined positions
+    const snapPoints = [
+      SNAP_POSITIONS.CLOSED,
+      SNAP_POSITIONS.CARDS,
+      SNAP_POSITIONS.EXPANDED,
+    ];
     const closest = snapPoints.reduce((prev, curr) => {
       return Math.abs(curr - handShelf.position) <
         Math.abs(prev - handShelf.position)
@@ -88,9 +109,17 @@ export function MobilePlayerSheet() {
     setHandShelfPosition(closest);
   };
 
-  // Handle double tap to toggle between default and mid position
+  // Handle double tap to toggle between CARDS and EXPANDED modes
   const handleDoubleTab = () => {
-    const targetPosition = handShelf.position > 0 ? 0 : 150;
+    const currentPosition = handShelf.position;
+    let targetPosition: number;
+
+    if (currentPosition === SNAP_POSITIONS.CARDS) {
+      targetPosition = SNAP_POSITIONS.EXPANDED;
+    } else {
+      targetPosition = SNAP_POSITIONS.CARDS; // Always return to CARDS as primary mode
+    }
+
     setHandShelfPosition(targetPosition);
 
     // Haptic feedback if available
@@ -137,8 +166,14 @@ export function MobilePlayerSheet() {
           </div>
         </div>
 
-        {/* Hand Controls */}
-        <div className={styles.handControls}>
+        {/* Hand Controls - Smooth visibility transitions */}
+        <div
+          className={`${styles.handControls} ${
+            handShelf.position > SNAP_POSITIONS.CLOSED
+              ? styles['handControls--visible']
+              : styles['handControls--hidden']
+          }`}
+        >
           <button
             className={`${styles.controlButton} ${styles.playButton}`}
             disabled={!isPlayerTurn || selectedCards.length === 0}
@@ -164,12 +199,19 @@ export function MobilePlayerSheet() {
           </button>
         </div>
 
-        {/* Player Hand */}
-        <div className={styles.handCards}>
-          <MobileHandArea />
+        {/* Player Hand with Fixed Shadows */}
+        <div className={styles.handContainer}>
+          <div ref={handCardsRef} className={styles.handCards}>
+            <MobileHandArea />
+          </div>
+          {/* Fixed shadow elements */}
+          <div className={styles.leftShadow}></div>
+          <div className={styles.rightShadow}></div>
         </div>
+      </div>
 
-        {/* Sort and Hint Controls - positioned below cards but outside scroll area */}
+      {/* Secondary Controls - Fixed at bottom of screen when expanded */}
+      {handShelf.position >= SNAP_POSITIONS.EXPANDED && (
         <div className={styles.secondaryControls}>
           <HandControls
             selectedCount={selectedCards.length}
@@ -178,7 +220,7 @@ export function MobilePlayerSheet() {
             showPlayControls={false}
           />
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -662,27 +662,27 @@ body {
   background: white;
   box-shadow: none;
 }
-
-.card:not(.disabled):not(.playable):hover {
-  transform: translateY(-8px) scale(1.05);
-  background: #f8f9fa;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  z-index: 5;
+@media (hover: hover) {
+  .card:not(.disabled):not(.playable):hover {
+    transform: translateY(-15px) scale(1.05);
+    background: #f8f9fa;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 5;
+  }
 }
 
 /* Card Selection */
 .card.selected {
-  transform: translateY(-20px);
+  transform: translateY(-15px) scale(1.05);
   box-shadow: 0 15px 30px rgba(52, 152, 219, 0.4);
   border-color: #3498db !important;
   border-width: 3px;
   background: #e8f4fd !important;
-  z-index: 10;
   position: relative;
 }
 
 .card.selected:hover {
-  transform: translateY(-25px) scale(1.05);
+  transform: translateY(-15px) scale(1.05);
 }
 
 /* Selection Order Indicator */
@@ -935,8 +935,7 @@ body {
   /* Better spacing in hand */
   .hand {
     gap: 12px;
-    padding: 0 10px;
-    overflow-x: auto;
+    overflow: visible; /* Allow selected cards to show above container */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
@@ -946,10 +945,9 @@ body {
     display: flex;
     flex-wrap: nowrap;
     justify-content: flex-start;
-    padding: 0 15px;
     gap: 8px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    /* overflow-x: auto; */
+    overflow-y: visible; /* Allow selected cards to show above */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
@@ -1239,10 +1237,12 @@ body {
     transform: translateY(-15px) scale(1.05);
     box-shadow: 0 12px 25px rgba(52, 152, 219, 0.5);
     border-width: 4px;
+    position: relative;
   }
 
   .card.playable:hover {
-    transform: translateY(-12px) scale(1.08);
+    transform: translateY(-15px) scale(1.05);
+    /* transform: translateY(-12px) scale(1.08); */
     box-shadow: 0 12px 25px rgba(39, 174, 96, 0.5);
   }
 
@@ -3131,7 +3131,7 @@ body {
     width: calc(100% - 20px);
     max-height: 90vh;
   }
-  
+
   .in-game-menu-header,
   .room-info-header,
   .in-game-menu-content,
@@ -3139,15 +3139,15 @@ body {
   .in-game-menu-actions {
     padding: 15px 18px;
   }
-  
+
   .rule-indicators {
     grid-template-columns: 1fr;
   }
-  
+
   .sort-options {
     flex-direction: column;
   }
-  
+
   .in-game-menu-actions {
     flex-direction: column;
   }
