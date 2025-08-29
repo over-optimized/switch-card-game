@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { useGameStore, useUIStore } from '../stores';
+import { useIsMobile } from '../hooks';
 import styles from './HandControls.module.css';
 
 interface HandControlsProps {
@@ -15,7 +15,7 @@ export function HandControls({
   onClearSelection,
   showPlayControls = true, // Default to true for backward compatibility
 }: HandControlsProps) {
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const { settings, updateSettings } = useUIStore(state => ({
     settings: state.settings,
     updateSettings: state.updateSettings,
@@ -41,17 +41,6 @@ export function HandControls({
   const handleServePenalty = async () => {
     await servePenalty(playerId);
   };
-
-  // Detect mobile screen size
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 480);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   // Check if current player can serve penalty
   const canServePenalty =

@@ -4,7 +4,7 @@ import styles from './MobileWinModal.module.css';
 
 interface MobileWinModalProps {
   gameState: GameState;
-  onBackToMenu?: () => void;
+  onBackToMenu?: (() => void) | undefined;
 }
 
 export function MobileWinModal({

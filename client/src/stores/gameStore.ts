@@ -4,6 +4,11 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { GameSetupConfig } from '../components/MenuScreen';
 import {
+  gameToasts,
+  getCardDisplayString,
+  isTrickCard,
+} from '../utils/toastUtils';
+import {
   debugLogger,
   logCardPlay,
   logGame,
@@ -259,6 +264,10 @@ export const useGameStore = create<GameStore>()(
           // Handle local game creation response
           socket.on('local-game-created', ({ room, player, gameState }) => {
             logGame('Local game created', { room, player, gameState });
+
+            // Show game start notification
+            gameToasts.showGameStart();
+
             set({
               gameState,
               serverGameState: gameState,
@@ -272,6 +281,65 @@ export const useGameStore = create<GameStore>()(
           // Handle game events
           socket.on('card-played', ({ playerId, cardId, gameState }) => {
             logCardPlay(playerId, [cardId], true, 'Server confirmed card play');
+
+            // Show toast for opponent moves
+            if (playerId !== get().playerId) {
+              const oldGameState = get().gameState;
+              const player = gameState.players.find(
+                (p: any) => p.id === playerId,
+              );
+              const cardPlayed =
+                oldGameState?.discardPile[oldGameState.discardPile.length - 1];
+
+              if (player && cardPlayed) {
+                const cardDisplay = getCardDisplayString(
+                  cardPlayed.rank,
+                  cardPlayed.suit,
+                );
+
+                // Check for trick card effects
+                if (isTrickCard(cardPlayed.rank)) {
+                  let effect = '';
+
+                  if (cardPlayed.rank === '2') {
+                    const penalty = gameState.penaltyState;
+                    const oldPenalty = oldGameState.penaltyState;
+
+                    if (penalty.active) {
+                      if (oldPenalty?.active && oldPenalty.cards > 0) {
+                        // Penalty stacking
+                        const addedCards = penalty.cards - oldPenalty.cards;
+                        gameToasts.showPenaltyStacked(
+                          penalty.cards,
+                          addedCards,
+                        );
+                        gameToasts.show2sEffect(addedCards, player.name);
+                      } else {
+                        // New penalty created
+                        gameToasts.showPenaltyCreated(penalty.cards);
+                        gameToasts.show2sEffect(penalty.cards, player.name);
+                      }
+                    }
+                    effect = `+${penalty.cards} penalty cards`;
+                  } else if (cardPlayed.rank === 'A' && gameState.chosenSuit) {
+                    gameToasts.showAceEffect(
+                      gameState.chosenSuit as any,
+                      player.name,
+                    );
+                    effect = `Changed suit to ${gameState.chosenSuit}`;
+                  } else if (cardPlayed.rank === 'J') {
+                    // Jack skips next player - show toast
+                    gameToasts.showJackEffect(1, player.name);
+                    effect = 'Next player skipped';
+                  }
+
+                  gameToasts.showOpponentMove(player.name, cardDisplay, effect);
+                } else {
+                  gameToasts.showOpponentMove(player.name, cardDisplay);
+                }
+              }
+            }
+
             set({
               gameState,
               serverGameState: gameState,
@@ -282,8 +350,69 @@ export const useGameStore = create<GameStore>()(
             });
           });
 
+          socket.on('cards-played', ({ playerId, cardIds, gameState }) => {
+            logCardPlay(
+              playerId,
+              cardIds,
+              true,
+              `Server confirmed ${cardIds.length} cards played`,
+            );
+
+            // Show toast for opponent multiple card plays
+            if (playerId !== get().playerId) {
+              const player = gameState.players.find(
+                (p: any) => p.id === playerId,
+              );
+              if (player) {
+                const cardCount = cardIds.length;
+                gameToasts.showOpponentMove(
+                  player.name,
+                  `${cardCount} cards of same rank`,
+                  `Multiple card play (${cardCount}x)`,
+                );
+              }
+            }
+
+            set({
+              gameState,
+              serverGameState: gameState,
+              message:
+                playerId === get().playerId
+                  ? `${cardIds.length} cards played!`
+                  : `${playerId} played ${cardIds.length} cards`,
+            });
+          });
+
           socket.on('card-drawn', ({ playerId, gameState }) => {
             logNetwork(`Card drawn by ${playerId}`, 'success', { gameState });
+
+            // Show toast for penalty served notifications
+            if (playerId !== get().playerId) {
+              const oldGameState = get().gameState;
+              const player = gameState.players.find(
+                (p: any) => p.id === playerId,
+              );
+
+              if (player && oldGameState) {
+                const oldPlayerData = oldGameState.players.find(
+                  (p: any) => p.id === playerId,
+                );
+                const cardsDrawn =
+                  player.hand.length - (oldPlayerData?.hand.length || 0);
+
+                // Check if this was a penalty draw (multiple cards)
+                if (
+                  cardsDrawn > 1 ||
+                  (oldGameState.penaltyState?.active && cardsDrawn >= 1)
+                ) {
+                  gameToasts.showPenaltyServed(player.name, cardsDrawn);
+                } else if (cardsDrawn === 1) {
+                  // Regular card draw - show simple notification
+                  gameToasts.showOpponentMove(player.name, 'Drew a card');
+                }
+              }
+            }
+
             set({
               gameState,
               serverGameState: gameState,
@@ -296,13 +425,17 @@ export const useGameStore = create<GameStore>()(
 
           socket.on('game-finished', ({ winner, gameState }) => {
             logGame('Game finished', { winner, gameState });
+
+            // Show game end toast - winner is a Player object, not an ID
+            const isYou = winner.id === get().playerId;
+            const winnerName = winner.name;
+
+            gameToasts.showGameEnd(winnerName, isYou);
+
             set({
               gameState,
               serverGameState: gameState,
-              message:
-                winner === get().playerId
-                  ? 'You won! 🎉'
-                  : `${winner} won the game!`,
+              message: isYou ? 'You won! 🎉' : `${winnerName} won the game!`,
             });
           });
 
@@ -545,19 +678,43 @@ export const useGameStore = create<GameStore>()(
       // Apply optimistic update for immediate UI feedback
       get().applyOptimisticUpdate(actionId, selectedCards);
 
+      // Check for Ace plays that need suit selection BEFORE sending to server
+      if (selectedCards.length === 1) {
+        const cardId = selectedCards[0];
+        const player = gameState.players.find(p => p.id === playerId);
+        const card = player?.hand.find(c => c.id === cardId);
+
+        if (card?.rank === 'A') {
+          logNetwork(
+            `Ace detected - opening suit selection for ${card.rank}${card.suit}`,
+            'pending',
+          );
+          get().openSuitSelection(cardId);
+          return true; // Don't send to server yet - wait for suit selection
+        }
+      }
+
       // Send WebSocket message to server
       const socket = get().socket;
-      if (socket && selectedCards.length === 1) {
-        const cardId = selectedCards[0];
-        logNetwork(`Playing card ${cardId} via WebSocket`, 'pending');
-
-        // Server will respond with card-played event which updates the game state
-        socket.emit('play-card', { cardId });
+      if (socket) {
+        if (selectedCards.length === 1) {
+          const cardId = selectedCards[0];
+          logNetwork(`Playing single card ${cardId} via WebSocket`, 'pending');
+          socket.emit('play-card', { cardId });
+        } else {
+          logNetwork(
+            `Playing ${selectedCards.length} cards via WebSocket`,
+            'pending',
+            { cardIds: selectedCards },
+          );
+          socket.emit('play-cards', { cardIds: selectedCards });
+        }
 
         // Clear selection after sending
         get().clearSelection();
       } else {
-        // Fallback for multi-card plays or missing socket
+        // Fallback for missing socket
+        logNetwork('No socket available, using fallback confirmation', 'error');
         setTimeout(() => {
           get().confirmAction(actionId, get().gameState!);
         }, 1000);
@@ -1149,6 +1306,47 @@ export const useGameStore = create<GameStore>()(
     },
 
     closeSuitSelection: () => {
+      const { pendingAceCardId, pendingActions, optimisticUpdates } = get();
+
+      // If we have a pending Ace card, we need to rollback the optimistic update
+      if (pendingAceCardId) {
+        // Find the pending action that was created for this Ace play
+        const aceAction = pendingActions.find(
+          action =>
+            action.type === 'play-cards' &&
+            action.cardIds?.includes(pendingAceCardId),
+        );
+
+        if (aceAction) {
+          // Rollback the action (this will also rollback related optimistic updates)
+          get().rollbackAction(aceAction.id);
+          logNetwork(
+            `Ace play cancelled - rolled back action ${aceAction.id.slice(-6)}`,
+            'error',
+          );
+        } else {
+          // Fallback: look for optimistic updates related to this card
+          const aceUpdate = optimisticUpdates.find(update =>
+            update.cardIds?.includes(pendingAceCardId),
+          );
+          if (aceUpdate) {
+            get().rollbackOptimisticUpdate(aceUpdate.id);
+            logNetwork(
+              `Ace play cancelled - rolled back optimistic update ${aceUpdate.id.slice(-6)}`,
+              'error',
+            );
+          }
+        }
+
+        // Restore the card selection since the play was cancelled
+        set({
+          selectedCards: [pendingAceCardId],
+          selectionMode: 'ready',
+          cardSelectionOrder: { [pendingAceCardId]: 1 },
+          message: 'Ace play cancelled - card remains selected',
+        });
+      }
+
       set({
         suitSelectionOpen: false,
         pendingAceCardId: null,
@@ -1156,47 +1354,33 @@ export const useGameStore = create<GameStore>()(
     },
 
     selectSuit: async (suit: Suit) => {
-      const { gameState, playerId, pendingAceCardId } = get();
-      if (!gameState || !pendingAceCardId) return false;
+      const { pendingAceCardId, socket } = get();
+      if (!pendingAceCardId || !socket) return false;
 
       try {
-        const action = {
-          type: 'play-card' as const,
-          playerId,
+        logNetwork(`Playing Ace with chosen suit: ${suit}`, 'pending');
+
+        // Send Ace play to server with chosen suit
+        socket.emit('play-card', {
           cardId: pendingAceCardId,
           chosenSuit: suit,
-          timestamp: new Date(),
-        };
+        });
 
-        const updatedGameState = GameEngine.processAction(gameState, action);
+        // Close suit selection - server will respond with game state update
+        get().closeSuitSelection();
 
+        // Clear any selected cards since we just played
         set({
-          gameState: updatedGameState,
-          gameMode: updatedGameState.gameMode,
-          penaltyState: updatedGameState.penaltyState,
-          suitSelectionOpen: false,
-          pendingAceCardId: null,
           selectedCards: [],
           selectionMode: 'none',
           cardSelectionOrder: {},
-          message: `Ace played! Suit changed to ${suit}`,
+          message: `Playing Ace with ${suit} suit...`,
         });
-
-        get().addRecentMove('You', 'played Ace', `Changed suit to ${suit}`);
-
-        // Handle AI turn
-        if (updatedGameState.phase !== 'finished') {
-          const nextPlayer =
-            updatedGameState.players[updatedGameState.currentPlayerIndex];
-          if (nextPlayer.id !== get().playerId) {
-            setTimeout(() => get().executeComputerTurn(), 1500);
-          }
-        }
 
         return true;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : 'Invalid Ace play';
+          error instanceof Error ? error.message : 'Failed to play Ace';
         get().updateMessage(errorMessage);
         get().closeSuitSelection();
         return false;

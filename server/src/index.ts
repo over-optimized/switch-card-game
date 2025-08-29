@@ -98,6 +98,29 @@ const handleAITurns = async (roomCode: string) => {
     if (validCards.length > 0) {
       // AI plays first valid card
       const cardToPlay = validCards[0];
+
+      // Log opponent move details
+      console.log(
+        `[OPPONENT-MOVE] AI ${currentPlayer.id} playing ${cardToPlay.rank}${cardToPlay.suit} (${cardToPlay.id})`,
+      );
+
+      // Log penalty state before AI plays
+      const beforePenalty = room.gameState.penaltyState;
+      if (beforePenalty.active) {
+        console.log(
+          `[PENALTY-BEFORE] Active penalty: ${beforePenalty.cards} cards (type: ${beforePenalty.type}), target: ${beforePenalty.playerId}`,
+        );
+      }
+
+      // Log Jack effects before and after
+      const beforeSkips = room.gameState.skipsRemaining;
+      const beforeTurn = room.gameState.currentPlayerIndex;
+      if (cardToPlay.rank === 'J') {
+        console.log(
+          `[JACK-EFFECT] AI playing Jack ${cardToPlay.suit} - skipsRemaining: ${beforeSkips}, currentPlayer: ${beforeTurn}`,
+        );
+      }
+
       const updatedGame = GameEngine.playCard(
         room.gameState,
         currentPlayer.id,
@@ -105,6 +128,40 @@ const handleAITurns = async (roomCode: string) => {
       );
       room.gameState = updatedGame;
 
+      // Log skip behavior after Jack play
+      const afterSkips = updatedGame.skipsRemaining;
+      const afterTurn = updatedGame.currentPlayerIndex;
+      if (
+        cardToPlay.rank === 'J' ||
+        beforeSkips !== afterSkips ||
+        beforeTurn !== afterTurn
+      ) {
+        const nextPlayer = updatedGame.players[afterTurn];
+        console.log(
+          `[TURN-ADVANCE] After ${cardToPlay.rank}${cardToPlay.suit}: skipsRemaining ${beforeSkips} -> ${afterSkips}, turn ${beforeTurn} -> ${afterTurn} (${nextPlayer?.name || 'Unknown'})`,
+        );
+      }
+
+      // Log penalty state after AI plays
+      const afterPenalty = updatedGame.penaltyState;
+      if (
+        beforePenalty.active !== afterPenalty.active ||
+        beforePenalty.cards !== afterPenalty.cards
+      ) {
+        console.log(
+          `[PENALTY-AFTER] Penalty changed: active=${afterPenalty.active}, cards=${afterPenalty.cards}, type=${afterPenalty.type}, target=${afterPenalty.playerId}`,
+        );
+
+        if (cardToPlay.rank === '2') {
+          console.log(
+            `[TRICK-CARD-2s] 2${cardToPlay.suit} played - penalty should stack by +2 cards`,
+          );
+        }
+      }
+
+      console.log(
+        `[NETWORK] Broadcasting card-played event for AI ${currentPlayer.name} (${currentPlayer.id}): ${cardToPlay.rank}${cardToPlay.suit}`,
+      );
       io.to(roomCode).emit('card-played', {
         playerId: currentPlayer.id,
         cardId: cardToPlay.id,
@@ -129,8 +186,25 @@ const handleAITurns = async (roomCode: string) => {
         timestamp: new Date(),
       };
 
+      // Log penalty state before draw action
+      const hadActivePenalty = room.gameState.penaltyState.active;
+      const penaltyCards = room.gameState.penaltyState.cards;
+
+      if (hadActivePenalty) {
+        console.log(
+          `[AI-PENALTY] AI ${currentPlayer.id} serving penalty: ${penaltyCards} cards (type: ${room.gameState.penaltyState.type})`,
+        );
+      }
+
       const updatedGame = GameEngine.processAction(room.gameState, drawAction);
       room.gameState = updatedGame;
+
+      // Log results
+      if (hadActivePenalty) {
+        console.log(
+          `[AI-PENALTY-RESULT] Penalty cleared: ${!updatedGame.penaltyState.active}, mode: ${updatedGame.gameMode}`,
+        );
+      }
 
       io.to(roomCode).emit('card-drawn', {
         playerId: currentPlayer.id,
@@ -334,7 +408,7 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('play-card', ({ cardId }) => {
+  socket.on('play-card', ({ cardId, chosenSuit }) => {
     const { roomCode, playerId } = socket.data;
 
     if (!roomCode || !playerId) {
@@ -351,16 +425,96 @@ io.on('connection', socket => {
         return;
       }
 
+      // Find the card being played for detailed logging
+      const player = room.gameState.players.find(p => p.id === playerId);
+      const cardToPlay = player?.hand.find(c => c.id === cardId);
+
+      if (cardToPlay) {
+        console.log(
+          `[HUMAN-MOVE] Player ${playerId} playing ${cardToPlay.rank}${cardToPlay.suit} (${cardId})`,
+        );
+
+        // Log Ace suit selection
+        if (cardToPlay.rank === 'A' && chosenSuit) {
+          console.log(
+            `[ACE-SUIT-SELECTION] Player chose ${chosenSuit} for ${cardToPlay.rank}${cardToPlay.suit}`,
+          );
+        } else if (cardToPlay.rank === 'A' && !chosenSuit) {
+          console.log(
+            `[ACE-NO-SUIT] Player played ${cardToPlay.rank}${cardToPlay.suit} without suit selection - will default to ${cardToPlay.suit}`,
+          );
+        }
+
+        // Log penalty state before human plays
+        const beforePenalty = room.gameState.penaltyState;
+        if (beforePenalty.active) {
+          console.log(
+            `[PENALTY-BEFORE] Active penalty: ${beforePenalty.cards} cards (type: ${beforePenalty.type}), target: ${beforePenalty.playerId}`,
+          );
+        }
+      }
+
       const action = {
         type: 'play-card' as const,
         playerId,
         cardId,
+        chosenSuit,
         timestamp: new Date(),
       };
+
+      // Log Jack effects before and after for human players
+      const beforeSkips = room.gameState.skipsRemaining;
+      const beforeTurn = room.gameState.currentPlayerIndex;
+      if (cardToPlay?.rank === 'J') {
+        console.log(
+          `[JACK-EFFECT] Human playing Jack ${cardToPlay.suit} - skipsRemaining: ${beforeSkips}, currentPlayer: ${beforeTurn}`,
+        );
+      }
 
       const updatedGame = GameEngine.processAction(room.gameState, action);
       room.gameState = updatedGame;
 
+      // Log skip behavior after human Jack play
+      const afterSkips = updatedGame.skipsRemaining;
+      const afterTurn = updatedGame.currentPlayerIndex;
+      if (
+        cardToPlay?.rank === 'J' ||
+        beforeSkips !== afterSkips ||
+        beforeTurn !== afterTurn
+      ) {
+        const nextPlayer = updatedGame.players[afterTurn];
+        console.log(
+          `[TURN-ADVANCE] After ${cardToPlay?.rank}${cardToPlay?.suit}: skipsRemaining ${beforeSkips} -> ${afterSkips}, turn ${beforeTurn} -> ${afterTurn} (${nextPlayer?.name || 'Unknown'})`,
+        );
+      }
+
+      // Log penalty state after human plays
+      if (cardToPlay) {
+        const afterPenalty = updatedGame.penaltyState;
+        const beforePenalty = room.gameState.penaltyState;
+
+        if (
+          beforePenalty.active !== afterPenalty.active ||
+          beforePenalty.cards !== afterPenalty.cards
+        ) {
+          console.log(
+            `[PENALTY-AFTER] Penalty changed: active=${afterPenalty.active}, cards=${afterPenalty.cards}, type=${afterPenalty.type}, target=${afterPenalty.playerId}`,
+          );
+
+          if (cardToPlay.rank === '2') {
+            console.log(
+              `[TRICK-CARD-2s] 2${cardToPlay.suit} played - penalty should activate/stack by +2 cards`,
+            );
+          }
+        }
+      }
+
+      const humanPlayer = room.players.find(p => p.id === playerId);
+      const playedCard =
+        room.gameState.discardPile[room.gameState.discardPile.length - 1];
+      console.log(
+        `[NETWORK] Broadcasting card-played event for human ${humanPlayer?.name || 'Unknown'} (${playerId}): ${playedCard?.rank}${playedCard?.suit}`,
+      );
       io.to(roomCode).emit('card-played', {
         playerId,
         cardId,
@@ -377,8 +531,84 @@ io.on('connection', socket => {
         setTimeout(() => handleAITurns(roomCode), 1000);
       }
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Invalid card play';
+      console.error(
+        `[PLAY-CARD ERROR] Player ${playerId} in room ${roomCode}:`,
+        errorMessage,
+      );
       socket.emit('error', {
-        message: error instanceof Error ? error.message : 'Invalid card play',
+        message: errorMessage,
+      });
+    }
+  });
+
+  socket.on('play-cards', ({ cardIds }) => {
+    const { roomCode, playerId } = socket.data;
+
+    if (!roomCode || !playerId) {
+      socket.emit('error', { message: 'Not in a room' });
+      return;
+    }
+
+    updatePlayerActivity(socket.id);
+    try {
+      const room = RoomManager.getRoom(roomCode);
+
+      if (!room?.gameState) {
+        socket.emit('error', { message: 'Game not found' });
+        return;
+      }
+
+      console.log(
+        `[PLAY-CARDS] Player ${playerId} attempting to play ${cardIds.length} cards:`,
+        cardIds,
+      );
+
+      const action = {
+        type: 'play-cards' as const,
+        playerId,
+        cardIds,
+        timestamp: new Date(),
+      };
+
+      const updatedGame = GameEngine.processAction(room.gameState, action);
+      room.gameState = updatedGame;
+
+      console.log(
+        `[PLAY-CARDS SUCCESS] Player ${playerId} played cards successfully`,
+      );
+
+      const multiCardPlayer = room.players.find(p => p.id === playerId);
+      console.log(
+        `[NETWORK] Broadcasting cards-played event for ${multiCardPlayer?.name || 'Unknown'} (${playerId}): ${cardIds.length} cards`,
+      );
+      io.to(roomCode).emit('cards-played', {
+        playerId,
+        cardIds,
+        gameState: updatedGame,
+      });
+
+      if (updatedGame.phase === 'finished' && updatedGame.winner) {
+        io.to(roomCode).emit('game-finished', {
+          winner: updatedGame.winner,
+          gameState: updatedGame,
+        });
+      } else {
+        // Check if next turn is AI and trigger AI turn
+        setTimeout(() => handleAITurns(roomCode), 1000);
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Invalid cards play';
+      console.error(
+        `[PLAY-CARDS ERROR] Player ${playerId} in room ${roomCode}:`,
+        errorMessage,
+        'Cards:',
+        cardIds,
+      );
+      socket.emit('error', {
+        message: errorMessage,
       });
     }
   });
@@ -400,6 +630,16 @@ io.on('connection', socket => {
         return;
       }
 
+      // Log penalty state for human players too
+      const hadActivePenalty = room.gameState.penaltyState.active;
+      const penaltyCards = room.gameState.penaltyState.cards;
+
+      if (hadActivePenalty) {
+        console.log(
+          `[HUMAN-PENALTY] Player ${playerId} serving penalty: ${penaltyCards} cards (type: ${room.gameState.penaltyState.type})`,
+        );
+      }
+
       const action = {
         type: 'draw-card' as const,
         playerId,
@@ -408,6 +648,13 @@ io.on('connection', socket => {
 
       const updatedGame = GameEngine.processAction(room.gameState, action);
       room.gameState = updatedGame;
+
+      // Log results for human players
+      if (hadActivePenalty) {
+        console.log(
+          `[HUMAN-PENALTY-RESULT] Penalty cleared: ${!updatedGame.penaltyState.active}, mode: ${updatedGame.gameMode}`,
+        );
+      }
 
       io.to(roomCode).emit('card-drawn', { playerId, gameState: updatedGame });
 

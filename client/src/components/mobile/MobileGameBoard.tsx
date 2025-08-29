@@ -4,17 +4,16 @@ import { useGameStore } from '../../stores/gameStore';
 import { DeckArea } from '../DeckArea';
 import { MobileOpponentArea } from './MobileOpponentArea';
 import { MobilePlayerSheet } from './MobilePlayerSheet';
-import { MobileWinModal } from './MobileWinModal';
 import { PenaltyIndicator } from '../PenaltyIndicator';
 import { SkipIndicator } from '../SkipIndicator';
 import { SuitSelector } from '../SuitSelector';
 import styles from './MobileGameBoard.module.css';
 
 interface MobileGameBoardProps {
-  onBackToMenu?: (() => void) | undefined; // Still needed for MobileWinModal
+  // No longer needs onBackToMenu since MobileWinModal moved to GameContainer
 }
 
-export function MobileGameBoard({ onBackToMenu }: MobileGameBoardProps) {
+export function MobileGameBoard(_props: MobileGameBoardProps) {
   const gameState = useGameStore(state => state.gameState);
   const players = useGameStore(state => state.gameState?.players || []);
   const playerId = useGameStore(state => state.playerId);
@@ -53,13 +52,7 @@ export function MobileGameBoard({ onBackToMenu }: MobileGameBoardProps) {
         onClose={closeSuitSelection}
       />
 
-      {/* Win Modal - Shows on game completion */}
-      {gameState && (
-        <MobileWinModal
-          gameState={gameState}
-          {...(onBackToMenu && { onBackToMenu })}
-        />
-      )}
+      {/* Win Modal moved to GameContainer for unified platform coverage */}
     </div>
   );
 }

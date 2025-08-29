@@ -49,6 +49,13 @@ export class GameEngine {
           action.cardId!,
           action.chosenSuit,
         );
+      case 'play-cards':
+        return GameEngine.playCards(
+          gameState,
+          action.playerId,
+          action.cardIds!,
+          action.chosenSuit,
+        );
       case 'draw-card':
         return GameEngine.drawCard(gameState, action.playerId);
       default:
@@ -98,7 +105,90 @@ export class GameEngine {
     return GameEngine.advanceTurn(updatedGameState);
   }
 
+  static playCards(
+    gameState: GameState,
+    playerId: string,
+    cardIds: string[],
+    chosenSuit?: Suit,
+  ): GameState {
+    if (!cardIds.length) {
+      throw new Error('No cards provided');
+    }
+
+    const playerIndex = gameState.players.findIndex(p => p.id === playerId);
+    if (playerIndex === -1) {
+      throw new Error('Player not found');
+    }
+
+    const player = gameState.players[playerIndex];
+
+    // Validate all cards exist in hand
+    const cards: Card[] = [];
+    for (const cardId of cardIds) {
+      const card = player.hand.find(c => c.id === cardId);
+      if (!card) {
+        throw new Error(`Card ${cardId} not found in player hand`);
+      }
+      cards.push(card);
+    }
+
+    // Validate all cards have the same rank (Switch rule for multiple cards)
+    const firstCard = cards[0];
+    const allSameRank = cards.every(card => card.rank === firstCard.rank);
+    if (!allSameRank) {
+      throw new Error(
+        'All cards must have the same rank for multiple card play',
+      );
+    }
+
+    // Validate the first card is a valid play (determines legality)
+    if (!GameEngine.isValidPlay(gameState, firstCard)) {
+      throw new Error('Invalid card play - first card does not match');
+    }
+
+    // Remove all cards from player's hand
+    let updatedPlayers = [...gameState.players];
+    let updatedPlayer = { ...player };
+
+    for (const cardId of cardIds) {
+      updatedPlayer = removeCardFromHand(updatedPlayer, cardId);
+    }
+    updatedPlayers[playerIndex] = updatedPlayer;
+
+    // Add all cards to discard pile (last card will be on top)
+    let updatedGameState: GameState = {
+      ...gameState,
+      players: updatedPlayers,
+      discardPile: [...gameState.discardPile, ...cards],
+    };
+
+    // Handle card effects based on the top card (last card played)
+    const topCard = cards[cards.length - 1];
+
+    // Apply effects multiple times based on number of cards played
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      updatedGameState = GameEngine.handle2sEffect(updatedGameState, card);
+      updatedGameState = GameEngine.handleJackEffect(updatedGameState, card);
+    }
+
+    // Handle Ace effect only once (for the top card)
+    updatedGameState = GameEngine.handleAceEffect(
+      updatedGameState,
+      topCard,
+      chosenSuit,
+    );
+
+    return GameEngine.advanceTurn(updatedGameState);
+  }
+
   static drawCard(gameState: GameState, playerId: string): GameState {
+    // Check if there's an active penalty - if so, serve the penalty instead of drawing 1 card
+    if (gameState.penaltyState.active) {
+      return GameEngine.servePenalty(gameState, playerId);
+    }
+
+    // Normal draw: 1 card and advance turn
     const updatedGameState = DeckManager.drawCard(gameState, playerId);
     return GameEngine.advanceTurn(updatedGameState);
   }
@@ -150,19 +240,24 @@ export class GameEngine {
     let nextPlayerIndex = getNextPlayerIndex(updatedGameState);
 
     // Handle skipping players when Jacks have been played
-    if (updatedGameState.skipsRemaining > 0) {
-      // Skip one player and decrement the counter
+    // We need to skip players WITHOUT giving them turns
+    while (updatedGameState.skipsRemaining > 0) {
+      // Skip the next player entirely
+      nextPlayerIndex = getNextPlayerIndex(updatedGameState);
       updatedGameState = {
         ...updatedGameState,
         currentPlayerIndex: nextPlayerIndex,
         skipsRemaining: updatedGameState.skipsRemaining - 1,
       };
 
-      // If more skips remain, advance again
+      // Calculate the next player index for potential further skips
       if (updatedGameState.skipsRemaining > 0) {
-        return GameEngine.advanceTurn(updatedGameState);
+        nextPlayerIndex = getNextPlayerIndex(updatedGameState);
       }
-    } else {
+    }
+
+    // If no skips, just advance normally
+    if (gameState.skipsRemaining === 0) {
       updatedGameState = {
         ...updatedGameState,
         currentPlayerIndex: nextPlayerIndex,
@@ -200,6 +295,11 @@ export class GameEngine {
 
     // Activate or increase 2s penalty
     const currentPenalty = gameState.penaltyState;
+
+    // The penalty targets the NEXT player (who will have to resolve it)
+    const nextPlayerIndex = getNextPlayerIndex(gameState);
+    const targetPlayerId = gameState.players[nextPlayerIndex]?.id;
+
     return {
       ...gameState,
       gameMode: 'active-2s',
@@ -207,7 +307,7 @@ export class GameEngine {
         active: true,
         type: '2s',
         cards: currentPenalty.cards + 2, // Each 2 adds 2 cards
-        playerId: gameState.players[gameState.currentPlayerIndex]?.id,
+        playerId: targetPlayerId, // Target the NEXT player, not current player
       },
     };
   }

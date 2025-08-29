@@ -5,11 +5,12 @@ interface GameBoardProps {
   onBackToMenu?: (() => void) | undefined;
 }
 
-export function GameBoard({ onBackToMenu }: GameBoardProps) {
+export function GameBoard(_props: GameBoardProps) {
   const gameState = useGameStore(state => state.gameState);
 
   if (!gameState) return null;
 
   // Always use mobile-first layout - desktop responsive adjustments handled via CSS
-  return <MobileGameBoard onBackToMenu={onBackToMenu} />;
+  // onBackToMenu is handled at GameContainer level for MobileWinModal
+  return <MobileGameBoard />;
 }
