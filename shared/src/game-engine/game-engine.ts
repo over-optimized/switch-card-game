@@ -249,7 +249,7 @@ export class GameEngine {
         currentPlayerIndex: nextPlayerIndex,
         skipsRemaining: updatedGameState.skipsRemaining - 1,
       };
-      
+
       // Calculate the next player index for potential further skips
       if (updatedGameState.skipsRemaining > 0) {
         nextPlayerIndex = getNextPlayerIndex(updatedGameState);

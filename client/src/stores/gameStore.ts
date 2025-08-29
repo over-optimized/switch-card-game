@@ -1306,6 +1306,47 @@ export const useGameStore = create<GameStore>()(
     },
 
     closeSuitSelection: () => {
+      const { pendingAceCardId, pendingActions, optimisticUpdates } = get();
+
+      // If we have a pending Ace card, we need to rollback the optimistic update
+      if (pendingAceCardId) {
+        // Find the pending action that was created for this Ace play
+        const aceAction = pendingActions.find(
+          action =>
+            action.type === 'play-cards' &&
+            action.cardIds?.includes(pendingAceCardId),
+        );
+
+        if (aceAction) {
+          // Rollback the action (this will also rollback related optimistic updates)
+          get().rollbackAction(aceAction.id);
+          logNetwork(
+            `Ace play cancelled - rolled back action ${aceAction.id.slice(-6)}`,
+            'error',
+          );
+        } else {
+          // Fallback: look for optimistic updates related to this card
+          const aceUpdate = optimisticUpdates.find(update =>
+            update.cardIds?.includes(pendingAceCardId),
+          );
+          if (aceUpdate) {
+            get().rollbackOptimisticUpdate(aceUpdate.id);
+            logNetwork(
+              `Ace play cancelled - rolled back optimistic update ${aceUpdate.id.slice(-6)}`,
+              'error',
+            );
+          }
+        }
+
+        // Restore the card selection since the play was cancelled
+        set({
+          selectedCards: [pendingAceCardId],
+          selectionMode: 'ready',
+          cardSelectionOrder: { [pendingAceCardId]: 1 },
+          message: 'Ace play cancelled - card remains selected',
+        });
+      }
+
       set({
         suitSelectionOpen: false,
         pendingAceCardId: null,

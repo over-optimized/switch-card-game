@@ -103,10 +103,7 @@ export function MobilePlayerSheet() {
     }
   };
 
-  // Calculate expansion percentage for label
-  const expansionPercentage = Math.round(
-    (handShelf.position / MAX_POSITION) * 100,
-  );
+  // Remove unused expansion percentage calculation since we simplified the drag handle
 
   if (!currentPlayer) return null;
 

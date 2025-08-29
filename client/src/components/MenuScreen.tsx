@@ -179,7 +179,9 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             <div className={styles.stackedCard}>🃏</div>
           </div>
           <h1 className={styles.headerTitle}>Switch</h1>
-          <p className={styles.headerDescription}>Configure your game and start playing!</p>
+          <p className={styles.headerDescription}>
+            Configure your game and start playing!
+          </p>
         </div>
 
         {/* Quick Start Section - Always visible with presets */}
@@ -323,7 +325,10 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
               </div>
 
               <div className={styles.menuActions}>
-                <button className={styles.startGameBtn} onClick={handleStartGame}>
+                <button
+                  className={styles.startGameBtn}
+                  onClick={handleStartGame}
+                >
                   Start Custom Game
                 </button>
               </div>

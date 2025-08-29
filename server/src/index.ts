@@ -131,7 +131,11 @@ const handleAITurns = async (roomCode: string) => {
       // Log skip behavior after Jack play
       const afterSkips = updatedGame.skipsRemaining;
       const afterTurn = updatedGame.currentPlayerIndex;
-      if (cardToPlay.rank === 'J' || beforeSkips !== afterSkips || beforeTurn !== afterTurn) {
+      if (
+        cardToPlay.rank === 'J' ||
+        beforeSkips !== afterSkips ||
+        beforeTurn !== afterTurn
+      ) {
         const nextPlayer = updatedGame.players[afterTurn];
         console.log(
           `[TURN-ADVANCE] After ${cardToPlay.rank}${cardToPlay.suit}: skipsRemaining ${beforeSkips} -> ${afterSkips}, turn ${beforeTurn} -> ${afterTurn} (${nextPlayer?.name || 'Unknown'})`,
