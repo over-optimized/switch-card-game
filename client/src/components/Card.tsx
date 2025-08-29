@@ -1,8 +1,6 @@
-import {
-  Card as CardType,
-  getCardDisplayName,
-  getCardColorClass,
-} from 'switch-shared';
+import { Card as CardType, getCardDisplayName } from 'switch-shared';
+import { useRef } from 'react';
+import styles from './Card.module.css';
 
 interface CardProps {
   card: CardType | null;
@@ -35,17 +33,29 @@ export function Card({
   onDragStart,
   onDragEnd,
 }: CardProps) {
+  const touchDataRef = useRef<{
+    startTime: number;
+    startX: number;
+    startY: number;
+    moved: boolean;
+  } | null>(null);
   if (!card) {
-    return <div className="card">🃏</div>;
+    return <div className={styles.card}>🃏</div>;
   }
 
+  const getCardColorClass = (card: CardType) => {
+    return card.suit === 'hearts' || card.suit === 'diamonds'
+      ? styles.cardRed
+      : styles.cardBlack;
+  };
+
   const classes = [
-    'card',
+    styles.card,
     getCardColorClass(card),
-    isPlayable && !isDisabled && !disabled ? 'playable' : '',
-    isDisabled || disabled ? 'disabled' : '',
-    isSelected ? 'selected' : '',
-    isDragging ? 'dragging' : '',
+    isPlayable && !isDisabled && !disabled ? styles.playable : '',
+    isDisabled || disabled ? styles.disabled : '',
+    isSelected ? styles.selected : '',
+    isDragging ? styles.dragging : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -72,16 +82,52 @@ export function Card({
     }
   };
 
-  const handleTouchStart = () => {
-    if (!disabled && !isDisabled && onTouchStart) {
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (disabled || isDisabled) return;
+
+    const touch = e.touches[0];
+    touchDataRef.current = {
+      startTime: Date.now(),
+      startX: touch.clientX,
+      startY: touch.clientY,
+      moved: false,
+    };
+
+    if (onTouchStart) {
       onTouchStart();
     }
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchDataRef.current) return;
+
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchDataRef.current.startX);
+    const deltaY = Math.abs(touch.clientY - touchDataRef.current.startY);
+
+    // Consider it moved if touch moves more than 10px in any direction
+    if (deltaX > 10 || deltaY > 10) {
+      touchDataRef.current.moved = true;
+    }
+  };
+
   const handleTouchEnd = () => {
-    if (!disabled && !isDisabled && onTouchEnd) {
+    if (disabled || isDisabled || !touchDataRef.current) return;
+
+    const { startTime, moved } = touchDataRef.current;
+    const touchDuration = Date.now() - startTime;
+
+    // Only trigger selection if:
+    // 1. Touch was short (less than 300ms) OR it was a long press (more than 500ms)
+    // 2. Touch didn't move significantly (not a scroll gesture)
+    const isQuickTap = touchDuration < 300;
+    const isLongPress = touchDuration > 500;
+
+    if ((isQuickTap || isLongPress) && !moved && onTouchEnd) {
       onTouchEnd();
     }
+
+    touchDataRef.current = null;
   };
 
   return (
@@ -89,6 +135,7 @@ export function Card({
       className={classes}
       onClick={handleClick}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       draggable={!disabled && !isDisabled && !isDiscard}
       onDragStart={handleDragStart}
@@ -97,7 +144,7 @@ export function Card({
     >
       {getCardDisplayName(card)}
       {selectionOrder && (
-        <div className="selection-order">{selectionOrder}</div>
+        <div className={styles.selectionOrder}>{selectionOrder}</div>
       )}
     </div>
   );

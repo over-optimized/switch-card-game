@@ -554,12 +554,9 @@ export const useGameStore = create<GameStore>()(
     },
 
     selectCard: (cardId: string) => {
-      console.log('🎯 SELECTCARD CALLED:', { cardId });
       const { gameState, playerId, selectedCards, cardSelectionOrder } = get();
-      console.log('🎯 Current state:', { selectedCards, playerId });
 
       if (!gameState) {
-        console.log('🎯 ERROR: No gameState');
         return;
       }
 
@@ -579,13 +576,11 @@ export const useGameStore = create<GameStore>()(
       const isCurrentlySelected = selectedCards.includes(cardId);
 
       if (isCurrentlySelected) {
-        console.log('🎯 DESELECTING card:', cardId);
         // Deselect card
         const newSelection = selectedCards.filter(id => id !== cardId);
         const newOrder = { ...cardSelectionOrder };
         delete newOrder[cardId];
 
-        console.log('🎯 New selection after deselect:', newSelection);
         set({
           selectedCards: newSelection,
           cardSelectionOrder: newOrder,
@@ -610,7 +605,6 @@ export const useGameStore = create<GameStore>()(
           }
         }
 
-        console.log('🎯 SELECTING card:', cardId);
         const newSelectedCards = [...selectedCards, cardId];
         const selectionOrder = newSelectedCards.length; // 1, 2, 3, etc.
         console.log('🎯 New selection after select:', newSelectedCards);
