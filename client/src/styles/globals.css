@@ -935,7 +935,6 @@ body {
   /* Better spacing in hand */
   .hand {
     gap: 12px;
-    padding: 0 10px;
     overflow-x: auto;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
@@ -946,7 +945,6 @@ body {
     display: flex;
     flex-wrap: nowrap;
     justify-content: flex-start;
-    padding: 0 15px;
     gap: 8px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -3131,7 +3129,7 @@ body {
     width: calc(100% - 20px);
     max-height: 90vh;
   }
-  
+
   .in-game-menu-header,
   .room-info-header,
   .in-game-menu-content,
@@ -3139,15 +3137,15 @@ body {
   .in-game-menu-actions {
     padding: 15px 18px;
   }
-  
+
   .rule-indicators {
     grid-template-columns: 1fr;
   }
-  
+
   .sort-options {
     flex-direction: column;
   }
-  
+
   .in-game-menu-actions {
     flex-direction: column;
   }
