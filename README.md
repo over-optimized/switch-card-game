@@ -74,6 +74,13 @@ pnpm ci                   # Full CI pipeline (lint + test + build)
 3. **Start Game**: Room host starts the game when ready
 4. **Play**: Take turns playing cards or drawing from deck
 
+### Connection Features
+
+- **Visual Status Indicators**: Real-time connection status (🟢 Connected, 🟠 Connecting, 🔴 Offline)
+- **Automatic Reconnection**: Exponential backoff strategy with progress tracking
+- **Session Persistence**: 30-minute room session storage with automatic restoration
+- **Enhanced Error Handling**: Clear feedback for connection issues and recovery guidance
+
 ## 🏗️ Architecture
 
 ### Project Structure
@@ -207,10 +214,13 @@ VITE_WS_URL=https://your-railway-app.railway.app
 ### Phase 2: Multiplayer ✅ Complete
 
 - [x] WebSocket server setup
-- [x] Room-based matchmaking
+- [x] Room-based matchmaking  
 - [x] Real-time game state sync
 - [x] React client UI for multiplayer
 - [x] Local single-player mode with AI
+- [x] Connection stability with automatic reconnection
+- [x] Visual connection status indicators
+- [x] Room session persistence and recovery
 
 ### Phase 3: Advanced Features 🔴 Deferred
 
