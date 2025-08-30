@@ -267,6 +267,12 @@ export const useGameStore = create<GameStore>()(
               playerId: socketId,
             });
 
+            // DEBUG: Track playerId assignment during socket connection
+            console.log(
+              '[Jack Debug] Socket connected - playerId set to:',
+              socketId,
+            );
+
             logNetwork('WebSocket connected', 'success', {
               id: socketId,
             });
@@ -349,10 +355,21 @@ export const useGameStore = create<GameStore>()(
             // Show game start notification
             gameToasts.showGameStart();
 
+            // DEBUG: Track playerId change during local game creation
+            const oldPlayerId = get().playerId;
+            console.log(
+              '[Jack Debug] Local game created - playerId changing:',
+              {
+                from: oldPlayerId,
+                to: player.id,
+              },
+            );
+
             set({
               gameState,
               serverGameState: gameState,
               roomCode: room.code,
+              playerId: player.id, // FIX: Set playerId to match server player ID
               isHost: player.isHost,
               isLoading: false,
               message: 'Game started!',
@@ -363,14 +380,24 @@ export const useGameStore = create<GameStore>()(
           socket.on('card-played', ({ playerId, cardId, gameState }) => {
             logCardPlay(playerId, [cardId], true, 'Server confirmed card play');
 
+            // DEBUG: Track playerId comparison for Jack toast issue
+            const currentPlayerId = get().playerId;
+            console.log('[Jack Debug] card-played event:', {
+              eventPlayerId: playerId,
+              clientPlayerId: currentPlayerId,
+              isOpponent: playerId !== currentPlayerId,
+              cardId,
+            });
+
             // Show toast for opponent moves
             if (playerId !== get().playerId) {
               const oldGameState = get().gameState;
               const player = gameState.players.find(
                 (p: any) => p.id === playerId,
               );
+              // Get the card that was just played (top of new discard pile)
               const cardPlayed =
-                oldGameState?.discardPile[oldGameState.discardPile.length - 1];
+                gameState.discardPile[gameState.discardPile.length - 1];
 
               if (player && cardPlayed) {
                 const cardDisplay = getCardDisplayString(
@@ -384,7 +411,7 @@ export const useGameStore = create<GameStore>()(
 
                   if (cardPlayed.rank === '2') {
                     const penalty = gameState.penaltyState;
-                    const oldPenalty = oldGameState.penaltyState;
+                    const oldPenalty = oldGameState?.penaltyState;
 
                     if (penalty.active) {
                       if (oldPenalty?.active && oldPenalty.cards > 0) {
@@ -410,7 +437,31 @@ export const useGameStore = create<GameStore>()(
                     effect = `Changed suit to ${gameState.chosenSuit}`;
                   } else if (cardPlayed.rank === 'J') {
                     // Jack skips next player - show toast
-                    gameToasts.showJackEffect(1, player.name);
+                    console.log(
+                      '[Jack Debug] Showing Jack effect for opponent:',
+                      {
+                        playerName: player.name,
+                        playerId: playerId,
+                        clientPlayerId: get().playerId,
+                        shouldShowAsOpponent: playerId !== get().playerId,
+                      },
+                    );
+
+                    // SAFEGUARD: Double-check that this is actually an opponent
+                    // Don't show if player name suggests it's the current player
+                    if (
+                      player.name !== 'You' &&
+                      player.name !==
+                        get().gameState?.players?.find(
+                          p => p.id === get().playerId,
+                        )?.name
+                    ) {
+                      gameToasts.showJackEffect(1, player.name);
+                    } else {
+                      console.log(
+                        '[Jack Debug] Prevented showing opponent toast for own play',
+                      );
+                    }
                     effect = 'Next player skipped';
                   }
 
@@ -571,6 +622,14 @@ export const useGameStore = create<GameStore>()(
         const handleRoomCreated = (data: any) => {
           clearTimeout(timeout);
           console.log('[Room Debug] Room created successfully', data);
+
+          // DEBUG: Track playerId change during room creation
+          const oldPlayerId = get().playerId;
+          console.log('[Jack Debug] Room created - playerId changing:', {
+            from: oldPlayerId,
+            to: data.player.id,
+          });
+
           set({
             roomCode: data.room.code,
             playerId: data.player.id,
@@ -629,6 +688,14 @@ export const useGameStore = create<GameStore>()(
         const handleRoomJoined = (data: any) => {
           clearTimeout(timeout);
           console.log('[Room Debug] Room joined successfully', data);
+
+          // DEBUG: Track playerId change during room joining
+          const oldPlayerId = get().playerId;
+          console.log('[Jack Debug] Room joined - playerId changing:', {
+            from: oldPlayerId,
+            to: data.player.id,
+          });
+
           set({
             roomCode: data.room.code,
             playerId: data.player.id,
