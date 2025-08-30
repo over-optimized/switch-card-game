@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useUIStore } from '../stores/uiStore';
 import styles from './Toast.module.css';
 
@@ -10,6 +10,11 @@ export interface ToastMessage {
   icon?: string;
   duration?: number;
   priority?: 'low' | 'normal' | 'high';
+  // Stagger display properties
+  queueDelay?: number | undefined;
+  displayOrder?: number | undefined;
+  animationState?: 'pending' | 'entering' | 'visible' | 'exiting' | undefined;
+  scheduledTime?: number | undefined;
 }
 
 interface ToastProps {
@@ -19,18 +24,41 @@ interface ToastProps {
 
 function Toast({ toast, onDismiss }: ToastProps) {
   const theme = useUIStore(state => state.theme);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const duration = toast.duration ?? 4000; // Default 4 seconds
-    const timer = setTimeout(() => {
-      onDismiss(toast.id);
-    }, duration);
+    // Skip auto-dismiss for pending/exiting toasts
+    if (
+      toast.animationState === 'pending' ||
+      toast.animationState === 'exiting'
+    ) {
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [toast.id, toast.duration, onDismiss]);
+    const duration = toast.duration ?? 4000; // Default 4 seconds
+    let timer: number;
+
+    if (!isHovered) {
+      timer = window.setTimeout(() => {
+        onDismiss(toast.id);
+      }, duration);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [toast.id, toast.duration, toast.animationState, isHovered, onDismiss]);
 
   const handleClick = () => {
     onDismiss(toast.id);
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
   };
 
   const getToastIcon = () => {
@@ -52,11 +80,32 @@ function Toast({ toast, onDismiss }: ToastProps) {
     }
   };
 
+  // Get CSS classes including animation state
+  const toastClasses = [
+    styles.toast,
+    styles[toast.type],
+    styles[toast.priority || 'normal'],
+    toast.animationState ? styles[toast.animationState] : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
-      className={`${styles.toast} ${styles[toast.type]} ${styles[toast.priority || 'normal']}`}
+      className={toastClasses}
       data-theme={theme}
       onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={
+        {
+          '--display-order': toast.displayOrder || 0,
+          '--stagger-delay': `${toast.queueDelay || 0}ms`,
+        } as React.CSSProperties & {
+          '--display-order': number;
+          '--stagger-delay': string;
+        }
+      }
     >
       <div className={styles.toastIcon}>{getToastIcon()}</div>
       <div className={styles.toastContent}>
@@ -75,15 +124,44 @@ function Toast({ toast, onDismiss }: ToastProps) {
 }
 
 export function ToastContainer() {
-  const { toasts, dismissToast } = useUIStore(state => ({
+  const {
+    toasts,
+    dismissToast,
+    pauseToastAutoDismiss,
+    resumeToastAutoDismiss,
+  } = useUIStore(state => ({
     toasts: state.toasts,
     dismissToast: state.dismissToast,
+    pauseToastAutoDismiss: state.pauseToastAutoDismiss,
+    resumeToastAutoDismiss: state.resumeToastAutoDismiss,
   }));
 
+  const handleContainerMouseEnter = () => {
+    toasts.forEach(toast => {
+      pauseToastAutoDismiss(toast.id);
+    });
+  };
+
+  const handleContainerMouseLeave = () => {
+    toasts.forEach(toast => {
+      resumeToastAutoDismiss(toast.id);
+    });
+  };
+
+  if (toasts.length === 0) return null;
+
   return (
-    <div className={styles.toastContainer}>
-      {toasts.map(toast => (
-        <Toast key={toast.id} toast={toast} onDismiss={dismissToast} />
+    <div
+      className={styles.toastContainer}
+      onMouseEnter={handleContainerMouseEnter}
+      onMouseLeave={handleContainerMouseLeave}
+    >
+      {toasts.map((toast, index) => (
+        <Toast
+          key={toast.id}
+          toast={{ ...toast, displayOrder: toast.displayOrder ?? index }}
+          onDismiss={dismissToast}
+        />
       ))}
     </div>
   );

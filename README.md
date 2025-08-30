@@ -65,6 +65,7 @@ pnpm ci                   # Full CI pipeline (lint + test + build)
 - Players take turns playing cards that match the top card's suit or rank
 - If you can't play, draw a card from the deck
 - First player to empty their hand wins!
+- **Enhanced Win Screen**: Enjoy meaningful game statistics and player performance insights after each game
 
 ### Multiplayer Setup
 
@@ -72,6 +73,13 @@ pnpm ci                   # Full CI pipeline (lint + test + build)
 2. **Join Room**: Other players use the room code to join
 3. **Start Game**: Room host starts the game when ready
 4. **Play**: Take turns playing cards or drawing from deck
+
+### Connection Features
+
+- **Visual Status Indicators**: Real-time connection status (🟢 Connected, 🟠 Connecting, 🔴 Offline)
+- **Automatic Reconnection**: Exponential backoff strategy with progress tracking
+- **Session Persistence**: 30-minute room session storage with automatic restoration
+- **Enhanced Error Handling**: Clear feedback for connection issues and recovery guidance
 
 ## 🏗️ Architecture
 
@@ -102,18 +110,20 @@ switch-card-game/
 #### Unified Mobile-First Architecture
 - **GameBoard**: Unified responsive component using mobile-first patterns
 - **MobileGameBoard**: Mobile-optimized game layout with bottom sheets  
-- **MobileWinModal**: Full-screen celebration modal for game completion
+- **MobileWinModal**: Full-screen celebration modal with enhanced statistics display
 - **MobilePlayerSheet**: Draggable bottom sheet for player hand management
 - **MobileHandArea**: Unified touch/click-optimized card interaction system
 - **HandControls**: CSS modules-based responsive controls (75%/25% layout)
+- **Game Statistics**: Smart statistics tracking with contextual player achievements
 
 #### Network-First Game Architecture
-- **Game Engine**: Core game logic with penalty and special card systems
+- **Game Engine**: Core game logic with penalty and special card systems and comprehensive statistics tracking
 - **WebSocket Client**: Environment-based URLs (dev vs production)
 - **State Management**: Zustand stores with optimistic updates
 - **Room Manager**: Handles multiplayer room creation/joining and AI opponents
 - **Server**: Express + Socket.IO with Railway deployment configuration
 - **Type Safety**: Shared TypeScript interfaces across client/server
+- **Statistics System**: Real-time game metrics with smart selection algorithms
 
 ## 🧪 Testing
 
@@ -204,10 +214,13 @@ VITE_WS_URL=https://your-railway-app.railway.app
 ### Phase 2: Multiplayer ✅ Complete
 
 - [x] WebSocket server setup
-- [x] Room-based matchmaking
+- [x] Room-based matchmaking  
 - [x] Real-time game state sync
 - [x] React client UI for multiplayer
 - [x] Local single-player mode with AI
+- [x] Connection stability with automatic reconnection
+- [x] Visual connection status indicators
+- [x] Room session persistence and recovery
 
 ### Phase 3: Advanced Features 🔴 Deferred
 

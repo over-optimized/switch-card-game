@@ -26,6 +26,7 @@ interface UIStore {
   // Menu UI state
   menuSections: {
     quickStartExpanded: boolean;
+    onlinePlayExpanded: boolean;
     playerSetupExpanded: boolean;
   };
 
@@ -38,6 +39,10 @@ interface UIStore {
 
   // Toast notifications
   toasts: ToastMessage[];
+  toastQueue: ToastMessage[];
+  staggerDelay: number;
+  maxSimultaneousToasts: number;
+  pausedToasts: Set<string>;
 
   // Actions
   setCurrentScreen: (screen: 'menu' | 'game' | 'settings') => void;
@@ -51,9 +56,11 @@ interface UIStore {
   setTheme: (theme: 'light' | 'dark' | 'auto') => void;
 
   // Menu section actions
-  toggleMenuSection: (section: 'quickStart' | 'playerSetup') => void;
+  toggleMenuSection: (
+    section: 'quickStart' | 'onlinePlay' | 'playerSetup',
+  ) => void;
   setMenuSectionExpanded: (
-    section: 'quickStart' | 'playerSetup',
+    section: 'quickStart' | 'onlinePlay' | 'playerSetup',
     expanded: boolean,
   ) => void;
 
@@ -73,6 +80,11 @@ interface UIStore {
   showToast: (toast: Omit<ToastMessage, 'id'>) => void;
   dismissToast: (id: string) => void;
   clearAllToasts: () => void;
+  scheduleToast: (toast: Omit<ToastMessage, 'id'>) => void;
+  processToastQueue: () => void;
+  pauseToastAutoDismiss: (id: string) => void;
+  resumeToastAutoDismiss: (id: string) => void;
+  clearToastsOnGameEnd: () => void;
 }
 
 const defaultSettings: GameSettings = {
@@ -108,7 +120,7 @@ const defaultHandShelf: HandShelfState = {
 
 export const useUIStore = create<UIStore>()(
   persist(
-    set => ({
+    (set, get) => ({
       // Initial state
       currentScreen: 'menu',
       gameSetup: null,
@@ -120,12 +132,17 @@ export const useUIStore = create<UIStore>()(
       handShelf: defaultHandShelf,
       menuSections: {
         quickStartExpanded: true, // Show quick start by default for mobile-first approach
+        onlinePlayExpanded: false, // Hide online play by default
         playerSetupExpanded: false, // Hide advanced config by default
       },
       inGameMenuOpen: false,
       roomInfoOpen: false,
       theme: 'auto',
       toasts: [],
+      toastQueue: [],
+      staggerDelay: 150, // 150ms between toast appearances
+      maxSimultaneousToasts: 5,
+      pausedToasts: new Set(),
 
       // Actions
       setCurrentScreen: (screen: 'menu' | 'game' | 'settings') => {
@@ -179,7 +196,9 @@ export const useUIStore = create<UIStore>()(
       },
 
       // Menu section actions
-      toggleMenuSection: (section: 'quickStart' | 'playerSetup') => {
+      toggleMenuSection: (
+        section: 'quickStart' | 'onlinePlay' | 'playerSetup',
+      ) => {
         set(state => ({
           menuSections: {
             ...state.menuSections,
@@ -192,7 +211,7 @@ export const useUIStore = create<UIStore>()(
       },
 
       setMenuSectionExpanded: (
-        section: 'quickStart' | 'playerSetup',
+        section: 'quickStart' | 'onlinePlay' | 'playerSetup',
         expanded: boolean,
       ) => {
         set(state => ({
@@ -253,33 +272,195 @@ export const useUIStore = create<UIStore>()(
         }));
       },
 
-      // Toast notification actions
-      showToast: (toast: Omit<ToastMessage, 'id'>) => {
+      // Enhanced toast scheduling with stagger support
+      scheduleToast: (toast: Omit<ToastMessage, 'id'>) => {
+        const { toasts, staggerDelay, maxSimultaneousToasts } = get();
         const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const newToast: ToastMessage = { ...toast, id };
+
+        // High priority toasts appear immediately
+        if (toast.priority === 'high') {
+          get().showToast(toast);
+          return;
+        }
+
+        // Calculate delay based on current visible toasts
+        const visibleCount = toasts.filter(
+          t =>
+            t.animationState === 'visible' || t.animationState === 'entering',
+        ).length;
+
+        const queueDelay = visibleCount * staggerDelay;
+        const scheduledTime = Date.now() + queueDelay;
+
+        const newToast: ToastMessage = {
+          ...toast,
+          id,
+          queueDelay,
+          displayOrder: visibleCount,
+          animationState: 'pending',
+          scheduledTime,
+        };
+
+        // If we haven't hit the limit, schedule immediate display
+        if (visibleCount < maxSimultaneousToasts) {
+          setTimeout(() => {
+            const toastWithStagger = {
+              ...toast,
+              animationState: 'entering' as const,
+              displayOrder: visibleCount,
+            };
+            get().showToast(toastWithStagger);
+          }, queueDelay);
+        } else {
+          // Add to queue for later processing
+          set(state => ({
+            toastQueue: [...state.toastQueue, newToast],
+          }));
+        }
+      },
+
+      showToast: (toast: Omit<ToastMessage, 'id'> | ToastMessage) => {
+        const existingId = 'id' in toast ? toast.id : undefined;
+        const id =
+          existingId ||
+          `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const { toasts } = get();
+
+        const newToast: ToastMessage = {
+          ...toast,
+          id,
+          animationState: 'entering' as const,
+          displayOrder: existingId
+            ? (toast.displayOrder ?? toasts.length)
+            : toasts.length,
+        };
 
         set(state => ({
           toasts: [...state.toasts, newToast],
         }));
 
-        // Auto-dismiss high priority toasts after longer duration
-        if (toast.priority === 'high' && !toast.duration) {
-          setTimeout(() => {
-            set(state => ({
-              toasts: state.toasts.filter(t => t.id !== id),
-            }));
-          }, 6000);
+        // Update animation state after entrance
+        setTimeout(() => {
+          set(state => ({
+            toasts: state.toasts.map(t =>
+              t.id === id ? { ...t, animationState: 'visible' } : t,
+            ),
+          }));
+        }, 300); // Match CSS animation duration
+
+        // Auto-dismiss logic
+        const dismissDuration =
+          toast.priority === 'high' && !toast.duration
+            ? 6000
+            : (toast.duration ?? 4000);
+
+        setTimeout(() => {
+          const { pausedToasts } = get();
+          if (!pausedToasts.has(id)) {
+            get().dismissToast(id);
+          }
+        }, dismissDuration);
+      },
+
+      processToastQueue: () => {
+        const { toastQueue, toasts, maxSimultaneousToasts } = get();
+        const visibleCount = toasts.filter(
+          t =>
+            t.animationState === 'visible' || t.animationState === 'entering',
+        ).length;
+
+        if (toastQueue.length > 0 && visibleCount < maxSimultaneousToasts) {
+          const [nextToast, ...remainingQueue] = toastQueue;
+
+          set({ toastQueue: remainingQueue });
+          get().showToast(nextToast);
+
+          // Continue processing if more space available
+          if (
+            remainingQueue.length > 0 &&
+            visibleCount < maxSimultaneousToasts - 1
+          ) {
+            setTimeout(() => get().processToastQueue(), get().staggerDelay);
+          }
         }
       },
 
       dismissToast: (id: string) => {
+        // Mark as exiting first for animation
         set(state => ({
-          toasts: state.toasts.filter(toast => toast.id !== id),
+          toasts: state.toasts.map(t =>
+            t.id === id ? { ...t, animationState: 'exiting' } : t,
+          ),
+          pausedToasts: new Set(
+            [...state.pausedToasts].filter(pausedId => pausedId !== id),
+          ),
+        }));
+
+        // Actually remove after animation
+        setTimeout(() => {
+          set(state => ({
+            toasts: state.toasts.filter(toast => toast.id !== id),
+          }));
+          // Process queue when space opens up
+          get().processToastQueue();
+        }, 300);
+      },
+
+      pauseToastAutoDismiss: (id: string) => {
+        set(state => ({
+          pausedToasts: new Set([...state.pausedToasts, id]),
         }));
       },
 
+      resumeToastAutoDismiss: (id: string) => {
+        const { pausedToasts } = get();
+        const newPaused = new Set(pausedToasts);
+        newPaused.delete(id);
+
+        set({ pausedToasts: newPaused });
+
+        // Find the toast and set a new dismiss timer
+        const { toasts } = get();
+        const toast = toasts.find(t => t.id === id);
+        if (toast) {
+          const remainingTime = toast.duration ?? 4000;
+          setTimeout(() => {
+            if (!get().pausedToasts.has(id)) {
+              get().dismissToast(id);
+            }
+          }, remainingTime);
+        }
+      },
+
       clearAllToasts: () => {
-        set({ toasts: [] });
+        set({
+          toasts: [],
+          toastQueue: [],
+          pausedToasts: new Set(),
+        });
+      },
+
+      clearToastsOnGameEnd: () => {
+        // Gracefully animate out all toasts
+        const { toasts } = get();
+
+        toasts.forEach((toast, index) => {
+          setTimeout(() => {
+            set(state => ({
+              toasts: state.toasts.map(t =>
+                t.id === toast.id ? { ...t, animationState: 'exiting' } : t,
+              ),
+            }));
+          }, index * 50); // Stagger the exit animations
+        });
+
+        // Clear everything after animations complete
+        setTimeout(
+          () => {
+            get().clearAllToasts();
+          },
+          toasts.length * 50 + 300,
+        );
       },
     }),
     {

@@ -1,5 +1,6 @@
 import { useGameStore, useUIStore } from '../stores';
 import { useIsMobile } from '../hooks';
+import { ConnectionIndicator } from './ConnectionIndicator';
 
 interface GameHeaderProps {
   onBackToMenu?: (() => void) | undefined;
@@ -8,10 +9,13 @@ interface GameHeaderProps {
 export function GameHeader({ onBackToMenu }: GameHeaderProps) {
   const isMobile = useIsMobile();
 
-  const { roomCode, connectionStatus } = useGameStore(state => ({
-    roomCode: state.roomCode,
-    connectionStatus: state.connectionStatus,
-  }));
+  const { roomCode, connectionStatus, reconnectAttempts, manualReconnect } =
+    useGameStore(state => ({
+      roomCode: state.roomCode,
+      connectionStatus: state.connectionStatus,
+      reconnectAttempts: state.reconnectAttempts || 0,
+      manualReconnect: state.manualReconnect,
+    }));
 
   const { toggleInGameMenu, toggleRoomInfo } = useUIStore(state => ({
     toggleInGameMenu: state.toggleInGameMenu,
@@ -100,41 +104,42 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
         </h1>
       </div>
 
-      {/* Room Info Section - Clickable */}
-      {roomCode && (
-        <div
-          className="room-info clickable"
-          onClick={toggleRoomInfo}
-          title="Click for room details"
-          style={{
-            fontSize: isMobile ? '10px' : '11px',
-            opacity: 0.8,
-            textAlign: 'right',
-            flexShrink: 0,
-            lineHeight: '1.2',
-            cursor: 'pointer',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            transition: 'all 0.2s ease',
-            border: '1px solid transparent',
-          }}
-          onMouseEnter={e => {
+      {/* Connection Status Section */}
+      <div
+        className="connection-status"
+        onClick={toggleRoomInfo}
+        title="Click for room details"
+        style={{
+          flexShrink: 0,
+          cursor: roomCode ? 'pointer' : 'default',
+          padding: '4px 8px',
+          borderRadius: '4px',
+          transition: 'all 0.2s ease',
+          border: '1px solid transparent',
+        }}
+        onMouseEnter={e => {
+          if (roomCode) {
             const target = e.target as HTMLElement;
-            target.style.opacity = '1';
             target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
             target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-          }}
-          onMouseLeave={e => {
+          }
+        }}
+        onMouseLeave={e => {
+          if (roomCode) {
             const target = e.target as HTMLElement;
-            target.style.opacity = '0.8';
             target.style.backgroundColor = 'transparent';
             target.style.borderColor = 'transparent';
-          }}
-        >
-          <div>{roomCode}</div>
-          <div>{connectionStatus}</div>
-        </div>
-      )}
+          }
+        }}
+      >
+        <ConnectionIndicator
+          status={connectionStatus}
+          roomCode={roomCode}
+          reconnectAttempts={reconnectAttempts}
+          onManualReconnect={manualReconnect}
+          compact={isMobile}
+        />
+      </div>
     </header>
   );
 }

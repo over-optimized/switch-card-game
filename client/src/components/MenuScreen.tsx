@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useUIStore } from '../stores';
+import { useUIStore, useGameStore } from '../stores';
 import styles from './MenuScreen.module.css';
 
 export interface PlayerSetup {
@@ -77,10 +77,33 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
     { id: 'player-2', name: 'Computer', type: 'ai', aiDifficulty: 'medium' },
   ]);
 
+  // Online play state
+  const [playerName, setPlayerName] = useState('Player');
+  const [roomCode, setRoomCode] = useState('');
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
+
   // Get menu section states from store
   const { menuSections, toggleMenuSection } = useUIStore(state => ({
     menuSections: state.menuSections,
     toggleMenuSection: state.toggleMenuSection,
+  }));
+
+  // Get game store methods for room management
+  const {
+    connectToLocalServer,
+    createRoom,
+    joinRoom,
+    connectionStatus,
+    isLoading,
+    message,
+  } = useGameStore(state => ({
+    connectToLocalServer: state.connectToLocalServer,
+    createRoom: state.createRoom,
+    joinRoom: state.joinRoom,
+    connectionStatus: state.connectionStatus,
+    isLoading: state.isLoading,
+    message: state.message,
   }));
 
   // Update players array when player count changes
@@ -168,6 +191,98 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
     onStartGame(config);
   };
 
+  const handleCreateRoom = async () => {
+    if (!playerName.trim()) {
+      // Show toast instead of alert for better UX
+      import('../utils/toastUtils').then(({ gameToasts }) => {
+        gameToasts.showInfo('Validation Error', 'Please enter your name', 3000);
+      });
+      return;
+    }
+
+    setIsCreatingRoom(true);
+    try {
+      // First connect to server if not connected
+      if (connectionStatus !== 'connected') {
+        const connected = await connectToLocalServer();
+        if (!connected) {
+          return;
+        }
+      }
+
+      // Create the room
+      const success = await createRoom(playerName.trim());
+      if (success) {
+        // Navigate to game screen - create a basic online game config
+        const config: GameSetupConfig = {
+          playerCount: 2, // Will be determined by room
+          players: [{ id: 'host', name: playerName.trim(), type: 'human' }],
+          gameSettings: {
+            handSortOrder: 'rank',
+            showAnimations: true,
+            enableDebugLogs: true,
+          },
+        };
+        onStartGame(config);
+      }
+    } finally {
+      setIsCreatingRoom(false);
+    }
+  };
+
+  const handleJoinRoom = async () => {
+    if (!playerName.trim()) {
+      // Show toast instead of alert for better UX
+      import('../utils/toastUtils').then(({ gameToasts }) => {
+        gameToasts.showInfo('Validation Error', 'Please enter your name', 3000);
+      });
+      return;
+    }
+    if (!roomCode.trim()) {
+      // Show toast instead of alert for better UX
+      import('../utils/toastUtils').then(({ gameToasts }) => {
+        gameToasts.showInfo(
+          'Validation Error',
+          'Please enter a room code',
+          3000,
+        );
+      });
+      return;
+    }
+
+    setIsJoiningRoom(true);
+    try {
+      // First connect to server if not connected
+      if (connectionStatus !== 'connected') {
+        const connected = await connectToLocalServer();
+        if (!connected) {
+          return;
+        }
+      }
+
+      // Join the room
+      const success = await joinRoom(
+        roomCode.trim().toUpperCase(),
+        playerName.trim(),
+      );
+      if (success) {
+        // Navigate to game screen - create a basic online game config
+        const config: GameSetupConfig = {
+          playerCount: 2, // Will be determined by room
+          players: [{ id: 'player', name: playerName.trim(), type: 'human' }],
+          gameSettings: {
+            handSortOrder: 'rank',
+            showAnimations: true,
+            enableDebugLogs: true,
+          },
+        };
+        onStartGame(config);
+      }
+    } finally {
+      setIsJoiningRoom(false);
+    }
+  };
+
   return (
     <div className={styles.menuScreen}>
       <div className={styles.menuContainer}>
@@ -213,6 +328,107 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                     </div>
                   </button>
                 ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Online Play Section */}
+        <div className={styles.menuSection}>
+          <div
+            className={styles.sectionHeader}
+            onClick={() => toggleMenuSection('onlinePlay')}
+          >
+            <h3>🌐 Online Play</h3>
+            <span
+              className={`${styles.sectionToggle} ${menuSections.onlinePlayExpanded ? styles.expanded : ''}`}
+            >
+              {menuSections.onlinePlayExpanded ? '▼' : '▶'}
+            </span>
+          </div>
+
+          {menuSections.onlinePlayExpanded && (
+            <div className={styles.sectionContent}>
+              <div className={styles.onlinePlayContent}>
+                <div className={styles.connectionStatus}>
+                  <span
+                    className={`${styles.connectionDot} ${
+                      connectionStatus === 'connected'
+                        ? styles.connected
+                        : connectionStatus === 'connecting'
+                          ? styles.connecting
+                          : styles.offline
+                    }`}
+                  >
+                    ●
+                  </span>
+                  <span className={styles.connectionText}>
+                    {connectionStatus === 'connected'
+                      ? 'Connected to server'
+                      : connectionStatus === 'connecting'
+                        ? 'Connecting to server...'
+                        : 'Offline'}
+                  </span>
+                </div>
+
+                <div className={styles.playerNameSection}>
+                  <label className={styles.inputLabel}>
+                    Your Name:
+                    <input
+                      type="text"
+                      value={playerName}
+                      onChange={e => setPlayerName(e.target.value)}
+                      placeholder="Enter your name"
+                      className={styles.playerNameInput}
+                      maxLength={20}
+                    />
+                  </label>
+                </div>
+
+                <div className={styles.roomActions}>
+                  <div className={styles.createRoomSection}>
+                    <h4>Create a New Room</h4>
+                    <button
+                      className={styles.roomActionBtn}
+                      onClick={handleCreateRoom}
+                      disabled={
+                        isCreatingRoom || isLoading || !playerName.trim()
+                      }
+                    >
+                      {isCreatingRoom ? 'Creating...' : 'Create Room'}
+                    </button>
+                  </div>
+
+                  <div className={styles.joinRoomSection}>
+                    <h4>Join an Existing Room</h4>
+                    <div className={styles.joinRoomInputs}>
+                      <input
+                        type="text"
+                        value={roomCode}
+                        onChange={e =>
+                          setRoomCode(e.target.value.toUpperCase())
+                        }
+                        placeholder="Room Code (e.g. ABC123)"
+                        className={styles.roomCodeInput}
+                        maxLength={6}
+                      />
+                      <button
+                        className={styles.roomActionBtn}
+                        onClick={handleJoinRoom}
+                        disabled={
+                          isJoiningRoom ||
+                          isLoading ||
+                          !playerName.trim() ||
+                          !roomCode.trim()
+                        }
+                      >
+                        {isJoiningRoom ? 'Joining...' : 'Join Room'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {message && <div className={styles.gameMessage}>{message}</div>}
               </div>
             </div>
           )}

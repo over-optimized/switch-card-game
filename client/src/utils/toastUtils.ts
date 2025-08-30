@@ -5,8 +5,8 @@ import { useUIStore } from '../stores/uiStore';
 export const gameToasts = {
   // Opponent move notifications
   showOpponentMove: (playerName: string, cardInfo: string, effect?: string) => {
-    const showToast = useUIStore.getState().showToast;
-    showToast({
+    const scheduleToast = useUIStore.getState().scheduleToast;
+    scheduleToast({
       type: 'opponent-move',
       title: `${playerName} played`,
       message: effect ? `${cardInfo} - ${effect}` : cardInfo,
@@ -39,8 +39,8 @@ export const gameToasts = {
   },
 
   showPenaltyServed: (playerName: string, cards: number) => {
-    const showToast = useUIStore.getState().showToast;
-    showToast({
+    const scheduleToast = useUIStore.getState().scheduleToast;
+    scheduleToast({
       type: 'penalty',
       title: 'Penalty Served',
       message: `${playerName} drew ${cards} penalty card${cards !== 1 ? 's' : ''}`,
@@ -51,8 +51,8 @@ export const gameToasts = {
 
   // Trick card notifications
   showTrickCard: (cardName: string, effect: string, icon?: string) => {
-    const showToast = useUIStore.getState().showToast;
-    showToast({
+    const scheduleToast = useUIStore.getState().scheduleToast;
+    scheduleToast({
       type: 'trick-card',
       title: `${cardName} played!`,
       message: effect,
@@ -108,8 +108,8 @@ export const gameToasts = {
 
   // General info notifications
   showInfo: (title: string, message: string, duration = 3000) => {
-    const showToast = useUIStore.getState().showToast;
-    showToast({
+    const scheduleToast = useUIStore.getState().scheduleToast;
+    scheduleToast({
       type: 'info',
       title,
       message,
