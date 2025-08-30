@@ -53,6 +53,21 @@
   line-height: 1.4;
 }
 
+/* Player Summary Section */
+.playerSummary {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(69, 160, 73, 0.15) 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.playerSummary .statValue {
+  color: #4CAF50;
+  font-weight: bold;
+  font-size: 16px;
+}
+
 /* Game Stats */
 .gameStats {
   background: rgba(255, 255, 255, 0.05);
@@ -60,28 +75,51 @@
   padding: 20px;
   margin-bottom: 30px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 12px;
+}
+
+@media (max-width: 400px) {
+  .gameStats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 
 .stat {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* Player summary stats keep the margin */
+.playerSummary .stat {
   margin-bottom: 12px;
 }
 
-.stat:last-child {
+.playerSummary .stat:last-child {
   margin-bottom: 0;
 }
 
 .statLabel {
   color: #b8b8b8;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statIcon {
+  font-size: 16px;
+  opacity: 0.9;
 }
 
 .statValue {
   color: #ffffff;
   font-weight: bold;
   font-size: 16px;
+  text-align: right;
 }
 
 /* Action Buttons */

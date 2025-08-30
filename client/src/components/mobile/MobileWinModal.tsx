@@ -1,5 +1,6 @@
 import { useGameStore } from '../../stores/gameStore';
 import type { GameState } from '../../../../shared/src/types/game';
+import { analyzeGameStats, getPlayerSummary } from '../../utils/gameStatsUtils';
 import styles from './MobileWinModal.module.css';
 
 interface MobileWinModalProps {
@@ -23,6 +24,10 @@ export function MobileWinModal({
 
   const isPlayerWin = gameState.winner.id === playerId;
   const winnerName = gameState.winner.name;
+
+  // Analyze game statistics for meaningful display
+  const gameAnalysis = analyzeGameStats(gameState);
+  const playerSummary = getPlayerSummary(gameState, playerId);
 
   const handleNewGame = () => {
     console.log('🎮 MOBILE WIN MODAL - Starting new game');
@@ -54,18 +59,31 @@ export function MobileWinModal({
           </p>
         </div>
 
-        {/* Game Stats */}
+        {/* Player Performance Summary */}
+        <div className={styles.playerSummary}>
+          <div className={styles.stat}>
+            <span className={styles.statLabel}>Your Result:</span>
+            <span className={styles.statValue}>{playerSummary.rank}</span>
+          </div>
+          <div className={styles.stat}>
+            <span className={styles.statLabel}>Achievement:</span>
+            <span className={styles.statValue}>{playerSummary.highlight}</span>
+          </div>
+        </div>
+
+        {/* Game Statistics */}
         <div className={styles.gameStats}>
-          <div className={styles.stat}>
-            <span className={styles.statLabel}>Winner:</span>
-            <span className={styles.statValue}>
-              {isPlayerWin ? 'You' : winnerName}
-            </span>
-          </div>
-          <div className={styles.stat}>
-            <span className={styles.statLabel}>Final Cards:</span>
-            <span className={styles.statValue}>0</span>
-          </div>
+          {gameAnalysis.topStats.slice(0, 4).map((stat, index) => (
+            <div key={index} className={styles.stat}>
+              <span className={styles.statLabel}>
+                {stat.icon && (
+                  <span className={styles.statIcon}>{stat.icon}</span>
+                )}
+                {stat.label}:
+              </span>
+              <span className={styles.statValue}>{stat.value}</span>
+            </div>
+          ))}
         </div>
 
         {/* Action Buttons */}
