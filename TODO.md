@@ -286,10 +286,13 @@ The current architecture has grown complex with mobile/desktop duplication and l
 
 ### Medium Priority - Game Polish
 
-- [ ] **Add game statistics**
-  - [ ] Track games played, won, lost
-  - [ ] Show stats on restart screen
-  - [ ] Add "quick restart" option
+- [x] **Add game statistics** ✅ COMPLETED
+  - [x] Track comprehensive game metrics (duration, moves, cards played/drawn, penalties)
+  - [x] Enhanced win screen with meaningful statistics display
+  - [x] Smart statistics selection algorithm showing 4 most relevant stats
+  - [x] Player performance summaries with achievements (trick card master, penalty avoider)
+  - [x] Real-time statistics tracking throughout game engine
+  - [ ] Add "quick restart" option (deferred)
 
 - [ ] **Improve AI behavior**
   - [ ] Make AI more strategic with 2s
@@ -585,6 +588,16 @@ The current architecture has grown complex with mobile/desktop duplication and l
 - **Direction Aware**: Respects current game direction for proper skip order
 - **AI Integration**: Computer players can use Jacks tactically
 - **Settings**: Jacks enabled by default, fully configurable
+
+### ✅ **Completed Milestone: Game Statistics & Enhanced Win Screen**
+
+- **Comprehensive Tracking**: Real-time statistics for all game actions (cards played/drawn, penalties, special cards)
+- **Smart Statistics Display**: Algorithm selects 4 most relevant stats based on game context and priority
+- **Enhanced Win Screen**: Replaced meaningless "Final Cards: 0" with dynamic player performance summary
+- **Player Achievements**: Contextual highlights (trick card master, penalty avoider, most active player)
+- **Game Metrics**: Duration tracking, total moves, direction changes, penalty cards served
+- **Responsive Design**: Mobile-first statistics display with CSS grid layout and proper styling
+- **TypeScript Integration**: Full type safety with GameStats and PlayerGameStats interfaces
 
 ### 🎯 **Next Milestone: Fourth Trick Card (8s, 7s, or Runs)**
 
