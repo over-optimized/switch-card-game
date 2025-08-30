@@ -26,6 +26,7 @@ interface UIStore {
   // Menu UI state
   menuSections: {
     quickStartExpanded: boolean;
+    onlinePlayExpanded: boolean;
     playerSetupExpanded: boolean;
   };
 
@@ -55,9 +56,9 @@ interface UIStore {
   setTheme: (theme: 'light' | 'dark' | 'auto') => void;
 
   // Menu section actions
-  toggleMenuSection: (section: 'quickStart' | 'playerSetup') => void;
+  toggleMenuSection: (section: 'quickStart' | 'onlinePlay' | 'playerSetup') => void;
   setMenuSectionExpanded: (
-    section: 'quickStart' | 'playerSetup',
+    section: 'quickStart' | 'onlinePlay' | 'playerSetup',
     expanded: boolean,
   ) => void;
 
@@ -129,6 +130,7 @@ export const useUIStore = create<UIStore>()(
       handShelf: defaultHandShelf,
       menuSections: {
         quickStartExpanded: true, // Show quick start by default for mobile-first approach
+        onlinePlayExpanded: false, // Hide online play by default
         playerSetupExpanded: false, // Hide advanced config by default
       },
       inGameMenuOpen: false,
@@ -192,7 +194,7 @@ export const useUIStore = create<UIStore>()(
       },
 
       // Menu section actions
-      toggleMenuSection: (section: 'quickStart' | 'playerSetup') => {
+      toggleMenuSection: (section: 'quickStart' | 'onlinePlay' | 'playerSetup') => {
         set(state => ({
           menuSections: {
             ...state.menuSections,
@@ -205,7 +207,7 @@ export const useUIStore = create<UIStore>()(
       },
 
       setMenuSectionExpanded: (
-        section: 'quickStart' | 'playerSetup',
+        section: 'quickStart' | 'onlinePlay' | 'playerSetup',
         expanded: boolean,
       ) => {
         set(state => ({

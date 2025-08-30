@@ -1,0 +1,103 @@
+.indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: right;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusDot {
+  font-size: 12px;
+  display: inline-block;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+}
+
+.statusDot.pulse {
+  animation-name: pulse;
+}
+
+.statusText {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.roomCode {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 10px;
+  opacity: 0.8;
+  letter-spacing: 0.5px;
+}
+
+.reconnectButton {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 9px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 2px;
+}
+
+.reconnectButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.reconnectButton:active {
+  transform: translateY(0);
+}
+
+.recoveryOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .indicator {
+    font-size: 10px;
+  }
+  
+  .statusDot {
+    font-size: 10px;
+  }
+  
+  .roomCode {
+    font-size: 9px;
+  }
+  
+  .reconnectButton {
+    font-size: 8px;
+    padding: 1px 4px;
+  }
+}

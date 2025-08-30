@@ -44,6 +44,12 @@ interface GameStore {
   isHost: boolean;
   connectedPlayers: Record<string, PlayerInfo>;
   spectators: PlayerInfo[];
+  
+  // Reconnection tracking
+  reconnectAttempts: number;
+  maxReconnectAttempts: number;
+  reconnectTimeoutId: NodeJS.Timeout | null;
+  lastDisconnectTime: Date | null;
 
   // Game flow
   gameMode: GameMode;
@@ -71,6 +77,8 @@ interface GameStore {
   // Actions - Game management (WebSocket-first)
   setupWebSocketGame: (config?: GameSetupConfig) => void;
   connectToLocalServer: () => Promise<boolean>;
+  createRoom: (playerName: string, maxPlayers?: number) => Promise<boolean>;
+  joinRoom: (roomCode: string, playerName: string) => Promise<boolean>;
   restartGame: () => void;
   leaveRoom: () => Promise<boolean>;
   updateMessage: (message: string) => void;
@@ -93,6 +101,17 @@ interface GameStore {
   addPlayer: (player: PlayerInfo) => void;
   removePlayer: (playerId: string) => void;
   updatePlayer: (playerId: string, updates: Partial<PlayerInfo>) => void;
+  
+  // Actions - Reconnection management
+  startReconnection: () => void;
+  stopReconnection: () => void;
+  manualReconnect: () => void;
+  resetReconnectionState: () => void;
+  
+  // Actions - Room persistence
+  saveRoomSession: () => void;
+  loadRoomSession: () => boolean;
+  clearRoomSession: () => void;
 
   // Actions - State synchronization
   syncWithServer: (serverState: GameState) => void;
@@ -147,6 +166,12 @@ export const useGameStore = create<GameStore>()(
     isHost: false,
     connectedPlayers: {},
     spectators: [],
+    
+    // Reconnection tracking
+    reconnectAttempts: 0,
+    maxReconnectAttempts: 10,
+    reconnectTimeoutId: null,
+    lastDisconnectTime: null,
 
     // Game flow
     gameMode: 'normal',
@@ -234,23 +259,65 @@ export const useGameStore = create<GameStore>()(
         return new Promise<boolean>(resolve => {
           socket.on('connect', () => {
             const socketId = socket.id || `temp-${Date.now()}`;
+            const currentState = get();
+            
             set({
               connectionStatus: 'connected',
               message: 'Connected to game server',
               playerId: socketId,
             });
+            
             logNetwork('WebSocket connected', 'success', {
               id: socketId,
             });
+            
+            // Reset reconnection state on successful connection
+            currentState.resetReconnectionState();
+            
+            // Show reconnection success toast if this was a reconnection
+            if (currentState.reconnectAttempts > 0) {
+              import('../utils/toastUtils').then(({ gameToasts }) => {
+                gameToasts.showInfo(
+                  'Connection Restored',
+                  'Successfully reconnected to the game!',
+                  3000
+                );
+              });
+            }
+            
             resolve(true);
           });
 
           socket.on('disconnect', () => {
+            console.log('[Connection Debug] Socket disconnected - setting offline status');
             set({
               connectionStatus: 'offline',
               message: 'Disconnected from game server',
+              lastDisconnectTime: new Date(),
             });
             logNetwork('Disconnected from server', 'error');
+            
+            // Show disconnect toast
+            import('../utils/toastUtils').then(({ gameToasts }) => {
+              gameToasts.showInfo(
+                'Connection Lost',
+                'Attempting to reconnect...',
+                3000
+              );
+            });
+            
+            // Start automatic reconnection
+            setTimeout(() => {
+              const currentState = get();
+              console.log('[Connection Debug] Checking for auto-reconnection...', {
+                status: currentState.connectionStatus,
+                roomCode: currentState.roomCode
+              });
+              if (currentState.connectionStatus === 'offline' && currentState.roomCode) {
+                console.log('[Connection Debug] Starting automatic reconnection');
+                currentState.startReconnection();
+              }
+            }, 1000); // Brief delay before starting reconnection
           });
 
           socket.on('error', error => {
@@ -467,6 +534,117 @@ export const useGameStore = create<GameStore>()(
       }
     },
 
+    createRoom: async (playerName: string, maxPlayers = 4) => {
+      const socket = get().socket;
+      if (!socket) {
+        set({ message: 'Not connected to server' });
+        return false;
+      }
+
+      return new Promise<boolean>(resolve => {
+        console.log('[Room Debug] Creating room...', { playerName, maxPlayers });
+        set({ isLoading: true, message: 'Creating room...' });
+
+        const timeout = setTimeout(() => {
+          set({ 
+            isLoading: false, 
+            message: 'Room creation timed out. Please try again.' 
+          });
+          resolve(false);
+        }, 10000);
+
+        socket.emit('create-room', { playerName, maxPlayers });
+
+        const handleRoomCreated = (data: any) => {
+          clearTimeout(timeout);
+          console.log('[Room Debug] Room created successfully', data);
+          set({
+            roomCode: data.room.code,
+            playerId: data.player.id,
+            isHost: true,
+            connectedPlayers: { [data.player.id]: data.player },
+            isLoading: false,
+            message: `Room ${data.room.code} created! Waiting for players...`,
+          });
+          socket.off('room-created', handleRoomCreated);
+          socket.off('error', handleError);
+          resolve(true);
+        };
+
+        const handleError = (error: any) => {
+          clearTimeout(timeout);
+          console.log('[Room Debug] Room creation failed', error);
+          set({
+            isLoading: false,
+            message: error.message || 'Failed to create room',
+          });
+          socket.off('room-created', handleRoomCreated);
+          socket.off('error', handleError);
+          resolve(false);
+        };
+
+        socket.once('room-created', handleRoomCreated);
+        socket.once('error', handleError);
+      });
+    },
+
+    joinRoom: async (roomCode: string, playerName: string) => {
+      const socket = get().socket;
+      if (!socket) {
+        set({ message: 'Not connected to server' });
+        return false;
+      }
+
+      return new Promise<boolean>(resolve => {
+        console.log('[Room Debug] Joining room...', { roomCode, playerName });
+        set({ isLoading: true, message: `Joining room ${roomCode}...` });
+
+        const timeout = setTimeout(() => {
+          set({ 
+            isLoading: false, 
+            message: 'Join room timed out. Please check the room code and try again.' 
+          });
+          resolve(false);
+        }, 10000);
+
+        socket.emit('join-room', { roomCode: roomCode.toUpperCase(), playerName });
+
+        const handleRoomJoined = (data: any) => {
+          clearTimeout(timeout);
+          console.log('[Room Debug] Room joined successfully', data);
+          set({
+            roomCode: data.room.code,
+            playerId: data.player.id,
+            isHost: false,
+            connectedPlayers: data.room.players.reduce((acc: any, p: any) => {
+              acc[p.id] = p;
+              return acc;
+            }, {}),
+            isLoading: false,
+            message: `Joined room ${data.room.code}! Waiting for game to start...`,
+          });
+          socket.off('room-joined', handleRoomJoined);
+          socket.off('error', handleError);
+          resolve(true);
+        };
+
+        const handleError = (error: any) => {
+          clearTimeout(timeout);
+          console.log('[Room Debug] Join room failed', error);
+          set({
+            isLoading: false,
+            message: error.message || 'Failed to join room. Please check the room code.',
+          });
+          socket.off('room-joined', handleRoomJoined);
+          socket.off('error', handleError);
+          resolve(false);
+        };
+
+        socket.once('room-joined', handleRoomJoined);
+        socket.once('error', handleError);
+      });
+    },
+
     restartGame: () => {
       // Clear any existing toasts from previous game
       useUIStore.getState().clearAllToasts();
@@ -674,7 +852,36 @@ export const useGameStore = create<GameStore>()(
       });
 
       if (connectionStatus !== 'connected') {
-        get().updateMessage('Not connected to game server');
+        const { reconnectAttempts, maxReconnectAttempts } = get();
+        let errorMessage = 'Not connected to game server';
+        
+        switch (connectionStatus) {
+          case 'connecting':
+            errorMessage = 'Connecting to server... Please wait';
+            break;
+          case 'reconnecting':
+            errorMessage = `Reconnecting... (${reconnectAttempts}/${maxReconnectAttempts})`;
+            break;
+          case 'offline':
+            if (reconnectAttempts >= maxReconnectAttempts) {
+              errorMessage = 'Connection failed. Try the reconnect button in the top-right corner';
+            } else {
+              errorMessage = 'Connection lost. Attempting to reconnect...';
+            }
+            break;
+        }
+        
+        get().updateMessage(errorMessage);
+        
+        // Show user-friendly toast for connection issues
+        import('../utils/toastUtils').then(({ gameToasts }) => {
+          gameToasts.showInfo(
+            'Cannot Play Card',
+            errorMessage,
+            4000
+          );
+        });
+        
         return false;
       }
 
@@ -884,12 +1091,47 @@ export const useGameStore = create<GameStore>()(
     },
 
     drawCard: async () => {
-      const { gameState, playerId } = get();
+      const { gameState, playerId, connectionStatus } = get();
       if (!gameState) return false;
 
       const currentTurnPlayer = gameState.players[gameState.currentPlayerIndex];
       if (currentTurnPlayer.id !== playerId) {
         get().updateMessage("It's not your turn!");
+        return false;
+      }
+
+      // Check connection status
+      if (connectionStatus !== 'connected') {
+        const { reconnectAttempts, maxReconnectAttempts } = get();
+        let errorMessage = 'Not connected to game server';
+        
+        switch (connectionStatus) {
+          case 'connecting':
+            errorMessage = 'Connecting to server... Please wait';
+            break;
+          case 'reconnecting':
+            errorMessage = `Reconnecting... (${reconnectAttempts}/${maxReconnectAttempts})`;
+            break;
+          case 'offline':
+            if (reconnectAttempts >= maxReconnectAttempts) {
+              errorMessage = 'Connection failed. Try the reconnect button in the top-right corner';
+            } else {
+              errorMessage = 'Connection lost. Attempting to reconnect...';
+            }
+            break;
+        }
+        
+        get().updateMessage(errorMessage);
+        
+        // Show user-friendly toast for connection issues
+        import('../utils/toastUtils').then(({ gameToasts }) => {
+          gameToasts.showInfo(
+            'Cannot Draw Card',
+            errorMessage,
+            4000
+          );
+        });
+        
         return false;
       }
 
@@ -982,11 +1224,20 @@ export const useGameStore = create<GameStore>()(
 
     // Network actions (stubs for now)
     setConnectionStatus: (status: ConnectionStatus) => {
+      const prevStatus = get().connectionStatus;
+      console.log(`[Connection Debug] Status change: ${prevStatus} → ${status}`);
       set({ connectionStatus: status });
     },
 
     setRoomCode: (code: string | null) => {
       set({ roomCode: code });
+      
+      // Save or clear room session based on code presence
+      if (code) {
+        get().saveRoomSession();
+      } else {
+        get().clearRoomSession();
+      }
     },
 
     setIsHost: (isHost: boolean) => {
@@ -1020,6 +1271,175 @@ export const useGameStore = create<GameStore>()(
           },
         },
       }));
+    },
+
+    // Reconnection management
+    startReconnection: () => {
+      const state = get();
+      if (state.reconnectTimeoutId) {
+        clearTimeout(state.reconnectTimeoutId);
+      }
+
+      const attemptReconnection = () => {
+        const currentState = get();
+        if (currentState.connectionStatus === 'connected') {
+          return; // Already connected, stop trying
+        }
+
+        if (currentState.reconnectAttempts >= currentState.maxReconnectAttempts) {
+          set({ 
+            connectionStatus: 'offline',
+            reconnectTimeoutId: null,
+          });
+          // Show toast about max attempts reached
+          import('../utils/toastUtils').then(({ gameToasts }) => {
+            gameToasts.showInfo(
+              'Connection Failed',
+              `Unable to reconnect after ${currentState.maxReconnectAttempts} attempts. Try manual reconnection.`,
+              8000
+            );
+          });
+          return;
+        }
+
+        console.log(`[Connection Debug] Attempting reconnection ${currentState.reconnectAttempts + 1}/${currentState.maxReconnectAttempts}`);
+        set(state => ({
+          connectionStatus: 'reconnecting',
+          reconnectAttempts: state.reconnectAttempts + 1,
+        }));
+
+        // Try to reconnect
+        if (currentState.roomCode && currentState.socket) {
+          currentState.socket.connect();
+        } else if (currentState.roomCode) {
+          // Try to establish new socket connection
+          currentState.setupWebSocketGame();
+        }
+
+        // Schedule next attempt with exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, currentState.reconnectAttempts), 30000);
+        const timeoutId = setTimeout(attemptReconnection, delay);
+        set({ reconnectTimeoutId: timeoutId });
+      };
+
+      // Start first attempt immediately
+      attemptReconnection();
+    },
+
+    stopReconnection: () => {
+      const state = get();
+      if (state.reconnectTimeoutId) {
+        clearTimeout(state.reconnectTimeoutId);
+        set({ reconnectTimeoutId: null });
+      }
+    },
+
+    manualReconnect: () => {
+      const state = get();
+      
+      // Try to load saved room session if no current room
+      if (!state.roomCode) {
+        const sessionLoaded = get().loadRoomSession();
+        if (!sessionLoaded) {
+          // Show toast about no saved session
+          import('../utils/toastUtils').then(({ gameToasts }) => {
+            gameToasts.showInfo(
+              'No Saved Game',
+              'No game session to restore. Start a new game from the menu.',
+              6000
+            );
+          });
+          return;
+        }
+      }
+      
+      // Reset attempts and try again
+      set({
+        reconnectAttempts: 0,
+        connectionStatus: 'connecting',
+      });
+
+      if (state.roomCode && state.socket) {
+        state.socket.connect();
+      } else {
+        state.setupWebSocketGame();
+      }
+
+      // Show feedback toast
+      import('../utils/toastUtils').then(({ gameToasts }) => {
+        gameToasts.showInfo('Reconnecting...', 'Attempting to restore connection');
+      });
+    },
+
+    resetReconnectionState: () => {
+      const state = get();
+      if (state.reconnectTimeoutId) {
+        clearTimeout(state.reconnectTimeoutId);
+      }
+      set({
+        reconnectAttempts: 0,
+        reconnectTimeoutId: null,
+        lastDisconnectTime: null,
+      });
+    },
+
+    // Room persistence management
+    saveRoomSession: () => {
+      const { roomCode, playerId, isHost } = get();
+      if (roomCode && playerId) {
+        const sessionData = {
+          roomCode,
+          playerId,
+          isHost,
+          timestamp: Date.now(),
+        };
+        
+        try {
+          localStorage.setItem('switch-game-session', JSON.stringify(sessionData));
+          logNetwork('Room session saved', 'success', sessionData);
+        } catch (error) {
+          logNetwork('Failed to save room session', 'error', error);
+        }
+      }
+    },
+
+    loadRoomSession: () => {
+      try {
+        const sessionData = localStorage.getItem('switch-game-session');
+        if (!sessionData) return false;
+
+        const parsed = JSON.parse(sessionData);
+        const { roomCode, playerId, isHost, timestamp } = parsed;
+
+        // Check if session is not too old (30 minutes)
+        if (Date.now() - timestamp > 30 * 60 * 1000) {
+          get().clearRoomSession();
+          return false;
+        }
+
+        // Restore session data
+        set({
+          roomCode,
+          playerId,
+          isHost,
+        });
+
+        logNetwork('Room session loaded', 'success', { roomCode, playerId, isHost });
+        return true;
+      } catch (error) {
+        logNetwork('Failed to load room session', 'error', error);
+        get().clearRoomSession();
+        return false;
+      }
+    },
+
+    clearRoomSession: () => {
+      try {
+        localStorage.removeItem('switch-game-session');
+        logNetwork('Room session cleared', 'success');
+      } catch (error) {
+        logNetwork('Failed to clear room session', 'error', error);
+      }
     },
 
     syncWithServer: (serverState: GameState) => {
