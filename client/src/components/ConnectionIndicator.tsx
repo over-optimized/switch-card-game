@@ -80,11 +80,9 @@ export function ConnectionIndicator({
         </span>
         <span className={styles.statusText}>{statusInfo.text}</span>
       </div>
-      
-      {roomCode && (
-        <div className={styles.roomCode}>{roomCode}</div>
-      )}
-      
+
+      {roomCode && <div className={styles.roomCode}>{roomCode}</div>}
+
       {status === 'offline' && onManualReconnect && (
         <button
           className={styles.reconnectButton}
@@ -94,17 +92,19 @@ export function ConnectionIndicator({
           🔄 Reconnect
         </button>
       )}
-      
-      {status === 'reconnecting' && reconnectAttempts >= maxReconnectAttempts && onManualReconnect && (
-        <div className={styles.recoveryOptions}>
-          <button
-            className={styles.reconnectButton}
-            onClick={onManualReconnect}
-          >
-            🔄 Try Again
-          </button>
-        </div>
-      )}
+
+      {status === 'reconnecting' &&
+        reconnectAttempts >= maxReconnectAttempts &&
+        onManualReconnect && (
+          <div className={styles.recoveryOptions}>
+            <button
+              className={styles.reconnectButton}
+              onClick={onManualReconnect}
+            >
+              🔄 Try Again
+            </button>
+          </div>
+        )}
     </div>
   );
 }

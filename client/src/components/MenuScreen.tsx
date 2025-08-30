@@ -90,20 +90,20 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
   }));
 
   // Get game store methods for room management
-  const { 
+  const {
     connectToLocalServer,
     createRoom,
     joinRoom,
     connectionStatus,
     isLoading,
-    message
+    message,
   } = useGameStore(state => ({
     connectToLocalServer: state.connectToLocalServer,
     createRoom: state.createRoom,
     joinRoom: state.joinRoom,
     connectionStatus: state.connectionStatus,
     isLoading: state.isLoading,
-    message: state.message
+    message: state.message,
   }));
 
   // Update players array when player count changes
@@ -193,7 +193,10 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
 
   const handleCreateRoom = async () => {
     if (!playerName.trim()) {
-      alert('Please enter your name');
+      // Show toast instead of alert for better UX
+      import('../utils/toastUtils').then(({ gameToasts }) => {
+        gameToasts.showInfo('Validation Error', 'Please enter your name', 3000);
+      });
       return;
     }
 
@@ -213,9 +216,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
         // Navigate to game screen - create a basic online game config
         const config: GameSetupConfig = {
           playerCount: 2, // Will be determined by room
-          players: [
-            { id: 'host', name: playerName.trim(), type: 'human' }
-          ],
+          players: [{ id: 'host', name: playerName.trim(), type: 'human' }],
           gameSettings: {
             handSortOrder: 'rank',
             showAnimations: true,
@@ -231,11 +232,21 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
 
   const handleJoinRoom = async () => {
     if (!playerName.trim()) {
-      alert('Please enter your name');
+      // Show toast instead of alert for better UX
+      import('../utils/toastUtils').then(({ gameToasts }) => {
+        gameToasts.showInfo('Validation Error', 'Please enter your name', 3000);
+      });
       return;
     }
     if (!roomCode.trim()) {
-      alert('Please enter a room code');
+      // Show toast instead of alert for better UX
+      import('../utils/toastUtils').then(({ gameToasts }) => {
+        gameToasts.showInfo(
+          'Validation Error',
+          'Please enter a room code',
+          3000,
+        );
+      });
       return;
     }
 
@@ -250,14 +261,15 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
       }
 
       // Join the room
-      const success = await joinRoom(roomCode.trim().toUpperCase(), playerName.trim());
+      const success = await joinRoom(
+        roomCode.trim().toUpperCase(),
+        playerName.trim(),
+      );
       if (success) {
         // Navigate to game screen - create a basic online game config
         const config: GameSetupConfig = {
           playerCount: 2, // Will be determined by room
-          players: [
-            { id: 'player', name: playerName.trim(), type: 'human' }
-          ],
+          players: [{ id: 'player', name: playerName.trim(), type: 'human' }],
           gameSettings: {
             handSortOrder: 'rank',
             showAnimations: true,
@@ -416,9 +428,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
                   </div>
                 </div>
 
-                {message && (
-                  <div className={styles.gameMessage}>{message}</div>
-                )}
+                {message && <div className={styles.gameMessage}>{message}</div>}
               </div>
             </div>
           )}

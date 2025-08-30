@@ -56,7 +56,9 @@ interface UIStore {
   setTheme: (theme: 'light' | 'dark' | 'auto') => void;
 
   // Menu section actions
-  toggleMenuSection: (section: 'quickStart' | 'onlinePlay' | 'playerSetup') => void;
+  toggleMenuSection: (
+    section: 'quickStart' | 'onlinePlay' | 'playerSetup',
+  ) => void;
   setMenuSectionExpanded: (
     section: 'quickStart' | 'onlinePlay' | 'playerSetup',
     expanded: boolean,
@@ -194,7 +196,9 @@ export const useUIStore = create<UIStore>()(
       },
 
       // Menu section actions
-      toggleMenuSection: (section: 'quickStart' | 'onlinePlay' | 'playerSetup') => {
+      toggleMenuSection: (
+        section: 'quickStart' | 'onlinePlay' | 'playerSetup',
+      ) => {
         set(state => ({
           menuSections: {
             ...state.menuSections,

@@ -9,12 +9,13 @@ interface GameHeaderProps {
 export function GameHeader({ onBackToMenu }: GameHeaderProps) {
   const isMobile = useIsMobile();
 
-  const { roomCode, connectionStatus, reconnectAttempts, manualReconnect } = useGameStore(state => ({
-    roomCode: state.roomCode,
-    connectionStatus: state.connectionStatus,
-    reconnectAttempts: state.reconnectAttempts || 0,
-    manualReconnect: state.manualReconnect,
-  }));
+  const { roomCode, connectionStatus, reconnectAttempts, manualReconnect } =
+    useGameStore(state => ({
+      roomCode: state.roomCode,
+      connectionStatus: state.connectionStatus,
+      reconnectAttempts: state.reconnectAttempts || 0,
+      manualReconnect: state.manualReconnect,
+    }));
 
   const { toggleInGameMenu, toggleRoomInfo } = useUIStore(state => ({
     toggleInGameMenu: state.toggleInGameMenu,

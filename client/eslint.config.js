@@ -28,6 +28,7 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         navigator: 'readonly',
+        localStorage: 'readonly',
         HTMLElement: 'readonly',
         HTMLDivElement: 'readonly',
         DragEvent: 'readonly',
