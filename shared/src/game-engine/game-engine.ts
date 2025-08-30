@@ -5,12 +5,83 @@ import {
   getNextPlayerIndex,
   isGameFinished,
   getWinner,
+  PlayerGameStats,
 } from '../types/game.js';
 import { removeCardFromHand } from '../types/player.js';
 import { Card, Suit } from '../types/card.js';
 import { DeckManager } from './deck-manager.js';
 
 export class GameEngine {
+  // Helper function to check if a card is a special card
+  private static isSpecialCard(card: Card): boolean {
+    return (
+      ['2', 'J', 'A', '7', '8'].includes(card.rank) ||
+      (card.rank === '5' && card.suit === 'hearts')
+    );
+  }
+
+  // Update player statistics
+  private static updatePlayerStats(
+    gameState: GameState,
+    playerId: string,
+    update: Partial<PlayerGameStats>,
+  ): GameState {
+    const updatedStats = {
+      ...gameState.gameStats.playerStats[playerId],
+      ...update,
+    };
+
+    // Recalculate total moves
+    updatedStats.totalMoves =
+      updatedStats.cardsPlayed + updatedStats.cardsDrawn;
+
+    return {
+      ...gameState,
+      gameStats: {
+        ...gameState.gameStats,
+        playerStats: {
+          ...gameState.gameStats.playerStats,
+          [playerId]: updatedStats,
+        },
+        totalMoves:
+          gameState.gameStats.totalMoves +
+          (update.cardsPlayed || 0) +
+          (update.cardsDrawn || 0),
+        totalCardsPlayed:
+          gameState.gameStats.totalCardsPlayed + (update.cardsPlayed || 0),
+        totalCardsDrawn:
+          gameState.gameStats.totalCardsDrawn + (update.cardsDrawn || 0),
+        specialCardsPlayedTotal:
+          gameState.gameStats.specialCardsPlayedTotal +
+          (update.specialCardsPlayed || 0),
+      },
+    };
+  }
+
+  // Track penalty cards served
+  private static trackPenalty(
+    gameState: GameState,
+    cardsDrawn: number,
+  ): GameState {
+    return {
+      ...gameState,
+      gameStats: {
+        ...gameState.gameStats,
+        penaltyCardsServed: gameState.gameStats.penaltyCardsServed + cardsDrawn,
+      },
+    };
+  }
+
+  // Track direction changes from Jacks
+  private static trackDirectionChange(gameState: GameState): GameState {
+    return {
+      ...gameState,
+      gameStats: {
+        ...gameState.gameStats,
+        directionChanges: gameState.gameStats.directionChanges + 1,
+      },
+    };
+  }
   static startGame(gameState: GameState): GameState {
     if (gameState.phase !== 'waiting') {
       throw new Error('Game has already started');
@@ -24,10 +95,15 @@ export class GameEngine {
     const gameStateWithDeck = { ...gameState, drawPile: shuffledDeck };
     const gameStateWithHands = DeckManager.dealInitialHands(gameStateWithDeck);
 
+    const startTime = new Date();
     return {
       ...gameStateWithHands,
       phase: 'playing',
-      startedAt: new Date(),
+      startedAt: startTime,
+      gameStats: {
+        ...gameStateWithHands.gameStats,
+        gameStarted: startTime,
+      },
     };
   }
 
@@ -101,6 +177,17 @@ export class GameEngine {
       chosenSuit,
     );
     updatedGameState = GameEngine.handleJackEffect(updatedGameState, card);
+
+    // Track statistics for the card play
+    const isSpecial = GameEngine.isSpecialCard(card);
+    updatedGameState = GameEngine.updatePlayerStats(
+      updatedGameState,
+      playerId,
+      {
+        cardsPlayed: 1,
+        specialCardsPlayed: isSpecial ? 1 : 0,
+      },
+    );
 
     return GameEngine.advanceTurn(updatedGameState);
   }
@@ -179,6 +266,19 @@ export class GameEngine {
       chosenSuit,
     );
 
+    // Track statistics for multiple card play
+    const specialCardsPlayed = cards.filter(card =>
+      GameEngine.isSpecialCard(card),
+    ).length;
+    updatedGameState = GameEngine.updatePlayerStats(
+      updatedGameState,
+      playerId,
+      {
+        cardsPlayed: cards.length,
+        specialCardsPlayed,
+      },
+    );
+
     return GameEngine.advanceTurn(updatedGameState);
   }
 
@@ -190,7 +290,17 @@ export class GameEngine {
 
     // Normal draw: 1 card and advance turn
     const updatedGameState = DeckManager.drawCard(gameState, playerId);
-    return GameEngine.advanceTurn(updatedGameState);
+
+    // Track statistics for normal card draw
+    const statsUpdatedGameState = GameEngine.updatePlayerStats(
+      updatedGameState,
+      playerId,
+      {
+        cardsDrawn: 1,
+      },
+    );
+
+    return GameEngine.advanceTurn(statsUpdatedGameState);
   }
 
   static isValidPlay(gameState: GameState, card: Card): boolean {
@@ -228,11 +338,21 @@ export class GameEngine {
   static advanceTurn(gameState: GameState): GameState {
     if (isGameFinished(gameState)) {
       const winner = getWinner(gameState);
+      const finishedAt = new Date();
+      const gameDurationMs = gameState.gameStats.gameStarted
+        ? finishedAt.getTime() - gameState.gameStats.gameStarted.getTime()
+        : undefined;
+
       return {
         ...gameState,
         phase: 'finished',
         winner,
-        finishedAt: new Date(),
+        finishedAt,
+        gameStats: {
+          ...gameState.gameStats,
+          gameFinished: finishedAt,
+          gameDurationMs,
+        },
       };
     }
 
@@ -337,11 +457,14 @@ export class GameEngine {
       return gameState;
     }
 
-    // Add 1 to skipsRemaining for each Jack played
-    return {
+    // Add 1 to skipsRemaining for each Jack played and track direction change
+    const updatedGameState = {
       ...gameState,
       skipsRemaining: gameState.skipsRemaining + 1,
     };
+
+    // Track direction change (Jacks effectively change turn flow)
+    return GameEngine.trackDirectionChange(updatedGameState);
   }
 
   static servePenalty(gameState: GameState, playerId: string): GameState {
@@ -355,6 +478,19 @@ export class GameEngine {
     for (let i = 0; i < penaltyCards; i++) {
       updatedGameState = DeckManager.drawCard(updatedGameState, playerId);
     }
+
+    // Track penalty statistics
+    updatedGameState = GameEngine.updatePlayerStats(
+      updatedGameState,
+      playerId,
+      {
+        cardsDrawn: penaltyCards,
+        penaltiesReceived: 1,
+      },
+    );
+
+    // Track global penalty cards served
+    updatedGameState = GameEngine.trackPenalty(updatedGameState, penaltyCards);
 
     // Clear penalty and return to normal mode
     updatedGameState = {

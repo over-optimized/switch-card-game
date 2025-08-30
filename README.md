@@ -65,6 +65,7 @@ pnpm ci                   # Full CI pipeline (lint + test + build)
 - Players take turns playing cards that match the top card's suit or rank
 - If you can't play, draw a card from the deck
 - First player to empty their hand wins!
+- **Enhanced Win Screen**: Enjoy meaningful game statistics and player performance insights after each game
 
 ### Multiplayer Setup
 
@@ -102,18 +103,20 @@ switch-card-game/
 #### Unified Mobile-First Architecture
 - **GameBoard**: Unified responsive component using mobile-first patterns
 - **MobileGameBoard**: Mobile-optimized game layout with bottom sheets  
-- **MobileWinModal**: Full-screen celebration modal for game completion
+- **MobileWinModal**: Full-screen celebration modal with enhanced statistics display
 - **MobilePlayerSheet**: Draggable bottom sheet for player hand management
 - **MobileHandArea**: Unified touch/click-optimized card interaction system
 - **HandControls**: CSS modules-based responsive controls (75%/25% layout)
+- **Game Statistics**: Smart statistics tracking with contextual player achievements
 
 #### Network-First Game Architecture
-- **Game Engine**: Core game logic with penalty and special card systems
+- **Game Engine**: Core game logic with penalty and special card systems and comprehensive statistics tracking
 - **WebSocket Client**: Environment-based URLs (dev vs production)
 - **State Management**: Zustand stores with optimistic updates
 - **Room Manager**: Handles multiplayer room creation/joining and AI opponents
 - **Server**: Express + Socket.IO with Railway deployment configuration
 - **Type Safety**: Shared TypeScript interfaces across client/server
+- **Statistics System**: Real-time game metrics with smart selection algorithms
 
 ## 🧪 Testing
 

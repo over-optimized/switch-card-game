@@ -33,7 +33,7 @@ const cleanupInactivePlayers = () => {
     const inactiveTime = now.getTime() - lastActivity.getTime();
 
     if (inactiveTime > timeoutMs) {
-      console.log(
+      logSystem(
         `Disconnecting inactive player: ${playerId} (inactive for ${Math.floor(
           inactiveTime / 60000,
         )} minutes)`,
@@ -60,7 +60,25 @@ const server = createServer(app);
 
 // Environment detection
 const isProduction = process.env.RAILWAY_ENVIRONMENT_NAME === 'production';
+const isDevelopment = process.env.NODE_ENV === 'development' || !isProduction;
 const PORT = process.env.PORT || 3001;
+
+// Logging utility - only log game moves in development
+const logGameMove = (message: string, ...args: unknown[]) => {
+  if (isDevelopment) {
+    console.log(message, ...args);
+  }
+};
+
+// System logging - always log in both dev and production
+const logSystem = (message: string, ...args: unknown[]) => {
+  console.log(message, ...args);
+};
+
+// Error logging - always log in both environments
+const logError = (message: string, ...args: unknown[]) => {
+  console.error(message, ...args);
+};
 
 // CORS configuration for dual-mode operation
 const corsOrigins = isProduction
@@ -100,14 +118,14 @@ const handleAITurns = async (roomCode: string) => {
       const cardToPlay = validCards[0];
 
       // Log opponent move details
-      console.log(
+      logGameMove(
         `[OPPONENT-MOVE] AI ${currentPlayer.id} playing ${cardToPlay.rank}${cardToPlay.suit} (${cardToPlay.id})`,
       );
 
       // Log penalty state before AI plays
       const beforePenalty = room.gameState.penaltyState;
       if (beforePenalty.active) {
-        console.log(
+        logGameMove(
           `[PENALTY-BEFORE] Active penalty: ${beforePenalty.cards} cards (type: ${beforePenalty.type}), target: ${beforePenalty.playerId}`,
         );
       }
@@ -116,7 +134,7 @@ const handleAITurns = async (roomCode: string) => {
       const beforeSkips = room.gameState.skipsRemaining;
       const beforeTurn = room.gameState.currentPlayerIndex;
       if (cardToPlay.rank === 'J') {
-        console.log(
+        logGameMove(
           `[JACK-EFFECT] AI playing Jack ${cardToPlay.suit} - skipsRemaining: ${beforeSkips}, currentPlayer: ${beforeTurn}`,
         );
       }
@@ -137,7 +155,7 @@ const handleAITurns = async (roomCode: string) => {
         beforeTurn !== afterTurn
       ) {
         const nextPlayer = updatedGame.players[afterTurn];
-        console.log(
+        logGameMove(
           `[TURN-ADVANCE] After ${cardToPlay.rank}${cardToPlay.suit}: skipsRemaining ${beforeSkips} -> ${afterSkips}, turn ${beforeTurn} -> ${afterTurn} (${nextPlayer?.name || 'Unknown'})`,
         );
       }
@@ -148,18 +166,18 @@ const handleAITurns = async (roomCode: string) => {
         beforePenalty.active !== afterPenalty.active ||
         beforePenalty.cards !== afterPenalty.cards
       ) {
-        console.log(
+        logGameMove(
           `[PENALTY-AFTER] Penalty changed: active=${afterPenalty.active}, cards=${afterPenalty.cards}, type=${afterPenalty.type}, target=${afterPenalty.playerId}`,
         );
 
         if (cardToPlay.rank === '2') {
-          console.log(
+          logGameMove(
             `[TRICK-CARD-2s] 2${cardToPlay.suit} played - penalty should stack by +2 cards`,
           );
         }
       }
 
-      console.log(
+      logGameMove(
         `[NETWORK] Broadcasting card-played event for AI ${currentPlayer.name} (${currentPlayer.id}): ${cardToPlay.rank}${cardToPlay.suit}`,
       );
       io.to(roomCode).emit('card-played', {
@@ -191,7 +209,7 @@ const handleAITurns = async (roomCode: string) => {
       const penaltyCards = room.gameState.penaltyState.cards;
 
       if (hadActivePenalty) {
-        console.log(
+        logGameMove(
           `[AI-PENALTY] AI ${currentPlayer.id} serving penalty: ${penaltyCards} cards (type: ${room.gameState.penaltyState.type})`,
         );
       }
@@ -201,7 +219,7 @@ const handleAITurns = async (roomCode: string) => {
 
       // Log results
       if (hadActivePenalty) {
-        console.log(
+        logGameMove(
           `[AI-PENALTY-RESULT] Penalty cleared: ${!updatedGame.penaltyState.active}, mode: ${updatedGame.gameMode}`,
         );
       }
@@ -215,7 +233,7 @@ const handleAITurns = async (roomCode: string) => {
       setTimeout(() => handleAITurns(roomCode), 1000);
     }
   } catch (error) {
-    console.error(`AI turn error in room ${roomCode}:`, error);
+    logError(`AI turn error in room ${roomCode}:`, error);
   }
 };
 
@@ -252,14 +270,14 @@ app.get('/api/rooms', (_req, res) => {
 });
 
 io.on('connection', socket => {
-  console.log(`Player connected: ${socket.id}`);
+  logSystem(`Player connected: ${socket.id}`);
 
   // Track initial connection activity
   updatePlayerActivity(socket.id);
 
   // Create local single-player room with AI opponents
   socket.on('create-local-game', ({ playerName, aiOpponents = 1 }) => {
-    console.log(
+    logSystem(
       `Creating local game: ${playerName} with ${aiOpponents} AI opponent(s)`,
     );
     updatePlayerActivity(socket.id);
@@ -300,7 +318,7 @@ io.on('connection', socket => {
         gameState: startedGame,
       });
 
-      console.log(
+      logSystem(
         `Local game created: ${room.code} by ${playerName} with ${aiOpponents} AI opponent(s)`,
       );
 
@@ -331,7 +349,7 @@ io.on('connection', socket => {
 
         socket.emit('room-created', { room, player: host });
 
-        console.log(`Room created: ${room.code} by ${playerName}`);
+        logSystem(`Room created: ${room.code} by ${playerName}`);
       } catch (error) {
         socket.emit('error', {
           message:
@@ -356,7 +374,7 @@ io.on('connection', socket => {
       socket.to(roomCode).emit('player-joined', { player, room });
       io.to(roomCode).emit('room-updated', { room });
 
-      console.log(`Player ${playerName} joined room ${roomCode}`);
+      logSystem(`Player ${playerName} joined room ${roomCode}`);
     } catch (error) {
       socket.emit('error', {
         message: error instanceof Error ? error.message : 'Failed to join room',
@@ -399,7 +417,7 @@ io.on('connection', socket => {
 
       io.to(roomCode).emit('game-started', { gameState: startedGame });
 
-      console.log(`Game started in room ${roomCode}`);
+      logSystem(`Game started in room ${roomCode}`);
     } catch (error) {
       socket.emit('error', {
         message:
@@ -430,17 +448,17 @@ io.on('connection', socket => {
       const cardToPlay = player?.hand.find(c => c.id === cardId);
 
       if (cardToPlay) {
-        console.log(
+        logGameMove(
           `[HUMAN-MOVE] Player ${playerId} playing ${cardToPlay.rank}${cardToPlay.suit} (${cardId})`,
         );
 
         // Log Ace suit selection
         if (cardToPlay.rank === 'A' && chosenSuit) {
-          console.log(
+          logGameMove(
             `[ACE-SUIT-SELECTION] Player chose ${chosenSuit} for ${cardToPlay.rank}${cardToPlay.suit}`,
           );
         } else if (cardToPlay.rank === 'A' && !chosenSuit) {
-          console.log(
+          logGameMove(
             `[ACE-NO-SUIT] Player played ${cardToPlay.rank}${cardToPlay.suit} without suit selection - will default to ${cardToPlay.suit}`,
           );
         }
@@ -448,7 +466,7 @@ io.on('connection', socket => {
         // Log penalty state before human plays
         const beforePenalty = room.gameState.penaltyState;
         if (beforePenalty.active) {
-          console.log(
+          logGameMove(
             `[PENALTY-BEFORE] Active penalty: ${beforePenalty.cards} cards (type: ${beforePenalty.type}), target: ${beforePenalty.playerId}`,
           );
         }
@@ -466,7 +484,7 @@ io.on('connection', socket => {
       const beforeSkips = room.gameState.skipsRemaining;
       const beforeTurn = room.gameState.currentPlayerIndex;
       if (cardToPlay?.rank === 'J') {
-        console.log(
+        logGameMove(
           `[JACK-EFFECT] Human playing Jack ${cardToPlay.suit} - skipsRemaining: ${beforeSkips}, currentPlayer: ${beforeTurn}`,
         );
       }
@@ -483,7 +501,7 @@ io.on('connection', socket => {
         beforeTurn !== afterTurn
       ) {
         const nextPlayer = updatedGame.players[afterTurn];
-        console.log(
+        logGameMove(
           `[TURN-ADVANCE] After ${cardToPlay?.rank}${cardToPlay?.suit}: skipsRemaining ${beforeSkips} -> ${afterSkips}, turn ${beforeTurn} -> ${afterTurn} (${nextPlayer?.name || 'Unknown'})`,
         );
       }
@@ -497,12 +515,12 @@ io.on('connection', socket => {
           beforePenalty.active !== afterPenalty.active ||
           beforePenalty.cards !== afterPenalty.cards
         ) {
-          console.log(
+          logGameMove(
             `[PENALTY-AFTER] Penalty changed: active=${afterPenalty.active}, cards=${afterPenalty.cards}, type=${afterPenalty.type}, target=${afterPenalty.playerId}`,
           );
 
           if (cardToPlay.rank === '2') {
-            console.log(
+            logGameMove(
               `[TRICK-CARD-2s] 2${cardToPlay.suit} played - penalty should activate/stack by +2 cards`,
             );
           }
@@ -512,7 +530,7 @@ io.on('connection', socket => {
       const humanPlayer = room.players.find(p => p.id === playerId);
       const playedCard =
         room.gameState.discardPile[room.gameState.discardPile.length - 1];
-      console.log(
+      logGameMove(
         `[NETWORK] Broadcasting card-played event for human ${humanPlayer?.name || 'Unknown'} (${playerId}): ${playedCard?.rank}${playedCard?.suit}`,
       );
       io.to(roomCode).emit('card-played', {
@@ -533,7 +551,7 @@ io.on('connection', socket => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Invalid card play';
-      console.error(
+      logError(
         `[PLAY-CARD ERROR] Player ${playerId} in room ${roomCode}:`,
         errorMessage,
       );
@@ -560,7 +578,7 @@ io.on('connection', socket => {
         return;
       }
 
-      console.log(
+      logGameMove(
         `[PLAY-CARDS] Player ${playerId} attempting to play ${cardIds.length} cards:`,
         cardIds,
       );
@@ -575,12 +593,12 @@ io.on('connection', socket => {
       const updatedGame = GameEngine.processAction(room.gameState, action);
       room.gameState = updatedGame;
 
-      console.log(
+      logGameMove(
         `[PLAY-CARDS SUCCESS] Player ${playerId} played cards successfully`,
       );
 
       const multiCardPlayer = room.players.find(p => p.id === playerId);
-      console.log(
+      logGameMove(
         `[NETWORK] Broadcasting cards-played event for ${multiCardPlayer?.name || 'Unknown'} (${playerId}): ${cardIds.length} cards`,
       );
       io.to(roomCode).emit('cards-played', {
@@ -601,7 +619,7 @@ io.on('connection', socket => {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Invalid cards play';
-      console.error(
+      logError(
         `[PLAY-CARDS ERROR] Player ${playerId} in room ${roomCode}:`,
         errorMessage,
         'Cards:',
@@ -635,7 +653,7 @@ io.on('connection', socket => {
       const penaltyCards = room.gameState.penaltyState.cards;
 
       if (hadActivePenalty) {
-        console.log(
+        logGameMove(
           `[HUMAN-PENALTY] Player ${playerId} serving penalty: ${penaltyCards} cards (type: ${room.gameState.penaltyState.type})`,
         );
       }
@@ -651,7 +669,7 @@ io.on('connection', socket => {
 
       // Log results for human players
       if (hadActivePenalty) {
-        console.log(
+        logGameMove(
           `[HUMAN-PENALTY-RESULT] Penalty cleared: ${!updatedGame.penaltyState.active}, mode: ${updatedGame.gameMode}`,
         );
       }
@@ -672,7 +690,7 @@ io.on('connection', socket => {
     const { roomCode, playerId } = socket.data;
 
     if (roomCode && playerId) {
-      console.log(`Player ${playerId} leaving room ${roomCode} gracefully`);
+      logSystem(`Player ${playerId} leaving room ${roomCode} gracefully`);
 
       // Clean up activity tracking
       playerLastActivity.delete(playerId);
@@ -699,7 +717,7 @@ io.on('connection', socket => {
         socket.leave(roomCode);
         socket.data = {};
 
-        console.log(`Player ${playerId} successfully left room ${roomCode}`);
+        logSystem(`Player ${playerId} successfully left room ${roomCode}`);
       } else {
         socket.emit('left-room', {
           success: false,
@@ -733,7 +751,7 @@ io.on('connection', socket => {
       }, 30000); // 30 second grace period for reconnection
     }
 
-    console.log(`Player disconnected: ${socket.id}`);
+    logSystem(`Player disconnected: ${socket.id}`);
   });
 });
 
@@ -743,29 +761,57 @@ const logResourceUsage = () => {
   const cpuUsage = process.cpuUsage();
   const activeRooms = RoomManager.getAllRooms().length;
   const activePlayers = playerLastActivity.size;
+  const uptime = process.uptime();
+  const uptimeHours = Math.floor(uptime / 3600);
+  const uptimeMinutes = Math.floor((uptime % 3600) / 60);
 
-  console.log(`📊 Resource Usage:`, {
+  // Calculate room statistics
+  const rooms = RoomManager.getAllRooms();
+  const playingRooms = rooms.filter(room => room.status === 'playing').length;
+  const waitingRooms = rooms.filter(room => room.status === 'waiting').length;
+  const totalPlayersInRooms = rooms.reduce(
+    (sum, room) => sum + room.players.length,
+    0,
+  );
+
+  logSystem(`📊 Resource Usage:`, {
+    timestamp: new Date().toISOString(),
+    environment: isProduction ? 'production' : 'development',
+    uptime: `${uptimeHours}h ${uptimeMinutes}m`,
     memory: {
       heapUsed: `${Math.round(memUsage.heapUsed / 1024 / 1024)}MB`,
       heapTotal: `${Math.round(memUsage.heapTotal / 1024 / 1024)}MB`,
       rss: `${Math.round(memUsage.rss / 1024 / 1024)}MB`,
+      external: `${Math.round(memUsage.external / 1024 / 1024)}MB`,
     },
     cpu: {
       user: `${Math.round(cpuUsage.user / 1000)}ms`,
       system: `${Math.round(cpuUsage.system / 1000)}ms`,
     },
-    stats: {
-      activeRooms,
-      activePlayers,
+    connections: {
       connectedSockets: io.sockets.sockets.size,
+      trackedPlayers: activePlayers,
+    },
+    rooms: {
+      total: activeRooms,
+      playing: playingRooms,
+      waiting: waitingRooms,
+      totalPlayers: totalPlayersInRooms,
     },
   });
 
-  // Memory threshold warning for Railway trial (150MB heap usage warning)
+  // Memory threshold warnings for Railway
   const heapUsedMB = memUsage.heapUsed / 1024 / 1024;
   if (heapUsedMB > 150) {
-    console.warn(
+    logSystem(
       `⚠️ High memory usage: ${Math.round(heapUsedMB)}MB - consider cleanup`,
+    );
+  }
+
+  // Connection monitoring
+  if (io.sockets.sockets.size !== activePlayers) {
+    logSystem(
+      `🔍 Connection mismatch: ${io.sockets.sockets.size} sockets, ${activePlayers} tracked players`,
     );
   }
 };
@@ -781,21 +827,21 @@ setInterval(
   GAME_CONFIG.INACTIVITY_CHECK_INTERVAL_MINUTES * 60 * 1000,
 ); // Cleanup inactive players every 5 minutes
 
-// Resource monitoring every 10 minutes (less frequent to reduce log noise)
-setInterval(
-  () => {
-    logResourceUsage();
-  },
-  10 * 60 * 1000,
-);
+// Resource monitoring - more frequent in dev, less frequent in production
+const resourceMonitoringInterval = isDevelopment
+  ? 2 * 60 * 1000
+  : 5 * 60 * 1000; // 2min dev, 5min prod
+setInterval(() => {
+  logResourceUsage();
+}, resourceMonitoringInterval);
 
 server.listen(PORT, () => {
-  console.log(`🎴 Switch Card Game Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logSystem(`🎴 Switch Card Game Server running on port ${PORT}`);
+  logSystem(`Environment: ${process.env.NODE_ENV || 'development'}`);
 
   // Log initial resource usage
   setTimeout(() => {
-    console.log('🚀 Server startup complete - initial resource usage:');
+    logSystem('🚀 Server startup complete - initial resource usage:');
     logResourceUsage();
   }, 1000);
 });

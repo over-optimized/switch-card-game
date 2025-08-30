@@ -591,3 +591,186 @@
     min-height: 50px;
   }
 }
+
+/* Online Play Section */
+.onlinePlayContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.connectionStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.connectionDot {
+  font-size: 12px;
+  display: inline-block;
+}
+
+.connectionDot.connected {
+  color: #4CAF50;
+}
+
+.connectionDot.connecting {
+  color: #FFA726;
+  animation: pulse 1.5s infinite;
+}
+
+.connectionDot.offline {
+  color: #F44336;
+}
+
+.connectionText {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.playerNameSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.playerNameInput,
+.roomCodeInput {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: white;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.playerNameInput:focus,
+.roomCodeInput:focus {
+  outline: none;
+  border-color: #3498db;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.roomActions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.createRoomSection,
+.joinRoomSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.createRoomSection h4,
+.joinRoomSection h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #3498db;
+}
+
+.joinRoomInputs {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+}
+
+.roomCodeInput {
+  flex: 1;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.roomActionBtn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.roomActionBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+}
+
+.roomActionBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.roomActionBtn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+
+.gameMessage {
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Mobile optimizations for online play */
+@media (max-width: 768px) {
+  .joinRoomInputs {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .roomCodeInput {
+    width: 100%;
+  }
+
+  .roomActionBtn {
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+  }
+
+  .roomActions {
+    gap: 16px;
+  }
+}

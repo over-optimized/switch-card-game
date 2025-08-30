@@ -1,0 +1,154 @@
+/* Card Base Styles */
+.card {
+  width: 65px;
+  height: 95px;
+  background: white;
+  color: #2c3e50;
+  border: 2px solid #34495e;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  position: relative;
+}
+
+/* Card Colors */
+.cardRed {
+  color: #e74c3c;
+}
+
+.cardBlack {
+  color: #2c3e50;
+}
+
+/* Card States */
+.playable {
+  border-color: #27ae60;
+  box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+}
+
+.playable:hover {
+  transform: translateY(-15px) scale(1.1);
+  background: #e8f5e8;
+  box-shadow: 0 15px 30px rgba(39, 174, 96, 0.4);
+  z-index: 10;
+  border-color: #27ae60;
+}
+
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.disabled:hover {
+  transform: none;
+  background: white;
+  box-shadow: none;
+}
+
+/* Hover Effects (Desktop Only) */
+@media (hover: hover) {
+  .card:not(.disabled):not(.playable):hover {
+    transform: translateY(-15px) scale(1.05);
+    background: #f8f9fa;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 5;
+  }
+}
+
+/* Card Selection */
+.selected {
+  transform: translateY(-15px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(52, 152, 219, 0.4);
+  border-color: #3498db !important;
+  border-width: 3px;
+  background: #e8f4fd !important;
+  position: relative;
+}
+
+.selected:hover {
+  transform: translateY(-15px) scale(1.05);
+}
+
+/* Selection Order Indicator */
+.selectionOrder {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: #3498db;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  font-weight: bold;
+  z-index: 15;
+}
+
+/* Drag and Drop */
+.card[draggable="true"] {
+  cursor: grab;
+}
+
+.card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+}
+
+/* Mobile Optimizations */
+@media (max-width: 480px) {
+  .card {
+    width: 75px;
+    height: 110px;
+    font-size: 1.3em;
+    margin: 4px;
+  }
+
+  .selected {
+    transform: translateY(-15px) scale(1.05);
+    box-shadow: 0 12px 25px rgba(52, 152, 219, 0.5);
+    border-width: 4px;
+    position: relative;
+  }
+
+  .playable:hover {
+    transform: translateY(-15px) scale(1.05);
+    box-shadow: 0 12px 25px rgba(39, 174, 96, 0.5);
+  }
+
+  /* Touch Feedback */
+  .card:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+  }
+}
+
+/* Extra Small Screens */
+@media (max-width: 375px) {
+  .card {
+    width: 68px;
+    height: 98px;
+    font-size: 1.2em;
+  }
+}
+
+/* Tablet Optimizations */
+@media (max-width: 768px) and (min-width: 481px) {
+  .card {
+    width: 70px;
+    height: 100px;
+    font-size: 1.25em;
+  }
+}

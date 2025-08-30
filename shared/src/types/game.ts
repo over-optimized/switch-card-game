@@ -5,6 +5,27 @@ export type GamePhase = 'waiting' | 'playing' | 'finished';
 export type GameDirection = 1 | -1;
 export type GameMode = 'normal' | 'active-2s' | 'active-run' | 'mirror-mode';
 
+export interface PlayerGameStats {
+  cardsPlayed: number;
+  cardsDrawn: number;
+  specialCardsPlayed: number; // 2s, Jacks, Aces, etc.
+  penaltiesReceived: number;
+  totalMoves: number; // cardsPlayed + cardsDrawn
+}
+
+export interface GameStats {
+  gameStarted?: Date | undefined;
+  gameFinished?: Date | undefined;
+  gameDurationMs?: number | undefined;
+  totalMoves: number;
+  totalCardsDrawn: number;
+  totalCardsPlayed: number;
+  playerStats: Record<string, PlayerGameStats>;
+  directionChanges: number;
+  penaltyCardsServed: number;
+  specialCardsPlayedTotal: number;
+}
+
 export interface PenaltyState {
   active: boolean;
   cards: number;
@@ -28,6 +49,7 @@ export interface GameState {
   createdAt: Date;
   startedAt?: Date | undefined;
   finishedAt?: Date | undefined;
+  gameStats: GameStats;
 }
 
 export interface Room {
@@ -54,6 +76,18 @@ export function createGameState(
   players: Player[],
   shuffledDeck: Card[],
 ): GameState {
+  // Initialize player stats for all players
+  const playerStats: Record<string, PlayerGameStats> = {};
+  players.forEach(player => {
+    playerStats[player.id] = {
+      cardsPlayed: 0,
+      cardsDrawn: 0,
+      specialCardsPlayed: 0,
+      penaltiesReceived: 0,
+      totalMoves: 0,
+    };
+  });
+
   return {
     id,
     players: [...players],
@@ -71,6 +105,18 @@ export function createGameState(
     chosenSuit: undefined,
     skipsRemaining: 0,
     createdAt: new Date(),
+    gameStats: {
+      gameStarted: undefined,
+      gameFinished: undefined,
+      gameDurationMs: undefined,
+      totalMoves: 0,
+      totalCardsDrawn: 0,
+      totalCardsPlayed: 0,
+      playerStats,
+      directionChanges: 0,
+      penaltyCardsServed: 0,
+      specialCardsPlayedTotal: 0,
+    },
   };
 }
 

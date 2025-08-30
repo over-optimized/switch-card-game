@@ -232,5 +232,3 @@ If quality gates fail:
 - **Quality gates before every commit** - pnpm ci must pass
 
 This configuration ensures high code quality, prevents regressions, and maintains accurate documentation throughout development.
-
-- Never include `Generated with Claude Code` in commit messages
