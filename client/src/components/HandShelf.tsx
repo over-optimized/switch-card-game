@@ -207,18 +207,7 @@ export function HandShelf() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onDoubleClick={handleDoubleTab}
-      >
-        <div className="drag-handle-icon">
-          <div className="grip-line" />
-          <div className="grip-line" />
-          <div className="grip-line" />
-        </div>
-        <div className="drag-handle-label">
-          {handShelf.position > 0
-            ? `Expanded ${Math.round((handShelf.position / currentLayout.constraints.maxPosition) * 100)}%`
-            : 'Default'}
-        </div>
-      </div>
+      />
     </div>
   );
 }
