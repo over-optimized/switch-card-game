@@ -14,7 +14,7 @@ export function DirectionIndicator({
 }: DirectionIndicatorProps) {
   const getDirectionDisplay = () => {
     const isClockwise = direction === 1;
-    
+
     return {
       text: isClockwise ? 'Clockwise' : 'Counter-clockwise',
       icon: isClockwise ? '↻' : '↺',
@@ -50,7 +50,7 @@ export function DirectionIndicator({
         </span>
         <span className={styles.directionText}>{directionInfo.text}</span>
       </div>
-      
+
       {playerCount > 2 && (
         <div className={styles.turnOrder}>
           Turn order: {directionInfo.arrow}

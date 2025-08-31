@@ -77,7 +77,6 @@ describe('GameStore', () => {
     });
 
     it('should update playerId when local-game-created event is received', () => {
-
       // Set up socket manually for test
       useGameStore.setState({ socket: mockSocket });
 

@@ -107,10 +107,10 @@ describe('GameEngine', () => {
   describe('8s - Reverse Direction', () => {
     it('should reverse direction when playing an 8', () => {
       const startedGame = GameEngine.startGame(gameState);
-      
+
       // Set up initial state with clockwise direction
       expect(startedGame.direction).toBe(1);
-      
+
       // Create an 8 card and put it in current player's hand
       const eightCard = { id: 'eight-test', rank: '8', suit: 'spades' };
       const currentPlayerIndex = startedGame.currentPlayerIndex;
@@ -119,7 +119,7 @@ describe('GameEngine', () => {
         ...updatedPlayers[currentPlayerIndex],
         hand: [...updatedPlayers[currentPlayerIndex].hand, eightCard],
       };
-      
+
       // Set discard pile to allow playing the 8
       const gameWithEight = {
         ...startedGame,
@@ -140,7 +140,7 @@ describe('GameEngine', () => {
 
     it('should handle multiple 8s correctly (odd = reverse, even = same)', () => {
       const startedGame = GameEngine.startGame(gameState);
-      
+
       // Create two 8 cards for multiple play
       const eight1 = { id: 'eight-1', rank: '8', suit: 'spades' };
       const eight2 = { id: 'eight-2', rank: '8', suit: 'clubs' };
@@ -150,7 +150,7 @@ describe('GameEngine', () => {
         ...updatedPlayers[currentPlayerIndex],
         hand: [...updatedPlayers[currentPlayerIndex].hand, eight1, eight2],
       };
-      
+
       const gameWithEights = {
         ...startedGame,
         players: updatedPlayers,
@@ -173,14 +173,14 @@ describe('GameEngine', () => {
       // Create 3-player game
       const threePlayers = [
         createPlayer('player1', 'Alice'),
-        createPlayer('player2', 'Bob'), 
+        createPlayer('player2', 'Bob'),
         createPlayer('player3', 'Charlie'),
       ];
       const deck = createStandardDeck();
       const threePlayerGame = GameEngine.startGame(
-        createGameState('test-3p', threePlayers, deck)
+        createGameState('test-3p', threePlayers, deck),
       );
-      
+
       // Set up 8 card play
       const eightCard = { id: 'eight-test', rank: '8', suit: 'spades' };
       const currentPlayerIndex = threePlayerGame.currentPlayerIndex; // Should be 0 (Alice)
@@ -189,7 +189,7 @@ describe('GameEngine', () => {
         ...updatedPlayers[currentPlayerIndex],
         hand: [...updatedPlayers[currentPlayerIndex].hand, eightCard],
       };
-      
+
       const gameWithEight = {
         ...threePlayerGame,
         players: updatedPlayers,
@@ -212,14 +212,14 @@ describe('GameEngine', () => {
       // For now, 8s effect should always apply since it's in the game engine
       const startedGame = GameEngine.startGame(gameState);
       const eightCard = { id: 'eight-test', rank: '8', suit: 'spades' };
-      
+
       const currentPlayerIndex = startedGame.currentPlayerIndex;
       const updatedPlayers = [...startedGame.players];
       updatedPlayers[currentPlayerIndex] = {
         ...updatedPlayers[currentPlayerIndex],
         hand: [...updatedPlayers[currentPlayerIndex].hand, eightCard],
       };
-      
+
       const gameWithEight = {
         ...startedGame,
         players: updatedPlayers,

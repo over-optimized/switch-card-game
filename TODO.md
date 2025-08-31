@@ -403,6 +403,39 @@ The current architecture has grown complex with mobile/desktop duplication and l
 - **Maintain compatibility**: Ensure new cards work with existing 2s, Aces, Jacks
 - **Mobile-first UI**: All new indicators must work on mobile and desktop
 
+## 🎮 Game Customization UI - NEXT PRIORITY
+
+**Current Issue**: Players can't customize trick card rules from the main menu
+
+### Phase 1: MenuScreen Game Rules Section
+
+- [ ] **Add Game Rules Section to MenuScreen**
+  - [ ] Add `gameRulesExpanded: boolean` to menuSections in uiStore
+  - [ ] Create expandable "Game Rules" section with toggle switches
+  - [ ] Follow existing section pattern (Quick Start, Online Play, Player Setup)
+
+- [ ] **Trick Card Toggle Controls**
+  - [ ] Individual toggle switches for implemented cards (2s, Aces, Jacks, 8s)
+  - [ ] Disabled toggles for future cards (5♥, 7s, Runs) with "Coming Soon"
+  - [ ] Visual card icons + descriptions for each toggle
+
+- [ ] **Enhanced Game Creation Flow**
+  - [ ] Update GameSetupConfig to include trick card settings
+  - [ ] Pass custom settings to createRoom/createLocalGame
+  - [ ] Server-side validation of rule combinations
+
+### Phase 2: Visual Rule Indicators
+
+- [ ] **In-Game Menu Enhancements** ✅ COMPLETED
+  - [x] Fixed incorrect rule descriptions (8s: "Miss Turn" → "Reverse Direction")  
+  - [x] Added all missing rule indicators (5♥, 7s, Runs)
+  - [x] Proper active/inactive visual states with green/red styling
+
+- [ ] **Game Setup Preview**
+  - [ ] Active rules summary in game creation
+  - [ ] "Classic Rules" vs "Full Rules" preset buttons
+  - [ ] Rule conflict validation and warnings
+
 ### Medium Priority - Game Polish
 
 - [x] **Add game statistics** ✅ COMPLETED

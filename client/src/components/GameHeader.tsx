@@ -10,14 +10,19 @@ interface GameHeaderProps {
 export function GameHeader({ onBackToMenu }: GameHeaderProps) {
   const isMobile = useIsMobile();
 
-  const { roomCode, connectionStatus, reconnectAttempts, manualReconnect, gameState } =
-    useGameStore(state => ({
-      roomCode: state.roomCode,
-      connectionStatus: state.connectionStatus,
-      reconnectAttempts: state.reconnectAttempts || 0,
-      manualReconnect: state.manualReconnect,
-      gameState: state.gameState,
-    }));
+  const {
+    roomCode,
+    connectionStatus,
+    reconnectAttempts,
+    manualReconnect,
+    gameState,
+  } = useGameStore(state => ({
+    roomCode: state.roomCode,
+    connectionStatus: state.connectionStatus,
+    reconnectAttempts: state.reconnectAttempts || 0,
+    manualReconnect: state.manualReconnect,
+    gameState: state.gameState,
+  }));
 
   const { toggleInGameMenu, toggleRoomInfo } = useUIStore(state => ({
     toggleInGameMenu: state.toggleInGameMenu,
@@ -117,13 +122,15 @@ export function GameHeader({ onBackToMenu }: GameHeaderProps) {
         }}
       >
         {/* Direction Indicator - only show during gameplay */}
-        {gameState && gameState.phase === 'playing' && gameState.players.length > 2 && (
-          <DirectionIndicator
-            direction={gameState.direction}
-            playerCount={gameState.players.length}
-            compact={isMobile}
-          />
-        )}
+        {gameState &&
+          gameState.phase === 'playing' &&
+          gameState.players.length > 2 && (
+            <DirectionIndicator
+              direction={gameState.direction}
+              playerCount={gameState.players.length}
+              compact={isMobile}
+            />
+          )}
 
         {/* Connection Status */}
         <div

@@ -474,7 +474,10 @@ export const useGameStore = create<GameStore>()(
                     ) {
                       gameToasts.show8sEffect(gameState.direction, player.name);
                     }
-                    const directionText = gameState.direction === 1 ? 'clockwise' : 'counter-clockwise';
+                    const directionText =
+                      gameState.direction === 1
+                        ? 'clockwise'
+                        : 'counter-clockwise';
                     effect = `Direction reversed to ${directionText}`;
                   }
 

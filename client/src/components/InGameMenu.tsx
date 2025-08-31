@@ -108,13 +108,13 @@ export function InGameMenu({ onBackToMenu }: InGameMenuProps) {
                   className={`rule-indicator ${settings.enable2s ? 'active' : 'inactive'}`}
                 >
                   <span className="rule-card">2s</span>
-                  <span className="rule-desc">Skip Turn</span>
+                  <span className="rule-desc">Pick Up Two</span>
                 </div>
                 <div
                   className={`rule-indicator ${settings.enable8s ? 'active' : 'inactive'}`}
                 >
                   <span className="rule-card">8s</span>
-                  <span className="rule-desc">Miss Turn</span>
+                  <span className="rule-desc">Reverse Direction</span>
                 </div>
                 <div
                   className={`rule-indicator ${settings.enableAces ? 'active' : 'inactive'}`}
@@ -126,7 +126,25 @@ export function InGameMenu({ onBackToMenu }: InGameMenuProps) {
                   className={`rule-indicator ${settings.enableJacks ? 'active' : 'inactive'}`}
                 >
                   <span className="rule-card">Js</span>
-                  <span className="rule-desc">Reverse</span>
+                  <span className="rule-desc">Skip Player</span>
+                </div>
+                <div
+                  className={`rule-indicator ${settings.enable5Hearts ? 'active' : 'inactive'}`}
+                >
+                  <span className="rule-card">5♥</span>
+                  <span className="rule-desc">Pick Up Five</span>
+                </div>
+                <div
+                  className={`rule-indicator ${settings.enableMirror ? 'active' : 'inactive'}`}
+                >
+                  <span className="rule-card">7s</span>
+                  <span className="rule-desc">Mirror Card</span>
+                </div>
+                <div
+                  className={`rule-indicator ${settings.enableRuns ? 'active' : 'inactive'}`}
+                >
+                  <span className="rule-card">3s</span>
+                  <span className="rule-desc">Start Runs</span>
                 </div>
               </div>
             </div>
