@@ -94,6 +94,15 @@ export const gameToasts = {
     );
   },
 
+  show8sEffect: (direction: 1 | -1, playerName?: string) => {
+    const directionText = direction === 1 ? 'clockwise' : 'counter-clockwise';
+    gameToasts.showTrickCard(
+      '8',
+      `Direction reversed to ${directionText}${playerName ? ` by ${playerName}` : ''}`,
+      '↻',
+    );
+  },
+
   // Turn prompt notifications
   showTurnPrompt: (message: string, options?: string[]) => {
     const showToast = useUIStore.getState().showToast;

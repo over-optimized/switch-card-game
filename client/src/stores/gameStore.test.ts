@@ -19,6 +19,7 @@ vi.mock('../utils/toastUtils', () => ({
     showJackEffect: vi.fn(),
     showAceEffect: vi.fn(),
     show2sEffect: vi.fn(),
+    show8sEffect: vi.fn(),
     showTrickCard: vi.fn(),
     showPenaltyCreated: vi.fn(),
     showPenaltyStacked: vi.fn(),

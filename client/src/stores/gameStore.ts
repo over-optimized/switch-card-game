@@ -463,6 +463,19 @@ export const useGameStore = create<GameStore>()(
                       );
                     }
                     effect = 'Next player skipped';
+                  } else if (cardPlayed.rank === '8') {
+                    // 8 reverses direction - show toast
+                    if (
+                      player.name !== 'You' &&
+                      player.name !==
+                        get().gameState?.players?.find(
+                          p => p.id === get().playerId,
+                        )?.name
+                    ) {
+                      gameToasts.show8sEffect(gameState.direction, player.name);
+                    }
+                    const directionText = gameState.direction === 1 ? 'clockwise' : 'counter-clockwise';
+                    effect = `Direction reversed to ${directionText}`;
                   }
 
                   gameToasts.showOpponentMove(player.name, cardDisplay, effect);
