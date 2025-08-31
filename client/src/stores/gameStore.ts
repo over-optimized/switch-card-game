@@ -227,7 +227,21 @@ export const useGameStore = create<GameStore>()(
                 playerName,
                 aiOpponents,
               });
-              socket.emit('create-local-game', { playerName, aiOpponents });
+              socket.emit('create-local-game', {
+                playerName,
+                aiOpponents,
+                gameSettings: config?.gameSettings
+                  ? {
+                      enable2s: config.gameSettings.enable2s,
+                      enable8s: config.gameSettings.enable8s,
+                      enableAces: config.gameSettings.enableAces,
+                      enableJacks: config.gameSettings.enableJacks,
+                      enable5Hearts: config.gameSettings.enable5Hearts,
+                      enableMirror: config.gameSettings.enableMirror,
+                      enableRuns: config.gameSettings.enableRuns,
+                    }
+                  : undefined,
+              });
             } else {
               set({
                 isLoading: false,
