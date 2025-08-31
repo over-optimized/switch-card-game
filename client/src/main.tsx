@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Analytics } from '@vercel/analytics/react';
 import { App } from './App';
 import './styles/globals.css';
 
@@ -13,5 +14,6 @@ const root = createRoot(container);
 root.render(
   <StrictMode>
     <App />
+    <Analytics />
   </StrictMode>,
 );

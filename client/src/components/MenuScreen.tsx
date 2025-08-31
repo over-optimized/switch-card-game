@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { track } from '@vercel/analytics';
 import { useUIStore, useGameStore } from '../stores';
 import styles from './MenuScreen.module.css';
 
@@ -166,6 +167,14 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
   const handleQuickStart = (
     preset: (typeof QUICK_START_PRESETS)[keyof typeof QUICK_START_PRESETS],
   ) => {
+    // Track quick start game type
+    track('game_started', {
+      type: 'quick_start',
+      mode: preset.label,
+      player_count: preset.playerCount,
+      has_ai: preset.players.some(p => p.type === 'ai'),
+    });
+
     const config: GameSetupConfig = {
       playerCount: preset.playerCount,
       players: preset.players,
@@ -179,6 +188,14 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
   };
 
   const handleStartGame = () => {
+    // Track custom game setup
+    track('game_started', {
+      type: 'custom',
+      player_count: playerCount,
+      has_ai: players.some(p => p.type === 'ai'),
+      ai_count: players.filter(p => p.type === 'ai').length,
+    });
+
     const config: GameSetupConfig = {
       playerCount,
       players,
@@ -213,6 +230,20 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
       // Create the room
       const success = await createRoom(playerName.trim());
       if (success) {
+        // Track room creation
+        track('room_created', {
+          max_players: 4, // Default room size
+          player_name_length: playerName.trim().length,
+        });
+
+        // Track multiplayer game start
+        track('game_started', {
+          type: 'multiplayer',
+          mode: 'host',
+          player_count: 1, // Just host initially
+          has_ai: false,
+        });
+
         // Navigate to game screen - create a basic online game config
         const config: GameSetupConfig = {
           playerCount: 2, // Will be determined by room
@@ -266,6 +297,21 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
         playerName.trim(),
       );
       if (success) {
+        // Track room joining
+        track('room_joined', {
+          room_code_length: roomCode.trim().length,
+          join_method: 'code_entry',
+          player_name_length: playerName.trim().length,
+        });
+
+        // Track multiplayer game start
+        track('game_started', {
+          type: 'multiplayer',
+          mode: 'join',
+          player_count: 2, // Unknown, will be updated when game starts
+          has_ai: false,
+        });
+
         // Navigate to game screen - create a basic online game config
         const config: GameSetupConfig = {
           playerCount: 2, // Will be determined by room

@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { track } from '@vercel/analytics';
 import { GameEngine, GameState, getCardDisplayName, Suit } from 'switch-shared';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
@@ -583,8 +584,23 @@ export const useGameStore = create<GameStore>()(
           socket.on('game-finished', ({ winner, gameState }) => {
             logGame('Game finished', { winner, gameState });
 
-            // Show game end toast - winner is a Player object, not an ID
+            // Track game completion
+            const gameDurationMs = gameState.gameStats.gameDurationMs || 0;
             const isYou = winner.id === get().playerId;
+
+            track('game_finished', {
+              duration_seconds: Math.round(gameDurationMs / 1000),
+              player_count: gameState.players.length,
+              winner_type: winner.isAI ? 'ai' : 'human',
+              winner_is_user: isYou,
+              total_moves: gameState.gameStats.totalMoves,
+              cards_played: gameState.gameStats.totalCardsPlayed,
+              cards_drawn: gameState.gameStats.totalCardsDrawn,
+              penalties_served: gameState.gameStats.penaltyCardsServed,
+              direction_changes: gameState.gameStats.directionChanges,
+            });
+
+            // Show game end toast - winner is a Player object, not an ID
             const winnerName = winner.name;
 
             gameToasts.showGameEnd(winnerName, isYou);
@@ -799,6 +815,27 @@ export const useGameStore = create<GameStore>()(
         }
 
         logNetwork('leave-room', 'pending', { roomCode, playerId });
+
+        // Track game abandonment if there's an active game
+        const { gameState } = get();
+        if (gameState && gameState.phase === 'playing') {
+          const gameDurationMs = gameState.gameStats.gameDurationMs || 0;
+          const totalPossibleMoves = gameState.players.length * 10; // Rough estimate
+          const progressPercentage = Math.min(
+            (gameState.gameStats.totalMoves / totalPossibleMoves) * 100,
+            90,
+          );
+
+          track('game_abandoned', {
+            duration_seconds: Math.round(gameDurationMs / 1000),
+            progress_percentage: Math.round(progressPercentage),
+            abandonment_reason: 'user_left_room',
+            player_count: gameState.players.length,
+            total_moves: gameState.gameStats.totalMoves,
+            game_mode: 'multiplayer',
+          });
+        }
+
         set({
           isLoading: true,
           message: 'Leaving room...',
@@ -1193,6 +1230,24 @@ export const useGameStore = create<GameStore>()(
         if (currentGameState.phase === 'finished') {
           const winner = currentGameState.winner;
           console.log('🏆 GAME FINISHED!', { winner, playerId });
+
+          // Track local game completion
+          const gameDurationMs = currentGameState.gameStats.gameDurationMs || 0;
+          const isYou = winner?.id === playerId;
+
+          track('game_finished', {
+            duration_seconds: Math.round(gameDurationMs / 1000),
+            player_count: currentGameState.players.length,
+            winner_type: winner?.isAI ? 'ai' : 'human',
+            winner_is_user: isYou || false,
+            total_moves: currentGameState.gameStats.totalMoves,
+            cards_played: currentGameState.gameStats.totalCardsPlayed,
+            cards_drawn: currentGameState.gameStats.totalCardsDrawn,
+            penalties_served: currentGameState.gameStats.penaltyCardsServed,
+            direction_changes: currentGameState.gameStats.directionChanges,
+            game_mode: 'local',
+          });
+
           get().updateMessage(
             winner?.id === playerId ? 'You won! 🎉' : `${winner?.name} wins!`,
           );
@@ -2145,6 +2200,26 @@ export const useGameStore = create<GameStore>()(
 
           if (updatedGameState.phase === 'finished') {
             const winner = updatedGameState.winner;
+
+            // Track AI game completion
+            const gameDurationMs =
+              updatedGameState.gameStats.gameDurationMs || 0;
+            const isYou = winner?.id === get().playerId;
+
+            track('game_finished', {
+              duration_seconds: Math.round(gameDurationMs / 1000),
+              player_count: updatedGameState.players.length,
+              winner_type: winner?.isAI ? 'ai' : 'human',
+              winner_is_user: isYou || false,
+              total_moves: updatedGameState.gameStats.totalMoves,
+              cards_played: updatedGameState.gameStats.totalCardsPlayed,
+              cards_drawn: updatedGameState.gameStats.totalCardsDrawn,
+              penalties_served: updatedGameState.gameStats.penaltyCardsServed,
+              direction_changes: updatedGameState.gameStats.directionChanges,
+              game_mode: 'local',
+              finished_by: 'ai_play',
+            });
+
             get().updateMessage(
               winner?.id === get().playerId
                 ? 'You won! 🎉'
