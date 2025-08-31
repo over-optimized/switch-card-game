@@ -306,9 +306,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             onClick={() => toggleMenuSection('quickStart')}
           >
             <h3>⚡ Quick Start</h3>
-            <span
-              className={`${styles.sectionToggle} ${menuSections.quickStartExpanded ? styles.expanded : ''}`}
-            >
+            <span className={styles.sectionToggle}>
               {menuSections.quickStartExpanded ? '▼' : '▶'}
             </span>
           </div>
@@ -340,9 +338,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             onClick={() => toggleMenuSection('onlinePlay')}
           >
             <h3>🌐 Online Play</h3>
-            <span
-              className={`${styles.sectionToggle} ${menuSections.onlinePlayExpanded ? styles.expanded : ''}`}
-            >
+            <span className={styles.sectionToggle}>
               {menuSections.onlinePlayExpanded ? '▼' : '▶'}
             </span>
           </div>
@@ -441,9 +437,7 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             onClick={() => toggleMenuSection('playerSetup')}
           >
             <h3>⚙️ Custom Setup</h3>
-            <span
-              className={`${styles.sectionToggle} ${menuSections.playerSetupExpanded ? styles.expanded : ''}`}
-            >
+            <span className={styles.sectionToggle}>
               {menuSections.playerSetupExpanded ? '▼' : '▶'}
             </span>
           </div>

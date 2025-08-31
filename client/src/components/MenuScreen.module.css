@@ -156,12 +156,6 @@
   font-size: 1.2em;
   color: #bdc3c7;
   transition: all 0.3s ease;
-  transform: rotate(0deg);
-}
-
-.sectionToggle.expanded {
-  transform: rotate(90deg);
-  color: #3498db;
 }
 
 .sectionContent {
