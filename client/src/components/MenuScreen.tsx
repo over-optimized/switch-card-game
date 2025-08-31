@@ -17,6 +17,14 @@ export interface GameSetupConfig {
     handSortOrder: 'dealt' | 'rank' | 'suit';
     showAnimations: boolean;
     enableDebugLogs: boolean;
+    // Trick card rules
+    enable2s: boolean;
+    enable8s: boolean;
+    enableAces: boolean;
+    enableJacks: boolean;
+    enable5Hearts: boolean;
+    enableMirror: boolean;
+    enableRuns: boolean;
   };
 }
 
@@ -85,10 +93,13 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
 
   // Get menu section states from store
-  const { menuSections, toggleMenuSection } = useUIStore(state => ({
-    menuSections: state.menuSections,
-    toggleMenuSection: state.toggleMenuSection,
-  }));
+  const { menuSections, toggleMenuSection, settings, updateSettings } =
+    useUIStore(state => ({
+      menuSections: state.menuSections,
+      toggleMenuSection: state.toggleMenuSection,
+      settings: state.settings,
+      updateSettings: state.updateSettings,
+    }));
 
   // Get game store methods for room management
   const {
@@ -182,6 +193,14 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
         handSortOrder: 'rank',
         showAnimations: true,
         enableDebugLogs: true,
+        // Use current UI settings for trick cards
+        enable2s: settings.enable2s,
+        enable8s: settings.enable8s,
+        enableAces: settings.enableAces,
+        enableJacks: settings.enableJacks,
+        enable5Hearts: settings.enable5Hearts,
+        enableMirror: settings.enableMirror,
+        enableRuns: settings.enableRuns,
       },
     };
     onStartGame(config);
@@ -203,6 +222,14 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
         handSortOrder: 'rank',
         showAnimations: true,
         enableDebugLogs: true,
+        // Use current UI settings for trick cards
+        enable2s: settings.enable2s,
+        enable8s: settings.enable8s,
+        enableAces: settings.enableAces,
+        enableJacks: settings.enableJacks,
+        enable5Hearts: settings.enable5Hearts,
+        enableMirror: settings.enableMirror,
+        enableRuns: settings.enableRuns,
       },
     };
     onStartGame(config);
@@ -252,6 +279,14 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             handSortOrder: 'rank',
             showAnimations: true,
             enableDebugLogs: true,
+            // Use current UI settings for trick cards
+            enable2s: settings.enable2s,
+            enable8s: settings.enable8s,
+            enableAces: settings.enableAces,
+            enableJacks: settings.enableJacks,
+            enable5Hearts: settings.enable5Hearts,
+            enableMirror: settings.enableMirror,
+            enableRuns: settings.enableRuns,
           },
         };
         onStartGame(config);
@@ -320,12 +355,51 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             handSortOrder: 'rank',
             showAnimations: true,
             enableDebugLogs: true,
+            // Use current UI settings for trick cards
+            enable2s: settings.enable2s,
+            enable8s: settings.enable8s,
+            enableAces: settings.enableAces,
+            enableJacks: settings.enableJacks,
+            enable5Hearts: settings.enable5Hearts,
+            enableMirror: settings.enableMirror,
+            enableRuns: settings.enableRuns,
           },
         };
         onStartGame(config);
       }
     } finally {
       setIsJoiningRoom(false);
+    }
+  };
+
+  // Game Rules handlers
+  const handleClassicRulesPreset = () => {
+    updateSettings({
+      enable2s: false,
+      enableAces: false,
+      enableJacks: false,
+      enable8s: false,
+      enableRuns: false,
+      enableMirror: false,
+      enable5Hearts: false,
+    });
+  };
+
+  const handleFullRulesPreset = () => {
+    updateSettings({
+      enable2s: true,
+      enableAces: true,
+      enableJacks: true,
+      enable8s: true,
+      enableRuns: false, // Not implemented yet
+      enableMirror: false, // Not implemented yet
+      enable5Hearts: false, // Not implemented yet
+    });
+  };
+
+  const handleTrickCardToggle = (setting: keyof typeof settings) => {
+    if (typeof settings[setting] === 'boolean') {
+      updateSettings({ [setting]: !settings[setting] });
     }
   };
 
@@ -587,6 +661,207 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
               <button className={styles.startGameBtn} onClick={handleStartGame}>
                 Start Custom Game
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Game Rules Section */}
+        <div className={styles.menuSection}>
+          <div
+            className={styles.sectionHeader}
+            onClick={() => toggleMenuSection('gameRules')}
+          >
+            <h3>🃏 Game Rules</h3>
+            <span className={styles.sectionToggle}>
+              {menuSections.gameRulesExpanded ? '▼' : '▶'}
+            </span>
+          </div>
+
+          <div
+            className={`${styles.sectionContent} ${
+              menuSections.gameRulesExpanded ? styles.expanded : ''
+            }`}
+          >
+            <div className={styles.gameRulesContent}>
+              <div className={styles.rulePresetsSection}>
+                <h4>Quick Presets</h4>
+                <div className={styles.rulePresets}>
+                  <button
+                    className={styles.rulePresetBtn}
+                    onClick={handleClassicRulesPreset}
+                  >
+                    <span className={styles.presetIcon}>🎯</span>
+                    <div className={styles.presetInfo}>
+                      <div className={styles.presetName}>Classic Rules</div>
+                      <div className={styles.presetDesc}>
+                        Basic gameplay only
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    className={styles.rulePresetBtn}
+                    onClick={handleFullRulesPreset}
+                  >
+                    <span className={styles.presetIcon}>⚡</span>
+                    <div className={styles.presetInfo}>
+                      <div className={styles.presetName}>Full Rules</div>
+                      <div className={styles.presetDesc}>
+                        All trick cards active
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div className={styles.trickCardSection}>
+                <h4>Trick Card Rules</h4>
+                <div className={styles.trickCardToggles}>
+                  <div className={styles.trickCardToggle}>
+                    <div className={styles.cardInfo}>
+                      <span className={styles.cardIcon}>2️⃣</span>
+                      <div className={styles.cardDescription}>
+                        <div className={styles.cardName}>2s - Pick Up Two</div>
+                        <div className={styles.cardEffect}>
+                          Force next player to draw 2 cards
+                        </div>
+                      </div>
+                    </div>
+                    <label className={styles.toggleSwitch}>
+                      <input
+                        type="checkbox"
+                        checked={settings.enable2s}
+                        onChange={() => handleTrickCardToggle('enable2s')}
+                      />
+                      <span className={styles.toggleSlider}></span>
+                    </label>
+                  </div>
+
+                  <div className={styles.trickCardToggle}>
+                    <div className={styles.cardInfo}>
+                      <span className={styles.cardIcon}>🅰️</span>
+                      <div className={styles.cardDescription}>
+                        <div className={styles.cardName}>
+                          Aces - Change Suit
+                        </div>
+                        <div className={styles.cardEffect}>
+                          Play on any suit, choose next suit
+                        </div>
+                      </div>
+                    </div>
+                    <label className={styles.toggleSwitch}>
+                      <input
+                        type="checkbox"
+                        checked={settings.enableAces}
+                        onChange={() => handleTrickCardToggle('enableAces')}
+                      />
+                      <span className={styles.toggleSlider}></span>
+                    </label>
+                  </div>
+
+                  <div className={styles.trickCardToggle}>
+                    <div className={styles.cardInfo}>
+                      <span className={styles.cardIcon}>🃏</span>
+                      <div className={styles.cardDescription}>
+                        <div className={styles.cardName}>
+                          Jacks - Skip Player
+                        </div>
+                        <div className={styles.cardEffect}>
+                          Skip the next player's turn
+                        </div>
+                      </div>
+                    </div>
+                    <label className={styles.toggleSwitch}>
+                      <input
+                        type="checkbox"
+                        checked={settings.enableJacks}
+                        onChange={() => handleTrickCardToggle('enableJacks')}
+                      />
+                      <span className={styles.toggleSlider}></span>
+                    </label>
+                  </div>
+
+                  <div className={styles.trickCardToggle}>
+                    <div className={styles.cardInfo}>
+                      <span className={styles.cardIcon}>8️⃣</span>
+                      <div className={styles.cardDescription}>
+                        <div className={styles.cardName}>
+                          8s - Reverse Direction
+                        </div>
+                        <div className={styles.cardEffect}>
+                          Change turn order direction
+                        </div>
+                      </div>
+                    </div>
+                    <label className={styles.toggleSwitch}>
+                      <input
+                        type="checkbox"
+                        checked={settings.enable8s}
+                        onChange={() => handleTrickCardToggle('enable8s')}
+                      />
+                      <span className={styles.toggleSlider}></span>
+                    </label>
+                  </div>
+
+                  <div className={styles.trickCardToggle}>
+                    <div className={styles.cardInfo}>
+                      <span className={styles.cardIcon}>5️⃣♥️</span>
+                      <div className={styles.cardDescription}>
+                        <div className={styles.cardName}>
+                          5♥ - Pick Up Five
+                        </div>
+                        <div className={styles.cardEffect}>
+                          Force next player to draw 5 cards
+                        </div>
+                      </div>
+                    </div>
+                    <label className={styles.toggleSwitch}>
+                      <input type="checkbox" disabled />
+                      <span
+                        className={`${styles.toggleSlider} ${styles.disabled}`}
+                      ></span>
+                    </label>
+                    <span className={styles.comingSoon}>Coming Soon</span>
+                  </div>
+
+                  <div className={styles.trickCardToggle}>
+                    <div className={styles.cardInfo}>
+                      <span className={styles.cardIcon}>7️⃣</span>
+                      <div className={styles.cardDescription}>
+                        <div className={styles.cardName}>7s - Mirror Cards</div>
+                        <div className={styles.cardEffect}>
+                          Next card must match previous card
+                        </div>
+                      </div>
+                    </div>
+                    <label className={styles.toggleSwitch}>
+                      <input type="checkbox" disabled />
+                      <span
+                        className={`${styles.toggleSlider} ${styles.disabled}`}
+                      ></span>
+                    </label>
+                    <span className={styles.comingSoon}>Coming Soon</span>
+                  </div>
+
+                  <div className={styles.trickCardToggle}>
+                    <div className={styles.cardInfo}>
+                      <span className={styles.cardIcon}>3️⃣</span>
+                      <div className={styles.cardDescription}>
+                        <div className={styles.cardName}>3s - Start Runs</div>
+                        <div className={styles.cardEffect}>
+                          Begin sequential card chains
+                        </div>
+                      </div>
+                    </div>
+                    <label className={styles.toggleSwitch}>
+                      <input type="checkbox" disabled />
+                      <span
+                        className={`${styles.toggleSlider} ${styles.disabled}`}
+                      ></span>
+                    </label>
+                    <span className={styles.comingSoon}>Coming Soon</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

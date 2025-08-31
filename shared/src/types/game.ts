@@ -13,6 +13,16 @@ export interface PlayerGameStats {
   totalMoves: number; // cardsPlayed + cardsDrawn
 }
 
+export interface GameSettings {
+  enable2s: boolean;
+  enable8s: boolean;
+  enableAces: boolean;
+  enableJacks: boolean;
+  enable5Hearts: boolean;
+  enableMirror: boolean;
+  enableRuns: boolean;
+}
+
 export interface GameStats {
   gameStarted?: Date | undefined;
   gameFinished?: Date | undefined;
@@ -50,6 +60,7 @@ export interface GameState {
   startedAt?: Date | undefined;
   finishedAt?: Date | undefined;
   gameStats: GameStats;
+  gameSettings: GameSettings;
 }
 
 export interface Room {
@@ -75,6 +86,7 @@ export function createGameState(
   id: string,
   players: Player[],
   shuffledDeck: Card[],
+  gameSettings?: Partial<GameSettings>,
 ): GameState {
   // Initialize player stats for all players
   const playerStats: Record<string, PlayerGameStats> = {};
@@ -116,6 +128,15 @@ export function createGameState(
       directionChanges: 0,
       penaltyCardsServed: 0,
       specialCardsPlayedTotal: 0,
+    },
+    gameSettings: {
+      enable2s: gameSettings?.enable2s ?? true,
+      enable8s: gameSettings?.enable8s ?? true,
+      enableAces: gameSettings?.enableAces ?? true,
+      enableJacks: gameSettings?.enableJacks ?? true,
+      enable5Hearts: gameSettings?.enable5Hearts ?? false,
+      enableMirror: gameSettings?.enableMirror ?? false,
+      enableRuns: gameSettings?.enableRuns ?? false,
     },
   };
 }

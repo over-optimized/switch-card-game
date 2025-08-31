@@ -8,6 +8,15 @@ export interface ClientToServerEvents {
     playerName: string;
     aiOpponents?: number;
     difficulty?: 'easy' | 'medium' | 'hard';
+    gameSettings?: {
+      enable2s?: boolean;
+      enable8s?: boolean;
+      enableAces?: boolean;
+      enableJacks?: boolean;
+      enable5Hearts?: boolean;
+      enableMirror?: boolean;
+      enableRuns?: boolean;
+    };
   }) => void;
   'join-room': (data: { roomCode: string; playerName: string }) => void;
   'leave-room': () => void;
