@@ -6,14 +6,19 @@ interface InGameMenuProps {
 }
 
 export function InGameMenu({ onBackToMenu }: InGameMenuProps) {
-  const { inGameMenuOpen, setInGameMenuOpen, settings, updateSettings, ensureCorrectDefaults } =
-    useUIStore(state => ({
-      inGameMenuOpen: state.inGameMenuOpen,
-      setInGameMenuOpen: state.setInGameMenuOpen,
-      settings: state.settings,
-      updateSettings: state.updateSettings,
-      ensureCorrectDefaults: state.ensureCorrectDefaults,
-    }));
+  const {
+    inGameMenuOpen,
+    setInGameMenuOpen,
+    settings,
+    updateSettings,
+    ensureCorrectDefaults,
+  } = useUIStore(state => ({
+    inGameMenuOpen: state.inGameMenuOpen,
+    setInGameMenuOpen: state.setInGameMenuOpen,
+    settings: state.settings,
+    updateSettings: state.updateSettings,
+    ensureCorrectDefaults: state.ensureCorrectDefaults,
+  }));
 
   // Ensure settings match implementation on component mount
   React.useEffect(() => {

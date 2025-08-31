@@ -328,6 +328,164 @@ The current architecture has grown complex with mobile/desktop duplication and l
   - [x] TypeScript compatibility fixes for setTimeout return types
   - [x] Interface extensions for room management methods
 
+## 🎮 ENGAGEMENT FEATURES & SOCIAL SYSTEMS - NEW PRIORITY
+
+**⭐ HIGH IMPACT: Leverage existing statistics system for player retention and engagement**
+
+### Phase 1: Daily Challenges & Basic Engagement (4-6 weeks) - HIGH PRIORITY
+
+#### Daily Challenges System ⭐ HIGHEST IMPACT, LOW EFFORT
+
+- [ ] **Guest-Friendly Challenge System**
+  - [ ] Design challenge types leveraging existing game statistics
+    - Speed challenges: "Win a game in under 5 minutes" (uses gameDurationMs)
+    - Skill challenges: "Win without drawing any cards" (uses cardsDrawn stat)
+    - Trick card challenges: "Reverse direction 5 times in one game" (uses directionChanges)
+    - Streak challenges: "Win 3 games in a row" (new streak tracking)
+  - [ ] localStorage-based progress tracking (no authentication required)
+  - [ ] Daily challenge refresh mechanism with weekend specials
+  - [ ] Challenge progress UI component with completion indicators
+
+- [ ] **Streak Tracking & Progress Systems**
+  - [ ] Win streak tracking with visual progression
+  - [ ] "Hot streak" indicators and celebration animations
+  - [ ] Personal best tracking (fastest wins, longest games, trick card mastery)
+  - [ ] Level-up system based on games played and achievements
+  - [ ] Progress bars and achievement unlock notifications
+
+- [ ] **Achievement Badge System**
+  - [ ] Badge collection for game accomplishments
+    - "Trick Card Master": Play 10 special cards in one game
+    - "Penalty Avoider": Win 5 games without receiving penalties
+    - "Speed Demon": Win 10 games under 3 minutes
+    - "Direction Master": Change direction 50 times total
+  - [ ] Achievement progress tracking and completion celebrations
+  - [ ] Badge display in game UI and win screens
+
+### Phase 2: Tournament & Competition Systems (6-8 weeks) - MEDIUM PRIORITY  
+
+#### Tournament Mode
+
+- [ ] **Single Elimination Tournaments**
+  - [ ] 4/8/16 player bracket generation
+  - [ ] Automated tournament progression
+  - [ ] Tournament leaderboards and winner celebrations
+  - [ ] Guest-friendly tournament participation
+
+- [ ] **Daily/Weekly Tournaments**
+  - [ ] Automated tournament scheduling
+  - [ ] Different tournament formats (speed, trick card masters, classic rules)
+  - [ ] Tournament history and results tracking
+
+#### Leaderboard Systems
+
+- [ ] **Multiple Leaderboard Categories**
+  - [ ] Speed leaderboard (fastest wins using gameDurationMs)
+  - [ ] Win rate leaderboard (wins/total games)
+  - [ ] Trick card mastery leaderboard (specialCardsPlayed)
+  - [ ] Streak leaderboard (longest win streaks)
+  - [ ] Seasonal rankings with monthly/weekly resets
+
+- [ ] **Guest vs Account Leaderboards**
+  - [ ] Device-local leaderboards for guest players
+  - [ ] Global leaderboards for account holders
+  - [ ] Leaderboard UI components with ranking visualization
+
+### Phase 3: Social Features & Advanced Engagement (8-12 weeks) - FUTURE
+
+#### Social Features
+
+- [ ] **Friend Systems**
+  - [ ] Friend lists with guest account bridging
+  - [ ] Send challenges to friends
+  - [ ] Private leaderboards among friend groups
+  - [ ] Share game highlights and achievements
+
+#### Advanced Customization
+
+- [ ] **Unlockable Content System**
+  - [ ] Unlockable card backs through achievement progress
+  - [ ] Theme unlocks (dark mode, seasonal themes)
+  - [ ] Animation unlocks (special win celebrations)
+  - [ ] Unlock progression tied to daily challenges and achievements
+
+- [ ] **Game Variants & Custom Modes**
+  - [ ] Speed Switch (faster turn timers)
+  - [ ] Trick Card Masters (all special cards enabled)
+  - [ ] Classic Mode (basic rules only)
+  - [ ] Custom rule lobbies with player-created settings
+
+### 🔐 Authentication Strategy
+
+#### Phase 1: Guest-First Approach (Immediate Implementation)
+
+- [ ] **Persistent Guest System**
+  - [ ] Browser fingerprinting for returning player recognition
+  - [ ] Persistent nicknames with localStorage
+  - [ ] Local statistics and achievement storage
+  - [ ] "Create account to sync across devices" upgrade path
+
+#### Phase 2: Lightweight Authentication (Later)
+
+- [ ] **Minimal Registration System**
+  - [ ] Guest account bridge (convert existing progress)
+  - [ ] Nickname + optional email registration
+  - [ ] OAuth integration (Google/GitHub)
+  - [ ] Cloud sync for cross-device progress preservation
+
+#### Phase 3: Full Social Features (Advanced)
+
+- [ ] **Complete Profile System**
+  - [ ] Public profiles with statistics and achievements
+  - [ ] Friend discovery by username/email
+  - [ ] Account linking across multiple devices
+
+### 🛠️ Technical Architecture Extensions
+
+#### Database Schema Requirements
+
+- [ ] **Guest Tracking Tables**
+  - [ ] guest_sessions (browser_fingerprint, nickname, progress)
+  - [ ] daily_challenges (challenge definitions and requirements)
+  - [ ] player_progress (challenge completion tracking)
+  - [ ] achievement_progress (badge collection progress)
+
+- [ ] **Statistics Enhancement**
+  - [ ] Extend existing GameStats for challenge requirements
+  - [ ] Add streak tracking to player statistics
+  - [ ] Personal best tracking across multiple metrics
+  - [ ] Historical data aggregation for leaderboards
+
+#### API Endpoints
+
+- [ ] **Challenge & Achievement APIs**
+  - [ ] `/api/challenges/daily` - Today's challenges
+  - [ ] `/api/achievements/{player}` - Player progress
+  - [ ] `/api/leaderboards/{type}` - Ranking data
+  - [ ] `/api/tournaments/active` - Current tournaments
+
+### 📊 Success Metrics & Targets
+
+#### Engagement Metrics
+
+- [ ] **Set Up Tracking**
+  - [ ] Daily active user tracking
+  - [ ] Average session duration monitoring (target: >20 minutes)
+  - [ ] Daily challenge completion rate (target: >40%)
+  - [ ] Player return rate (target: 60% next-day, 30% next-week)
+
+#### Feature Adoption Metrics
+
+- [ ] **Monitor Feature Usage**
+  - [ ] Tournament participation rate
+  - [ ] Achievement collection progress
+  - [ ] Social feature usage (friends, challenges)
+  - [ ] Custom game mode usage
+
+**🎯 IMPLEMENTATION STRATEGY: Start with Daily Challenges (highest impact, leverages existing stats system)**
+
+---
+
 ## 🎯 NEXT PRIORITIES - Fourth Trick Card & Game Polish
 
 **✅ Architecture Consolidation Complete - Ready for Feature Development!**
@@ -757,7 +915,7 @@ The current architecture has grown complex with mobile/desktop duplication and l
 - Options: 8s (direction change), 7s (mirror), or Runs (sequential)
 - Continue refining trick card architecture and UI patterns
 
-### 📈 **Development Velocity (Updated for Architecture Consolidation Priority):**
+### 📈 **Development Velocity (Updated for Engagement Features Priority):**
 
 - **Week 1**: Core foundation ✅ (Completed)
 - **Week 2**: React migration foundation ✅ (Completed)
@@ -766,10 +924,10 @@ The current architecture has grown complex with mobile/desktop duplication and l
 - **Week 4**: Second special card (Aces) ✅ (Completed - Commit: 43cae5f)
 - **Week 4**: Third special card (Jacks) ✅ (Completed - Commit: TBD)
 - **Week 5**: 🚨 **CRITICAL Architecture consolidation** ✅ (100% COMPLETE - production deployed!)
-- **Week 6**: Railway deployment + Production testing + Final cleanup tasks  
-- **Week 7**: Fourth special card (8s, 7s, or Runs) - after production deployment
-- **Week 8**: Advanced features (remaining trick cards, multiplayer)  
-- **Week 9+**: Polish, additional platforms, user feedback
+- **Week 6**: **NEW PRIORITY** - Engagement Features Phase 1 (Daily challenges, streaks, achievements)
+- **Week 7-8**: Daily challenges implementation + Achievement badge system
+- **Week 9-10**: Tournament mode + Basic leaderboards  
+- **Week 11+**: Social features, advanced customization, additional trick cards
 
 ### 🏗️ **Architecture Strategy (Updated for Consolidation):**
 - **Network-First Architecture**: Eliminate local/network complexity by treating all games as network games
@@ -820,5 +978,97 @@ The current architecture has grown complex with mobile/desktop duplication and l
 
 ---
 
-_Last Updated: 2024-08-26 (After Mobile-First Architecture Completion)_
+## 📊 ANALYTICS & USER INSIGHTS SYSTEM
+
+### Phase 1: Core Game Lifecycle Events ✅ COMPLETE
+
+- [x] **Game Start Tracking**
+  - [x] `game_started` event in MenuScreen for all game types
+  - [x] Track: type (quick_start/custom/multiplayer), mode, player_count, has_ai
+  - [x] Separate tracking for quick start vs custom setup vs multiplayer
+
+- [x] **Game Completion Tracking**
+  - [x] `game_finished` event in game store when games complete
+  - [x] Track: duration_seconds, player_count, winner_type (human/ai), final_stats
+  - [x] Include game statistics data for completion analysis
+
+- [x] **Game Abandonment Tracking**
+  - [x] `game_abandoned` event when users leave mid-game
+  - [x] Track: duration_seconds, progress_percentage, abandonment_reason
+  - [x] Hook into existing leave room and navigation logic
+
+- [x] **Multiplayer Room Events**
+  - [x] `room_created` event with room_code and max_players
+  - [x] `room_joined` event with join_method (code_entry/link)
+  - [x] Track multiplayer engagement and success rates
+
+- [x] **Vercel Analytics Integration**
+  - [x] Added @vercel/analytics package to client
+  - [x] Basic web analytics with automatic page view tracking
+  - [x] Custom event tracking system with TypeScript integration
+  - [x] Privacy-compliant implementation with no PII collection
+
+### Phase 2: Gameplay Analytics (Medium Priority - 2-3 days)
+
+- [ ] **Card Play Patterns**
+  - [ ] `card_played` event for understanding play patterns
+  - [ ] `special_card_activated` for trick card usage (2s/8s/ace/jack)
+  - [ ] `penalty_received` for penalty system engagement
+
+### Phase 3: UX Analytics (Lower Priority - 1-2 days)
+
+- [ ] **User Preference Tracking**
+  - [ ] `settings_changed` for configuration preferences
+  - [ ] `menu_section_expanded` for navigation patterns
+  - [ ] `hand_sorting_changed` for UI preference analysis
+
+### Phase 4: Future Engagement Events (After Engagement Features)
+
+- [ ] **Achievement & Challenge Events**
+  - [ ] `achievement_unlocked` for future achievement system
+  - [ ] `daily_challenge_completed` for future challenge system
+  - [ ] `streak_milestone` for future streak tracking
+
+### Implementation Benefits
+
+- **User Behavior Insights**: Understand most popular game modes and player preferences
+- **Completion Rate Analysis**: Track game abandonment vs completion patterns
+- **Feature Usage Metrics**: See which special cards and rules are most engaging
+- **Multiplayer Adoption**: Monitor room creation success and player retention
+- **A/B Testing Foundation**: Support future feature experiments and optimization
+
+### Technical Notes
+
+- Uses Vercel Analytics `track()` function for custom events
+- Privacy-compliant (no PII tracking, just game behavior patterns)
+- Leverages existing game statistics system for rich event context
+- Integrates with current game store and component architecture
+
+## 📈 Implementation Results
+
+### Analytics System Benefits Achieved
+
+- **Complete Game Lifecycle Tracking**: All major user interactions now tracked with rich context
+- **Data-Driven Insights**: Ready to analyze user behavior patterns, game preferences, and engagement
+- **Privacy-First Approach**: GDPR-compliant tracking focused on game behavior, not personal data
+- **Production-Ready**: Integrated with Vercel's robust analytics infrastructure
+- **Leveraged Existing Architecture**: Built on top of comprehensive game statistics system
+
+### Custom Events Implemented
+
+1. **game_started** - Track game initiation across all modes (quick start, custom, multiplayer)
+2. **game_finished** - Comprehensive completion tracking with game statistics integration
+3. **game_abandoned** - User engagement analysis with progress and abandonment reasons
+4. **room_created/room_joined** - Multiplayer adoption and success rate monitoring
+
+### Technical Integration Complete
+
+- TypeScript-safe event tracking with proper type definitions
+- Integrated with existing game store and component architecture
+- No performance impact with optimized event timing
+- Ready for A/B testing and feature experimentation
+
+---
+
+_Last Updated: 2024-08-31 (After Vercel Analytics Phase 1 Implementation)_
 _Review and update weekly during active development_

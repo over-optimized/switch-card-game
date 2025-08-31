@@ -735,7 +735,7 @@ io.on('connection', socket => {
   // Handle player reconnection attempts
   socket.on('reconnect-player', ({ roomCode, playerId }) => {
     logSystem(`Player reconnection attempt: ${playerId} to room ${roomCode}`);
-    
+
     const room = RoomManager.getRoom(roomCode);
     if (!room) {
       socket.emit('error', {
@@ -757,16 +757,16 @@ io.on('connection', socket => {
     // Update socket data and rejoin room
     socket.data = { roomCode, playerId, isHost: player.isHost || false };
     socket.join(roomCode);
-    
+
     // Update player connection status
     RoomManager.updatePlayerConnection(roomCode, playerId, true);
-    
+
     // Update activity tracking
     updatePlayerActivity(playerId);
 
     // Send updated room state
     socket.emit('room-joined', { room, player });
-    
+
     // If there's an active game, send game state
     if (room.gameState) {
       socket.emit('game-state', { gameState: room.gameState });
@@ -777,7 +777,7 @@ io.on('connection', socket => {
 
   socket.on('reconnect-host', ({ roomCode, playerId }) => {
     logSystem(`Host reconnection attempt: ${playerId} to room ${roomCode}`);
-    
+
     const room = RoomManager.getRoom(roomCode);
     if (!room) {
       socket.emit('error', {
@@ -799,16 +799,16 @@ io.on('connection', socket => {
     // Update socket data and rejoin room
     socket.data = { roomCode, playerId, isHost: true };
     socket.join(roomCode);
-    
+
     // Update player connection status
     RoomManager.updatePlayerConnection(roomCode, playerId, true);
-    
+
     // Update activity tracking
     updatePlayerActivity(playerId);
 
     // Send updated room state to host
     socket.emit('room-created', { room, player });
-    
+
     // If there's an active game, send game state
     if (room.gameState) {
       socket.emit('game-state', { gameState: room.gameState });

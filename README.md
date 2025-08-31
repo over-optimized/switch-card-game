@@ -81,6 +81,13 @@ pnpm ci                   # Full CI pipeline (lint + test + build)
 - **Session Persistence**: 30-minute room session storage with automatic restoration
 - **Enhanced Error Handling**: Clear feedback for connection issues and recovery guidance
 
+### Analytics Features
+
+- **User Behavior Insights**: Track game mode preferences, completion rates, and engagement patterns
+- **Performance Monitoring**: Core Web Vitals and real-time performance metrics via Vercel Analytics
+- **Game Statistics**: Comprehensive tracking of game duration, moves, special card usage, and outcomes
+- **Privacy-Compliant**: No cookies or personal data collection, focusing on game behavior analytics
+
 ## 🏗️ Architecture
 
 ### Project Structure
@@ -102,6 +109,7 @@ switch-card-game/
 - **Frontend**: React 18, TypeScript, Zustand, CSS Modules, Vite
 - **Backend**: Node.js, Express, Socket.IO
 - **Shared**: TypeScript types and game engine
+- **Analytics**: Vercel Analytics with custom event tracking
 - **Testing**: Vitest, React Testing Library, coverage reporting
 - **Development**: ESLint, Prettier, hot reloading
 
