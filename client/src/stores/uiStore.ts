@@ -46,6 +46,7 @@ interface UIStore {
 
   // Actions
   setCurrentScreen: (screen: 'menu' | 'game' | 'settings') => void;
+  ensureCorrectDefaults: () => void;
   setGameSetup: (config: GameSetupConfig) => void;
   updateSettings: (updates: Partial<GameSettings>) => void;
   resetSettings: () => void;
@@ -147,6 +148,25 @@ export const useUIStore = create<UIStore>()(
       // Actions
       setCurrentScreen: (screen: 'menu' | 'game' | 'settings') => {
         set({ currentScreen: screen });
+      },
+      
+      // Force correct default settings for implemented features
+      ensureCorrectDefaults: () => {
+        const currentSettings = get().settings;
+        const correctedSettings = {
+          ...currentSettings,
+          // Ensure trick cards that are implemented show as active
+          enable8s: true, // 8s reversal is implemented and working
+          enable2s: true, // 2s penalty is implemented and working  
+          enableAces: true, // Aces suit change is implemented and working
+          enableJacks: true, // Jacks skip is implemented and working
+        };
+        
+        // Only update if something changed
+        if (JSON.stringify(currentSettings) !== JSON.stringify(correctedSettings)) {
+          console.log('[UI Store] Correcting trick card settings to match implementation');
+          set({ settings: correctedSettings });
+        }
       },
 
       setGameSetup: (config: GameSetupConfig) => {
