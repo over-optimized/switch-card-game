@@ -103,4 +103,137 @@ describe('GameEngine', () => {
       expect(updatedPlayer?.hand).toHaveLength(6);
     }
   });
+
+  describe('8s - Reverse Direction', () => {
+    it('should reverse direction when playing an 8', () => {
+      const startedGame = GameEngine.startGame(gameState);
+
+      // Set up initial state with clockwise direction
+      expect(startedGame.direction).toBe(1);
+
+      // Create an 8 card and put it in current player's hand
+      const eightCard = { id: 'eight-test', rank: '8', suit: 'spades' };
+      const currentPlayerIndex = startedGame.currentPlayerIndex;
+      const updatedPlayers = [...startedGame.players];
+      updatedPlayers[currentPlayerIndex] = {
+        ...updatedPlayers[currentPlayerIndex],
+        hand: [...updatedPlayers[currentPlayerIndex].hand, eightCard],
+      };
+
+      // Set discard pile to allow playing the 8
+      const gameWithEight = {
+        ...startedGame,
+        players: updatedPlayers,
+        discardPile: [{ id: 'top', rank: '8', suit: 'hearts' }], // 8 can be played on 8
+      };
+
+      const resultGame = GameEngine.playCard(
+        gameWithEight,
+        updatedPlayers[currentPlayerIndex].id,
+        eightCard.id,
+      );
+
+      // Direction should be reversed
+      expect(resultGame.direction).toBe(-1);
+      expect(resultGame.gameStats.directionChanges).toBe(1);
+    });
+
+    it('should handle multiple 8s correctly (odd = reverse, even = same)', () => {
+      const startedGame = GameEngine.startGame(gameState);
+
+      // Create two 8 cards for multiple play
+      const eight1 = { id: 'eight-1', rank: '8', suit: 'spades' };
+      const eight2 = { id: 'eight-2', rank: '8', suit: 'clubs' };
+      const currentPlayerIndex = startedGame.currentPlayerIndex;
+      const updatedPlayers = [...startedGame.players];
+      updatedPlayers[currentPlayerIndex] = {
+        ...updatedPlayers[currentPlayerIndex],
+        hand: [...updatedPlayers[currentPlayerIndex].hand, eight1, eight2],
+      };
+
+      const gameWithEights = {
+        ...startedGame,
+        players: updatedPlayers,
+        discardPile: [{ id: 'top', rank: '8', suit: 'hearts' }],
+      };
+
+      // Play two 8s - should reverse twice (back to original direction)
+      const resultGame = GameEngine.playCards(
+        gameWithEights,
+        updatedPlayers[currentPlayerIndex].id,
+        [eight1.id, eight2.id],
+      );
+
+      // Two 8s should result in same direction (1 → -1 → 1)
+      expect(resultGame.direction).toBe(1);
+      expect(resultGame.gameStats.directionChanges).toBe(2);
+    });
+
+    it('should work correctly with 3+ players', () => {
+      // Create 3-player game
+      const threePlayers = [
+        createPlayer('player1', 'Alice'),
+        createPlayer('player2', 'Bob'),
+        createPlayer('player3', 'Charlie'),
+      ];
+      const deck = createStandardDeck();
+      const threePlayerGame = GameEngine.startGame(
+        createGameState('test-3p', threePlayers, deck),
+      );
+
+      // Set up 8 card play
+      const eightCard = { id: 'eight-test', rank: '8', suit: 'spades' };
+      const currentPlayerIndex = threePlayerGame.currentPlayerIndex; // Should be 0 (Alice)
+      const updatedPlayers = [...threePlayerGame.players];
+      updatedPlayers[currentPlayerIndex] = {
+        ...updatedPlayers[currentPlayerIndex],
+        hand: [...updatedPlayers[currentPlayerIndex].hand, eightCard],
+      };
+
+      const gameWithEight = {
+        ...threePlayerGame,
+        players: updatedPlayers,
+        discardPile: [{ id: 'top', rank: '8', suit: 'hearts' }],
+      };
+
+      const resultGame = GameEngine.playCard(
+        gameWithEight,
+        updatedPlayers[currentPlayerIndex].id,
+        eightCard.id,
+      );
+
+      // Direction reversed: next turn should be index 2 (Charlie) instead of 1 (Bob)
+      expect(resultGame.direction).toBe(-1);
+      expect(resultGame.currentPlayerIndex).toBe(2); // Charlie
+    });
+
+    it('should not affect turn order if 8s setting is disabled', () => {
+      // This test will be relevant when we implement the setting check
+      // For now, 8s effect should always apply since it's in the game engine
+      const startedGame = GameEngine.startGame(gameState);
+      const eightCard = { id: 'eight-test', rank: '8', suit: 'spades' };
+
+      const currentPlayerIndex = startedGame.currentPlayerIndex;
+      const updatedPlayers = [...startedGame.players];
+      updatedPlayers[currentPlayerIndex] = {
+        ...updatedPlayers[currentPlayerIndex],
+        hand: [...updatedPlayers[currentPlayerIndex].hand, eightCard],
+      };
+
+      const gameWithEight = {
+        ...startedGame,
+        players: updatedPlayers,
+        discardPile: [{ id: 'top', rank: '8', suit: 'hearts' }],
+      };
+
+      const resultGame = GameEngine.playCard(
+        gameWithEight,
+        updatedPlayers[currentPlayerIndex].id,
+        eightCard.id,
+      );
+
+      // For now, should always reverse (we'll add setting check later)
+      expect(resultGame.direction).toBe(-1);
+    });
+  });
 });

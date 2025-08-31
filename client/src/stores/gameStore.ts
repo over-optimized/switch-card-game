@@ -278,6 +278,9 @@ export const useGameStore = create<GameStore>()(
             });
 
             // Reset reconnection state on successful connection
+            console.log(
+              `[Connection Debug] Successful connection - resetting reconnection state (attempts: ${currentState.reconnectAttempts})`,
+            );
             currentState.resetReconnectionState();
 
             // Show reconnection success toast if this was a reconnection
@@ -294,16 +297,22 @@ export const useGameStore = create<GameStore>()(
             resolve(true);
           });
 
-          socket.on('disconnect', () => {
+          socket.on('disconnect', (reason: string) => {
             console.log(
-              '[Connection Debug] Socket disconnected - setting offline status',
+              `[Connection Debug] Socket disconnected - reason: ${reason}`,
             );
             set({
               connectionStatus: 'offline',
               message: 'Disconnected from game server',
               lastDisconnectTime: new Date(),
             });
-            logNetwork('Disconnected from server', 'error');
+            logNetwork('Disconnected from server', 'error', {
+              reason,
+              socketId: socket.id,
+              roomCode: get().roomCode,
+              playerId: get().playerId,
+              connected: socket.connected,
+            });
 
             // Show disconnect toast
             import('../utils/toastUtils').then(({ gameToasts }) => {
@@ -463,6 +472,22 @@ export const useGameStore = create<GameStore>()(
                       );
                     }
                     effect = 'Next player skipped';
+                  } else if (cardPlayed.rank === '8') {
+                    // 8 reverses direction - show toast
+                    if (
+                      player.name !== 'You' &&
+                      player.name !==
+                        get().gameState?.players?.find(
+                          p => p.id === get().playerId,
+                        )?.name
+                    ) {
+                      gameToasts.show8sEffect(gameState.direction, player.name);
+                    }
+                    const directionText =
+                      gameState.direction === 1
+                        ? 'clockwise'
+                        : 'counter-clockwise';
+                    effect = `Direction reversed to ${directionText}`;
                   }
 
                   gameToasts.showOpponentMove(player.name, cardDisplay, effect);
@@ -574,6 +599,27 @@ export const useGameStore = create<GameStore>()(
             setTimeout(() => {
               useUIStore.getState().clearToastsOnGameEnd();
             }, 6000);
+          });
+
+          // Handle direct game state updates (for reconnection)
+          socket.on('game-state', ({ gameState }) => {
+            console.log('[Reconnection Debug] Received game state update');
+            logGame('Game state restored', { gameState });
+
+            set({
+              gameState,
+              serverGameState: gameState,
+              message: 'Game state restored',
+            });
+
+            // Show reconnection success toast
+            import('../utils/toastUtils').then(({ gameToasts }) => {
+              gameToasts.showInfo(
+                'Reconnected',
+                'Game state restored successfully',
+                3000,
+              );
+            });
           });
 
           // Connection timeout
@@ -1394,18 +1440,44 @@ export const useGameStore = create<GameStore>()(
           reconnectAttempts: state.reconnectAttempts + 1,
         }));
 
-        // Try to reconnect
-        if (currentState.roomCode && currentState.socket) {
-          currentState.socket.connect();
-        } else if (currentState.roomCode) {
-          // Try to establish new socket connection
-          currentState.setupWebSocketGame();
+        // Try to reconnect - always create fresh socket instance
+        if (currentState.roomCode) {
+          console.log(
+            `[Reconnection Debug] Creating fresh socket connection for room: ${currentState.roomCode}`,
+          );
+          // Cleanup old socket if it exists
+          if (currentState.socket) {
+            currentState.socket.removeAllListeners();
+            currentState.socket.disconnect();
+          }
+
+          // Create fresh socket connection
+          currentState.connectToLocalServer().then(connected => {
+            if (connected) {
+              // Attempt to rejoin the room with saved session data
+              const { roomCode, playerId, isHost } = currentState;
+              if (roomCode && playerId) {
+                console.log(
+                  `[Reconnection Debug] Attempting to rejoin room: ${roomCode} as player: ${playerId}`,
+                );
+                const socket = get().socket;
+                if (socket && isHost) {
+                  // Host should try to restore the game state
+                  socket.emit('reconnect-host', { roomCode, playerId });
+                } else if (socket) {
+                  // Regular player should try to rejoin
+                  socket.emit('reconnect-player', { roomCode, playerId });
+                }
+              }
+            }
+          });
         }
 
         // Schedule next attempt with exponential backoff
+        // Extended timeout to match server's 30-second grace period
         const delay = Math.min(
           1000 * Math.pow(2, currentState.reconnectAttempts),
-          30000,
+          25000, // Max 25 seconds to stay within server's 30-second grace period
         );
         const timeoutId = setTimeout(attemptReconnection, delay);
         set({ reconnectTimeoutId: timeoutId });
@@ -1555,7 +1627,7 @@ export const useGameStore = create<GameStore>()(
 
     // Async action management
     createPendingAction: (type: PendingAction['type'], cardIds?: string[]) => {
-      const actionId = `action-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const actionId = `action-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const { playerId } = get();
 
       const pendingAction: PendingAction = {

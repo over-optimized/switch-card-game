@@ -1,6 +1,7 @@
 import {
   GameState,
   GameAction,
+  GameDirection,
   getCurrentPlayer,
   getNextPlayerIndex,
   isGameFinished,
@@ -177,6 +178,7 @@ export class GameEngine {
       chosenSuit,
     );
     updatedGameState = GameEngine.handleJackEffect(updatedGameState, card);
+    updatedGameState = GameEngine.handle8sEffect(updatedGameState, card);
 
     // Track statistics for the card play
     const isSpecial = GameEngine.isSpecialCard(card);
@@ -257,6 +259,7 @@ export class GameEngine {
       const card = cards[i];
       updatedGameState = GameEngine.handle2sEffect(updatedGameState, card);
       updatedGameState = GameEngine.handleJackEffect(updatedGameState, card);
+      updatedGameState = GameEngine.handle8sEffect(updatedGameState, card);
     }
 
     // Handle Ace effect only once (for the top card)
@@ -465,6 +468,27 @@ export class GameEngine {
 
     // Track direction change (Jacks effectively change turn flow)
     return GameEngine.trackDirectionChange(updatedGameState);
+  }
+
+  static handle8sEffect(gameState: GameState, playedCard: Card): GameState {
+    // Only handle if the played card is an 8
+    if (playedCard.rank !== '8') {
+      return gameState;
+    }
+
+    // Reverse the game direction: 1 (clockwise) becomes -1 (counterclockwise) and vice versa
+    const newDirection: GameDirection = gameState.direction === 1 ? -1 : 1;
+
+    const updatedGameState = {
+      ...gameState,
+      direction: newDirection,
+      gameStats: {
+        ...gameState.gameStats,
+        directionChanges: gameState.gameStats.directionChanges + 1,
+      },
+    };
+
+    return updatedGameState;
   }
 
   static servePenalty(gameState: GameState, playerId: string): GameState {

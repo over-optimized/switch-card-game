@@ -134,6 +134,32 @@ describe('toastUtils', () => {
         icon: '⚠️',
       });
     });
+
+    it('should show 8s effect with direction change', () => {
+      gameToasts.show8sEffect(-1, 'Eve');
+
+      expect(mockScheduleToast).toHaveBeenCalledWith({
+        type: 'trick-card',
+        title: '8 played!',
+        message: 'Direction reversed to counter-clockwise by Eve',
+        icon: '↻',
+        duration: 4000,
+        priority: 'normal',
+      });
+    });
+
+    it('should show 8s effect without player attribution', () => {
+      gameToasts.show8sEffect(1);
+
+      expect(mockScheduleToast).toHaveBeenCalledWith({
+        type: 'trick-card',
+        title: '8 played!',
+        message: 'Direction reversed to clockwise',
+        icon: '↻',
+        duration: 4000,
+        priority: 'normal',
+      });
+    });
   });
 
   describe('penalty notifications', () => {

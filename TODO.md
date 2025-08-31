@@ -333,22 +333,108 @@ The current architecture has grown complex with mobile/desktop duplication and l
 **✅ Architecture Consolidation Complete - Ready for Feature Development!**
 **✅ Connection Stability & Online Multiplayer Complete - Robust Network Experience!**
 
-### Fourth Special Card Implementation Options
+### Remaining Trick Card Implementation Plan
 
-- [ ] **8s (Reverse Direction)** - Changes turn order direction
-  - [ ] Add direction change logic to advanceTurn system
-  - [ ] Handle odd/even 8s stacking (1=reverse, 2=same direction)
-  - [ ] Update turn indicators to show current direction
+**Current Status: 3/7 Complete** (2s ✅, Aces ✅, Jacks ✅)
 
-- [ ] **7s (Mirror Cards)** - Universal cards that mirror previous card rank/suit
-  - [ ] Add card mirroring logic to game state
-  - [ ] Update matching rules to use mirrored rank/suit
-  - [ ] Visual indicators showing mirrored state
+### Priority 1: **8s (Reverse Direction)** - NEXT IMPLEMENTATION
 
-- [ ] **Runs (Starting with 3s)** - Sequential card chains
-  - [ ] Most complex - requires new game mode and validation
-  - [ ] Sequential rank progression system
-  - [ ] Run termination and penalty logic
+- [ ] **Backend Implementation (Shared Engine)**
+  - [ ] Add `direction` field to GameState ('clockwise' | 'counterclockwise')
+  - [ ] Add `handle8sEffect()` method to GameEngine
+  - [ ] Update `advanceTurn()` logic to respect current direction
+  - [ ] Handle odd/even 8s stacking (1=reverse, 2=same direction, etc.)
+
+- [ ] **Frontend Implementation (Client)**
+  - [ ] Add DirectionIndicator component showing current turn order
+  - [ ] Update game status messages for direction changes
+  - [ ] AI integration for strategic 8s usage
+  - [ ] Enable `enable8s: true` setting in uiStore
+
+### Priority 2: **5♥ (Pick Up Five)** - MEDIUM COMPLEXITY
+
+- [ ] **Backend Implementation (Shared Engine)**
+  - [ ] Add `handle5HeartsEffect()` method with 5-card penalty
+  - [ ] Implement 2♥ counter logic (only card that can stop 5♥)
+  - [ ] Add 5♥-specific penalty state management
+  - [ ] Handle 5♥ + 2s chaining interactions
+
+- [ ] **Frontend Implementation (Client)**
+  - [ ] Create 5Hearts-specific penalty indicator (different from 2s)
+  - [ ] Update penalty serving logic for 5-card draws
+  - [ ] AI logic for 5♥ play timing and 2♥ countering
+  - [ ] Enable `enable5Hearts: true` setting in uiStore
+
+### Priority 3: **7s (Mirror Cards)** - HIGH COMPLEXITY
+
+- [ ] **Backend Implementation (Shared Engine)**
+  - [ ] Add `mirroredRank` and `mirroredSuit` fields to GameState
+  - [ ] Add `handle7sEffect()` method with card mirroring logic
+  - [ ] Update `isValidPlay()` to use mirrored values when 7 is top card
+  - [ ] Handle multiple 7s stacking (each mirrors previous card)
+
+- [ ] **Frontend Implementation (Client)**
+  - [ ] Create MirrorIndicator component showing current mirrored state
+  - [ ] Update top card display to show mirrored rank/suit (7♠ → K♥ format)
+  - [ ] AI logic for strategic 7s usage and card bridging
+  - [ ] Add `enable7s` setting to uiStore and types
+
+### Priority 4: **Runs (Sequential Chains)** - MOST COMPLEX
+
+- [ ] **Backend Implementation (Shared Engine)**
+  - [ ] Add 'active-run' game mode to existing mode system
+  - [ ] Add `currentRunRank` field to GameState for sequence tracking
+  - [ ] Add `handleRunsEffect()` method for 3s (run starters)
+  - [ ] Implement sequential rank validation (3→4→5→...→King→Ace)
+  - [ ] Add run termination logic (success on Ace, failure penalties)
+  - [ ] Handle run failure penalties (cards = current rank)
+
+- [ ] **Frontend Implementation (Client)**
+  - [ ] Create RunIndicator component showing current sequence progress
+  - [ ] Update card hints to show valid run continuations
+  - [ ] Enhanced game status messages for run state
+  - [ ] AI logic for run strategy (when to start, continue, or fail)
+  - [ ] Enable `enableRuns: true` setting in uiStore
+
+### Implementation Strategy
+
+- **Follow established patterns**: Each card follows handle[Card]Effect() → UI component → AI integration → settings
+- **Test incrementally**: Enable one card at a time to verify interactions
+- **Maintain compatibility**: Ensure new cards work with existing 2s, Aces, Jacks
+- **Mobile-first UI**: All new indicators must work on mobile and desktop
+
+## 🎮 Game Customization UI - NEXT PRIORITY
+
+**Current Issue**: Players can't customize trick card rules from the main menu
+
+### Phase 1: MenuScreen Game Rules Section
+
+- [ ] **Add Game Rules Section to MenuScreen**
+  - [ ] Add `gameRulesExpanded: boolean` to menuSections in uiStore
+  - [ ] Create expandable "Game Rules" section with toggle switches
+  - [ ] Follow existing section pattern (Quick Start, Online Play, Player Setup)
+
+- [ ] **Trick Card Toggle Controls**
+  - [ ] Individual toggle switches for implemented cards (2s, Aces, Jacks, 8s)
+  - [ ] Disabled toggles for future cards (5♥, 7s, Runs) with "Coming Soon"
+  - [ ] Visual card icons + descriptions for each toggle
+
+- [ ] **Enhanced Game Creation Flow**
+  - [ ] Update GameSetupConfig to include trick card settings
+  - [ ] Pass custom settings to createRoom/createLocalGame
+  - [ ] Server-side validation of rule combinations
+
+### Phase 2: Visual Rule Indicators
+
+- [ ] **In-Game Menu Enhancements** ✅ COMPLETED
+  - [x] Fixed incorrect rule descriptions (8s: "Miss Turn" → "Reverse Direction")  
+  - [x] Added all missing rule indicators (5♥, 7s, Runs)
+  - [x] Proper active/inactive visual states with green/red styling
+
+- [ ] **Game Setup Preview**
+  - [ ] Active rules summary in game creation
+  - [ ] "Classic Rules" vs "Full Rules" preset buttons
+  - [ ] Rule conflict validation and warnings
 
 ### Medium Priority - Game Polish
 

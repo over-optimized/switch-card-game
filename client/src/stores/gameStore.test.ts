@@ -19,6 +19,7 @@ vi.mock('../utils/toastUtils', () => ({
     showJackEffect: vi.fn(),
     showAceEffect: vi.fn(),
     show2sEffect: vi.fn(),
+    show8sEffect: vi.fn(),
     showTrickCard: vi.fn(),
     showPenaltyCreated: vi.fn(),
     showPenaltyStacked: vi.fn(),
@@ -76,7 +77,6 @@ describe('GameStore', () => {
     });
 
     it('should update playerId when local-game-created event is received', () => {
-
       // Set up socket manually for test
       useGameStore.setState({ socket: mockSocket });
 
@@ -155,8 +155,9 @@ describe('GameStore', () => {
       useGameStore.setState({ socket: mockSocket });
 
       // Start with socket connection
-      expect(store.socket?.id).toBe('test-socket-id');
-      expect(store.playerId).toBeNull();
+      const initialStore = useGameStore.getState();
+      expect(initialStore.socket?.id).toBe('test-socket-id');
+      expect(initialStore.playerId).toBeNull();
 
       // Simulate room creation
       const player = createPlayer('consistent-player-id', 'Test Player');
@@ -288,11 +289,10 @@ describe('GameStore', () => {
     });
 
     it('should track reconnection attempts', () => {
-      const store = useGameStore.getState();
-
       // Set initial reconnect attempts
       useGameStore.setState({ reconnectAttempts: 3 });
 
+      const store = useGameStore.getState();
       expect(store.reconnectAttempts).toBe(3);
 
       // Test incrementing attempts
@@ -302,8 +302,6 @@ describe('GameStore', () => {
     });
 
     it('should respect max reconnection attempts', () => {
-      const store = useGameStore.getState();
-
       // Set up scenario where max attempts are reached
       useGameStore.setState({
         reconnectAttempts: 5,
@@ -387,6 +385,7 @@ describe('GameStore', () => {
       const emitMock = mockSocket.emit as vi.Mock;
 
       // Simulate creating a room
+      const store = useGameStore.getState();
       store.createRoom('Test Player');
 
       expect(emitMock).toHaveBeenCalledWith('create-room', {
@@ -400,6 +399,7 @@ describe('GameStore', () => {
       const emitMock = mockSocket.emit as vi.Mock;
 
       // Simulate joining a room
+      const store = useGameStore.getState();
       store.joinRoom('ROOM123', 'Joining Player');
 
       expect(emitMock).toHaveBeenCalledWith('join-room', {
@@ -414,6 +414,7 @@ describe('GameStore', () => {
       const emitMock = mockSocket.emit as vi.Mock;
 
       // Simulate starting a game
+      const store = useGameStore.getState();
       store.startGame();
 
       expect(emitMock).toHaveBeenCalledWith('start-game');
@@ -425,6 +426,7 @@ describe('GameStore', () => {
       const emitMock = mockSocket.emit as vi.Mock;
 
       // Simulate playing a card
+      const store = useGameStore.getState();
       store.playCard('card-123');
 
       expect(emitMock).toHaveBeenCalledWith('play-card', {

@@ -17,6 +17,8 @@ export interface ClientToServerEvents {
   'draw-card': () => void;
   'player-ready': () => void;
   'player-unready': () => void;
+  'reconnect-player': (data: { roomCode: string; playerId: string }) => void;
+  'reconnect-host': (data: { roomCode: string; playerId: string }) => void;
 }
 
 export interface ServerToClientEvents {
@@ -41,6 +43,7 @@ export interface ServerToClientEvents {
   }) => void;
   'game-started': (data: { gameState: GameState }) => void;
   'game-state-updated': (data: { gameState: GameState }) => void;
+  'game-state': (data: { gameState: GameState }) => void;
   'card-played': (data: {
     playerId: string;
     cardId: string;
@@ -69,4 +72,5 @@ export interface SocketData {
   playerId?: string;
   roomCode?: string;
   isLocalGame?: boolean;
+  isHost?: boolean;
 }
