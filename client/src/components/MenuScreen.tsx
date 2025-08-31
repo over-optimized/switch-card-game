@@ -311,24 +311,26 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             </span>
           </div>
 
-          {menuSections.quickStartExpanded && (
-            <div className={styles.sectionContent}>
-              <div className={styles.quickStartPresets}>
-                {Object.entries(QUICK_START_PRESETS).map(([key, preset]) => (
-                  <button
-                    key={key}
-                    className={styles.quickStartBtn}
-                    onClick={() => handleQuickStart(preset)}
-                  >
-                    <div className={styles.presetLabel}>{preset.label}</div>
-                    <div className={styles.presetDescription}>
-                      {preset.description}
-                    </div>
-                  </button>
-                ))}
-              </div>
+          <div
+            className={`${styles.sectionContent} ${
+              menuSections.quickStartExpanded ? styles.expanded : ''
+            }`}
+          >
+            <div className={styles.quickStartPresets}>
+              {Object.entries(QUICK_START_PRESETS).map(([key, preset]) => (
+                <button
+                  key={key}
+                  className={styles.quickStartBtn}
+                  onClick={() => handleQuickStart(preset)}
+                >
+                  <div className={styles.presetLabel}>{preset.label}</div>
+                  <div className={styles.presetDescription}>
+                    {preset.description}
+                  </div>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Online Play Section */}
@@ -343,91 +345,89 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             </span>
           </div>
 
-          {menuSections.onlinePlayExpanded && (
-            <div className={styles.sectionContent}>
-              <div className={styles.onlinePlayContent}>
-                <div className={styles.connectionStatus}>
-                  <span
-                    className={`${styles.connectionDot} ${
-                      connectionStatus === 'connected'
-                        ? styles.connected
-                        : connectionStatus === 'connecting'
-                          ? styles.connecting
-                          : styles.offline
-                    }`}
-                  >
-                    ●
-                  </span>
-                  <span className={styles.connectionText}>
-                    {connectionStatus === 'connected'
-                      ? 'Connected to server'
+          <div
+            className={`${styles.sectionContent} ${
+              menuSections.onlinePlayExpanded ? styles.expanded : ''
+            }`}
+          >
+            <div className={styles.onlinePlayContent}>
+              <div className={styles.connectionStatus}>
+                <span
+                  className={`${styles.connectionDot} ${
+                    connectionStatus === 'connected'
+                      ? styles.connected
                       : connectionStatus === 'connecting'
-                        ? 'Connecting to server...'
-                        : 'Offline'}
-                  </span>
+                        ? styles.connecting
+                        : styles.offline
+                  }`}
+                >
+                  ●
+                </span>
+                <span className={styles.connectionText}>
+                  {connectionStatus === 'connected'
+                    ? 'Connected to server'
+                    : connectionStatus === 'connecting'
+                      ? 'Connecting to server...'
+                      : 'Offline'}
+                </span>
+              </div>
+
+              <div className={styles.playerNameSection}>
+                <label className={styles.inputLabel}>
+                  Your Name:
+                  <input
+                    type="text"
+                    value={playerName}
+                    onChange={e => setPlayerName(e.target.value)}
+                    placeholder="Enter your name"
+                    className={styles.playerNameInput}
+                    maxLength={20}
+                  />
+                </label>
+              </div>
+
+              <div className={styles.roomActions}>
+                <div className={styles.createRoomSection}>
+                  <h4>Create a New Room</h4>
+                  <button
+                    className={styles.roomActionBtn}
+                    onClick={handleCreateRoom}
+                    disabled={isCreatingRoom || isLoading || !playerName.trim()}
+                  >
+                    {isCreatingRoom ? 'Creating...' : 'Create Room'}
+                  </button>
                 </div>
 
-                <div className={styles.playerNameSection}>
-                  <label className={styles.inputLabel}>
-                    Your Name:
+                <div className={styles.joinRoomSection}>
+                  <h4>Join an Existing Room</h4>
+                  <div className={styles.joinRoomInputs}>
                     <input
                       type="text"
-                      value={playerName}
-                      onChange={e => setPlayerName(e.target.value)}
-                      placeholder="Enter your name"
-                      className={styles.playerNameInput}
-                      maxLength={20}
+                      value={roomCode}
+                      onChange={e => setRoomCode(e.target.value.toUpperCase())}
+                      placeholder="Room Code (e.g. ABC123)"
+                      className={styles.roomCodeInput}
+                      maxLength={6}
                     />
-                  </label>
-                </div>
-
-                <div className={styles.roomActions}>
-                  <div className={styles.createRoomSection}>
-                    <h4>Create a New Room</h4>
                     <button
                       className={styles.roomActionBtn}
-                      onClick={handleCreateRoom}
+                      onClick={handleJoinRoom}
                       disabled={
-                        isCreatingRoom || isLoading || !playerName.trim()
+                        isJoiningRoom ||
+                        isLoading ||
+                        !playerName.trim() ||
+                        !roomCode.trim()
                       }
                     >
-                      {isCreatingRoom ? 'Creating...' : 'Create Room'}
+                      {isJoiningRoom ? 'Joining...' : 'Join Room'}
                     </button>
                   </div>
-
-                  <div className={styles.joinRoomSection}>
-                    <h4>Join an Existing Room</h4>
-                    <div className={styles.joinRoomInputs}>
-                      <input
-                        type="text"
-                        value={roomCode}
-                        onChange={e =>
-                          setRoomCode(e.target.value.toUpperCase())
-                        }
-                        placeholder="Room Code (e.g. ABC123)"
-                        className={styles.roomCodeInput}
-                        maxLength={6}
-                      />
-                      <button
-                        className={styles.roomActionBtn}
-                        onClick={handleJoinRoom}
-                        disabled={
-                          isJoiningRoom ||
-                          isLoading ||
-                          !playerName.trim() ||
-                          !roomCode.trim()
-                        }
-                      >
-                        {isJoiningRoom ? 'Joining...' : 'Join Room'}
-                      </button>
-                    </div>
-                  </div>
                 </div>
-
-                {message && <div className={styles.gameMessage}>{message}</div>}
               </div>
+
+              {message && <div className={styles.gameMessage}>{message}</div>}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Advanced Setup Section - Collapsible */}
@@ -442,108 +442,107 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
             </span>
           </div>
 
-          {menuSections.playerSetupExpanded && (
-            <div className={styles.sectionContent}>
-              <div className={styles.playerCountSection}>
-                <h4>Number of Players</h4>
-                <div className={styles.playerCountSelector}>
-                  {([2, 3, 4] as const).map(count => (
-                    <label key={count} className={styles.playerCountOption}>
-                      <input
-                        type="radio"
-                        name="playerCount"
-                        value={count}
-                        checked={playerCount === count}
-                        onChange={() => handlePlayerCountChange(count)}
-                      />
-                      <span className={styles.radioCustom}></span>
-                      {count} Players
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.playerSetupSection}>
-                <h4>Player Configuration</h4>
-                <div className={styles.playersSetup}>
-                  {players.map((player, index) => (
-                    <div key={player.id} className={styles.playerConfig}>
-                      <div className={styles.playerInfo}>
-                        <span className={styles.playerNumber}>
-                          Player {index + 1}
-                        </span>
-                        <input
-                          type="text"
-                          value={player.name}
-                          onChange={e =>
-                            handlePlayerNameChange(player.id, e.target.value)
-                          }
-                          className={styles.playerNameInput}
-                          placeholder="Enter name"
-                          maxLength={20}
-                        />
-                      </div>
-
-                      <div className={styles.playerType}>
-                        <label className={styles.typeOption}>
-                          <input
-                            type="radio"
-                            name={`type-${player.id}`}
-                            value="human"
-                            checked={player.type === 'human'}
-                            onChange={() =>
-                              handlePlayerTypeChange(player.id, 'human')
-                            }
-                          />
-                          👤 Human
-                        </label>
-                        <label className={styles.typeOption}>
-                          <input
-                            type="radio"
-                            name={`type-${player.id}`}
-                            value="ai"
-                            checked={player.type === 'ai'}
-                            onChange={() =>
-                              handlePlayerTypeChange(player.id, 'ai')
-                            }
-                          />
-                          🤖 AI
-                        </label>
-                      </div>
-
-                      {player.type === 'ai' && (
-                        <div className={styles.aiDifficulty}>
-                          <select
-                            value={player.aiDifficulty || 'medium'}
-                            onChange={e =>
-                              handleAIDifficultyChange(
-                                player.id,
-                                e.target.value as 'easy' | 'medium' | 'hard',
-                              )
-                            }
-                            className={styles.difficultySelect}
-                          >
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.menuActions}>
-                <button
-                  className={styles.startGameBtn}
-                  onClick={handleStartGame}
-                >
-                  Start Custom Game
-                </button>
+          <div
+            className={`${styles.sectionContent} ${
+              menuSections.playerSetupExpanded ? styles.expanded : ''
+            }`}
+          >
+            <div className={styles.playerCountSection}>
+              <h4>Number of Players</h4>
+              <div className={styles.playerCountSelector}>
+                {([2, 3, 4] as const).map(count => (
+                  <label key={count} className={styles.playerCountOption}>
+                    <input
+                      type="radio"
+                      name="playerCount"
+                      value={count}
+                      checked={playerCount === count}
+                      onChange={() => handlePlayerCountChange(count)}
+                    />
+                    <span className={styles.radioCustom}></span>
+                    {count} Players
+                  </label>
+                ))}
               </div>
             </div>
-          )}
+
+            <div className={styles.playerSetupSection}>
+              <h4>Player Configuration</h4>
+              <div className={styles.playersSetup}>
+                {players.map((player, index) => (
+                  <div key={player.id} className={styles.playerConfig}>
+                    <div className={styles.playerInfo}>
+                      <span className={styles.playerNumber}>
+                        Player {index + 1}
+                      </span>
+                      <input
+                        type="text"
+                        value={player.name}
+                        onChange={e =>
+                          handlePlayerNameChange(player.id, e.target.value)
+                        }
+                        className={styles.playerNameInput}
+                        placeholder="Enter name"
+                        maxLength={20}
+                      />
+                    </div>
+
+                    <div className={styles.playerType}>
+                      <label className={styles.typeOption}>
+                        <input
+                          type="radio"
+                          name={`type-${player.id}`}
+                          value="human"
+                          checked={player.type === 'human'}
+                          onChange={() =>
+                            handlePlayerTypeChange(player.id, 'human')
+                          }
+                        />
+                        👤 Human
+                      </label>
+                      <label className={styles.typeOption}>
+                        <input
+                          type="radio"
+                          name={`type-${player.id}`}
+                          value="ai"
+                          checked={player.type === 'ai'}
+                          onChange={() =>
+                            handlePlayerTypeChange(player.id, 'ai')
+                          }
+                        />
+                        🤖 AI
+                      </label>
+                    </div>
+
+                    {player.type === 'ai' && (
+                      <div className={styles.aiDifficulty}>
+                        <select
+                          value={player.aiDifficulty || 'medium'}
+                          onChange={e =>
+                            handleAIDifficultyChange(
+                              player.id,
+                              e.target.value as 'easy' | 'medium' | 'hard',
+                            )
+                          }
+                          className={styles.difficultySelect}
+                        >
+                          <option value="easy">Easy</option>
+                          <option value="medium">Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.menuActions}>
+              <button className={styles.startGameBtn} onClick={handleStartGame}>
+                Start Custom Game
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
