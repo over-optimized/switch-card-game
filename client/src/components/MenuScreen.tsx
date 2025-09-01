@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { track } from '@vercel/analytics';
 import { useUIStore, useGameStore } from '../stores';
+import { challengeService } from '../services/challengeService';
 import styles from './MenuScreen.module.css';
 
 export interface PlayerSetup {
@@ -78,6 +79,65 @@ const QUICK_START_PRESETS = {
     description: 'Challenge two computers',
   },
 };
+
+// Daily Challenge Display Component
+function DailyChallengeDisplay() {
+  const todayChallenge = challengeService.getTodayChallenge();
+  const streak = challengeService.getStreak();
+  const stats = challengeService.getStatistics();
+
+  return (
+    <div className={styles.dailyChallengeContent}>
+      <div className={styles.challengeCard}>
+        <div className={styles.challengeHeader}>
+          <div className={styles.challengeTitle}>
+            {todayChallenge.baseChallenge.title}
+          </div>
+          <div className={styles.challengeStatus}>
+            {todayChallenge.baseChallenge.completed ? (
+              <span className={styles.completed}>✅ Completed!</span>
+            ) : (
+              <span className={styles.pending}>⏳ Pending</span>
+            )}
+          </div>
+        </div>
+        <div className={styles.challengeDescription}>
+          {todayChallenge.baseChallenge.description}
+        </div>
+        {todayChallenge.baseChallenge.completed &&
+          todayChallenge.baseChallenge.completedAt && (
+            <div className={styles.completedAt}>
+              Completed at{' '}
+              {new Date(
+                todayChallenge.baseChallenge.completedAt,
+              ).toLocaleTimeString()}
+            </div>
+          )}
+      </div>
+
+      <div className={styles.challengeStats}>
+        <div className={styles.statItem}>
+          <div className={styles.statValue}>{streak.current}</div>
+          <div className={styles.statLabel}>Current Streak</div>
+        </div>
+        <div className={styles.statItem}>
+          <div className={styles.statValue}>{streak.best}</div>
+          <div className={styles.statLabel}>Best Streak</div>
+        </div>
+        <div className={styles.statItem}>
+          <div className={styles.statValue}>{stats.totalCompleted}</div>
+          <div className={styles.statLabel}>Total Completed</div>
+        </div>
+      </div>
+
+      {!todayChallenge.baseChallenge.completed && (
+        <div className={styles.challengeTip}>
+          💡 Complete any game to earn your daily victory!
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function MenuScreen({ onStartGame }: MenuScreenProps) {
   const [playerCount, setPlayerCount] = useState<2 | 3 | 4>(2);
@@ -417,6 +477,27 @@ export function MenuScreen({ onStartGame }: MenuScreenProps) {
           <p className={styles.headerDescription}>
             Configure your game and start playing!
           </p>
+        </div>
+
+        {/* Daily Challenge Section */}
+        <div className={styles.menuSection}>
+          <div
+            className={styles.sectionHeader}
+            onClick={() => toggleMenuSection('dailyChallenge')}
+          >
+            <h3>🎯 Daily Challenge</h3>
+            <span className={styles.sectionToggle}>
+              {menuSections.dailyChallengeExpanded ? '▼' : '▶'}
+            </span>
+          </div>
+
+          <div
+            className={`${styles.sectionContent} ${
+              menuSections.dailyChallengeExpanded ? styles.expanded : ''
+            }`}
+          >
+            <DailyChallengeDisplay />
+          </div>
         </div>
 
         {/* Quick Start Section - Always visible with presets */}
