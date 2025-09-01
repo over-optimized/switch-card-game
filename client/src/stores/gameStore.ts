@@ -29,6 +29,7 @@ import {
   PlayerInfo,
   RecentMove,
 } from './types';
+import { challengeService } from '../services/challengeService';
 
 interface GameStore {
   // Core game state
@@ -618,6 +619,16 @@ export const useGameStore = create<GameStore>()(
             const winnerName = winner.name;
 
             gameToasts.showGameEnd(winnerName, isYou);
+
+            // Check and complete daily challenge if player won
+            if (isYou) {
+              const challengeCompleted =
+                challengeService.completeBaseChallenge();
+              if (challengeCompleted) {
+                console.log('🎯 Daily challenge completed!');
+                // Challenge completion notification will be handled in win screen
+              }
+            }
 
             set({
               gameState,
@@ -1261,6 +1272,15 @@ export const useGameStore = create<GameStore>()(
             direction_changes: currentGameState.gameStats.directionChanges,
             game_mode: 'local',
           });
+
+          // Check and complete daily challenge if player won
+          if (isYou) {
+            const challengeCompleted = challengeService.completeBaseChallenge();
+            if (challengeCompleted) {
+              console.log('🎯 Daily challenge completed!');
+              // Challenge completion notification will be handled in win screen
+            }
+          }
 
           get().updateMessage(
             winner?.id === playerId ? 'You won! 🎉' : `${winner?.name} wins!`,
@@ -2233,6 +2253,16 @@ export const useGameStore = create<GameStore>()(
               game_mode: 'local',
               finished_by: 'ai_play',
             });
+
+            // Check and complete daily challenge if player won
+            if (isYou) {
+              const challengeCompleted =
+                challengeService.completeBaseChallenge();
+              if (challengeCompleted) {
+                console.log('🎯 Daily challenge completed!');
+                // Challenge completion notification will be handled in win screen
+              }
+            }
 
             get().updateMessage(
               winner?.id === get().playerId

@@ -1,6 +1,7 @@
 import { useGameStore } from '../../stores/gameStore';
 import type { GameState } from '../../../../shared/src/types/game';
 import { analyzeGameStats, getPlayerSummary } from '../../utils/gameStatsUtils';
+import { challengeService } from '../../services/challengeService';
 import styles from './MobileWinModal.module.css';
 
 interface MobileWinModalProps {
@@ -24,6 +25,12 @@ export function MobileWinModal({
 
   const isPlayerWin = gameState.winner.id === playerId;
   const winnerName = gameState.winner.name;
+
+  // Check challenge completion
+  const todayChallenge = challengeService.getTodayChallenge();
+  const streakInfo = challengeService.getStreak();
+  const challengeWasJustCompleted =
+    isPlayerWin && todayChallenge.baseChallenge.completed;
 
   // Analyze game statistics for meaningful display
   const gameAnalysis = analyzeGameStats(gameState);
@@ -70,6 +77,39 @@ export function MobileWinModal({
             <span className={styles.statValue}>{playerSummary.highlight}</span>
           </div>
         </div>
+
+        {/* Daily Challenge Completion */}
+        {challengeWasJustCompleted && (
+          <div className={styles.challengeCompletion}>
+            <div className={styles.challengeHeader}>
+              <span className={styles.challengeIcon}>🎯</span>
+              <span className={styles.challengeTitle}>
+                Daily Challenge Completed!
+              </span>
+            </div>
+            <div className={styles.challengeDetails}>
+              <div className={styles.challengeInfo}>
+                <span className={styles.challengeLabel}>
+                  "{todayChallenge.baseChallenge.title}"
+                </span>
+                <span className={styles.challengeStatus}>✅ Complete</span>
+              </div>
+              <div className={styles.streakInfo}>
+                <span className={styles.streakLabel}>Streak:</span>
+                <span className={styles.streakValue}>
+                  {streakInfo.current} day{streakInfo.current !== 1 ? 's' : ''}
+                  {streakInfo.current === streakInfo.best &&
+                    streakInfo.best > 1 && (
+                      <span className={styles.personalBest}>
+                        {' '}
+                        🏆 Personal Best!
+                      </span>
+                    )}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Game Statistics */}
         <div className={styles.gameStats}>

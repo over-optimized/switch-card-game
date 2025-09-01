@@ -29,6 +29,7 @@ interface UIStore {
     onlinePlayExpanded: boolean;
     playerSetupExpanded: boolean;
     gameRulesExpanded: boolean;
+    dailyChallengeExpanded: boolean;
   };
 
   // In-game menu state
@@ -59,10 +60,20 @@ interface UIStore {
 
   // Menu section actions
   toggleMenuSection: (
-    section: 'quickStart' | 'onlinePlay' | 'playerSetup' | 'gameRules',
+    section:
+      | 'quickStart'
+      | 'onlinePlay'
+      | 'playerSetup'
+      | 'gameRules'
+      | 'dailyChallenge',
   ) => void;
   setMenuSectionExpanded: (
-    section: 'quickStart' | 'onlinePlay' | 'playerSetup' | 'gameRules',
+    section:
+      | 'quickStart'
+      | 'onlinePlay'
+      | 'playerSetup'
+      | 'gameRules'
+      | 'dailyChallenge',
     expanded: boolean,
   ) => void;
 
@@ -137,6 +148,7 @@ export const useUIStore = create<UIStore>()(
         onlinePlayExpanded: false, // Hide online play by default
         playerSetupExpanded: false, // Hide advanced config by default
         gameRulesExpanded: false, // Hide game rules by default
+        dailyChallengeExpanded: true, // Show daily challenge by default for engagement
       },
       inGameMenuOpen: false,
       roomInfoOpen: false,
@@ -223,7 +235,12 @@ export const useUIStore = create<UIStore>()(
 
       // Menu section actions
       toggleMenuSection: (
-        section: 'quickStart' | 'onlinePlay' | 'playerSetup' | 'gameRules',
+        section:
+          | 'quickStart'
+          | 'onlinePlay'
+          | 'playerSetup'
+          | 'gameRules'
+          | 'dailyChallenge',
       ) => {
         set(state => ({
           menuSections: {
@@ -237,7 +254,12 @@ export const useUIStore = create<UIStore>()(
       },
 
       setMenuSectionExpanded: (
-        section: 'quickStart' | 'onlinePlay' | 'playerSetup' | 'gameRules',
+        section:
+          | 'quickStart'
+          | 'onlinePlay'
+          | 'playerSetup'
+          | 'gameRules'
+          | 'dailyChallenge',
         expanded: boolean,
       ) => {
         set(state => ({

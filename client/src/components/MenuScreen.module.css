@@ -967,6 +967,93 @@
   }
 }
 
+/* Daily Challenge Styles */
+.dailyChallengeContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.challengeCard {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.challengeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.challengeTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f8f9fa;
+}
+
+.challengeStatus .completed {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.challengeStatus .pending {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.challengeDescription {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.completedAt {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.challengeStats {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.statItem {
+  text-align: center;
+  flex: 1;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: #3498db;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.challengeTip {
+  background: rgba(52, 152, 219, 0.1);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  text-align: center;
+}
+
 /* Mobile optimizations for online play */
 @media (max-width: 768px) {
   .joinRoomInputs {
@@ -986,5 +1073,23 @@
 
   .roomActions {
     gap: 16px;
+  }
+
+  /* Mobile challenge display */
+  .challengeStats {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .statItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+  }
+
+  .statValue {
+    margin-bottom: 0;
+    font-size: 20px;
   }
 }
