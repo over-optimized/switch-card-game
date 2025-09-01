@@ -26,12 +26,18 @@ class ChallengeService {
       if (stored) {
         const parsed = JSON.parse(stored) as ChallengeStorage;
         // Ensure we have valid structure
-        return {
+        const storage: ChallengeStorage = {
           dailyProgress: parsed.dailyProgress || {},
           streak: parsed.streak || { current: 0, best: 0 },
           totalChallengesCompleted: parsed.totalChallengesCompleted || 0,
-          firstChallengeDate: parsed.firstChallengeDate,
         };
+
+        // Only add firstChallengeDate if it exists
+        if (parsed.firstChallengeDate) {
+          storage.firstChallengeDate = parsed.firstChallengeDate;
+        }
+
+        return storage;
       }
     } catch (error) {
       console.warn('[ChallengeService] Failed to load from storage:', error);
